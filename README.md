@@ -22,6 +22,10 @@ OPTIONS:
     -s, --size <size>    Region around overlap to extract. [default: 1000]
 ```
 
+E.g. 
+
+`gfatk overlap -g test.gfa > test.fa`
+
 ## TODO's
 
 - Extract a connected subgraph given a node?
