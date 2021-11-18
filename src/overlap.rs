@@ -5,10 +5,6 @@ use gfa::gfa::GFA;
 use crate::load::load_gfa;
 use crate::utils::{parse_cigar, reverse_complement};
 
-// probably should make the overlaps mutable to avoid
-// reallocating lots of memory for sequences, but that's
-// for later...
-
 pub fn overlap(matches: &clap::ArgMatches) -> Result<(), Box<dyn std::error::Error>> {
     // required so unwrap safely
     let gfa_file = matches.value_of("gfa").unwrap();
@@ -40,7 +36,10 @@ pub fn overlap(matches: &clap::ArgMatches) -> Result<(), Box<dyn std::error::Err
             // if we meet a segment, let's do something
             match line.some_segment() {
                 Some(s) => {
-                    if s.name == from_segment {
+                    if s.name == from_segment && s.name == to_segment {
+                        from_seq = &s.sequence;
+                        to_seq = &s.sequence;
+                    } else if s.name == from_segment {
                         from_seq = &s.sequence;
                     } else if s.name == to_segment {
                         to_seq = &s.sequence;

@@ -1,4 +1,5 @@
 use clap::{App, Arg};
+use gfatk::extract;
 use gfatk::overlap;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -26,6 +27,34 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         .help("Region around overlap to extract."),
                 ),
         )
+        .subcommand(
+            clap::SubCommand::with_name("extract")
+                .about("Extract subgraph from a GFA, given a segment name.")
+                // output file name
+                .arg(
+                    Arg::with_name("gfa")
+                        .short("g")
+                        .long("gfa")
+                        .takes_value(true)
+                        .required(true)
+                        .help("Input GFA file."),
+                )
+                .arg(
+                    Arg::with_name("sequence-id")
+                        .short("s")
+                        .long("sequence-id")
+                        .takes_value(true)
+                        .required(true)
+                        .help("Extract subgraph of which this sequence is part of."),
+                )
+                .arg(
+                    Arg::with_name("iterations")
+                        .short("i")
+                        .long("iterations")
+                        .default_value("3")
+                        .help("Number of iterations to recursively search for connecting nodes."),
+                ),
+        )
         .get_matches();
 
     let subcommand = matches.subcommand();
@@ -33,6 +62,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "overlap" => {
             let matches = subcommand.1.unwrap();
             overlap::overlap(matches)?;
+        }
+        "extract" => {
+            let matches = subcommand.1.unwrap();
+            extract::extract(matches)?;
         }
         _ => {
             println!("Subcommand invalid, run with '--help' for subcommand options. Exiting.");
