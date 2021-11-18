@@ -142,7 +142,7 @@ pub fn overlap(matches: &clap::ArgMatches) -> Result<(), Box<dyn std::error::Err
         let to_orient = tup.7;
 
         println!(
-            ">{}({}) -> {}({}): extend = {}\n{}{}{}{}",
+            ">{}({})->{}({}): extend = {}\n{}{}{}{}",
             from_seg, from_orient, to_seg, to_orient, extend_length, ff, fr, tf, tr
         );
     }
