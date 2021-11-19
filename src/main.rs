@@ -1,5 +1,6 @@
 use clap::{App, Arg};
 use gfatk::extract;
+use gfatk::gaf;
 use gfatk::overlap;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -55,6 +56,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         .help("Number of iterations to recursively search for connecting nodes."),
                 ),
         )
+        .subcommand(
+            clap::SubCommand::with_name("gaf")
+                .about("gaf")
+                // output file name
+                .arg(
+                    Arg::with_name("gaf")
+                        .short("g")
+                        .long("gaf")
+                        .takes_value(true)
+                        .required(true)
+                        .help("Input GAF file."),
+                ),
+        )
         .get_matches();
 
     let subcommand = matches.subcommand();
@@ -66,6 +80,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "extract" => {
             let matches = subcommand.1.unwrap();
             extract::extract(matches)?;
+        }
+        "gaf" => {
+            let matches = subcommand.1.unwrap();
+            gaf::gaf_to_graph(matches)?;
         }
         _ => {
             println!("Subcommand invalid, run with '--help' for subcommand options. Exiting.");

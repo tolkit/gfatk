@@ -1,6 +1,6 @@
 # gfatk
 
-A GFA toolkit. 
+Exploratory functions to manipulate Graphical Fragment Assembly Format (GFA), and Graph Alignment Format (GAF). Not very useful yet.
 
 ## Usage
 
@@ -47,4 +47,23 @@ OPTIONS:
     -g, --gfa <gfa>                    Input GFA file.
     -i, --iterations <iterations>      Number of iterations to recursively search for connecting nodes. [default: 3]
     -s, --sequence-id <sequence-id>    Extract subgraph of which this sequence is part of.
+```
+
+### gfatk gaf
+
+Merge forward and reverse mappings from a .gaf.
+
+```
+gfatk-gaf 
+gaf
+
+USAGE:
+    gfatk gaf --gaf <gaf>
+
+FLAGS:
+    -h, --help       Prints help information
+    -V, --version    Prints version information
+
+OPTIONS:
+    -g, --gaf <gaf>    Input GAF file.
 ```
