@@ -149,6 +149,7 @@ dependencies = [
  "byteorder",
  "clap",
  "gfa",
+ "indexmap",
  "petgraph",
 ]
 

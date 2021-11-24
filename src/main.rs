@@ -1,6 +1,7 @@
 use clap::{App, Arg};
 use gfatk::extract;
 use gfatk::gaf;
+use gfatk::linear;
 use gfatk::overlap;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -69,6 +70,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         .help("Input GAF file."),
                 ),
         )
+        .subcommand(
+            clap::SubCommand::with_name("linear")
+                .about(
+                    "Force a linear representation of the graph.\nEach node is included once only.",
+                )
+                // output file name
+                .arg(
+                    Arg::with_name("gfa")
+                        .short("g")
+                        .long("gfa")
+                        .takes_value(true)
+                        .required(true)
+                        .help("Input GFA file."),
+                ),
+        )
         .get_matches();
 
     let subcommand = matches.subcommand();
@@ -84,6 +100,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "gaf" => {
             let matches = subcommand.1.unwrap();
             gaf::gaf_to_graph(matches)?;
+        }
+        "linear" => {
+            let matches = subcommand.1.unwrap();
+            linear::force_linear(matches)?;
         }
         _ => {
             println!("Subcommand invalid, run with '--help' for subcommand options. Exiting.");

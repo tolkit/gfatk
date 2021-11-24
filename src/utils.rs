@@ -1,3 +1,36 @@
+use gfa::optfields::{OptField, OptFieldVal::*};
+
+pub fn get_option_string(options: Vec<OptField>) -> String {
+    let mut tag_val = String::new();
+    for op in options {
+        let tag = std::str::from_utf8(&op.tag).unwrap();
+        let value = match op.value {
+            Float(f) => format!(":f:{:.3}", f),
+            A(a) => format!(":A:{}", a.to_string()),
+            Int(i) => format!(":i:{}", i.to_string()),
+            Z(z) => format!(":Z:{}", std::str::from_utf8(&z).unwrap()),
+            // J(j) => ???,
+            // a hexadecimal array
+            H(h) => format!(":H:{}", h.iter().map(|x| x.to_string()).collect::<String>()),
+            // B is a general array
+            // is it capital B?
+            BInt(bi) => format!(
+                ":B:{}",
+                bi.iter().map(|x| x.to_string()).collect::<String>()
+            ),
+            BFloat(bf) => format!(
+                ":B:{}",
+                bf.iter().map(|x| format!("{:.3}", x)).collect::<String>()
+            ),
+            _ => "".to_string(),
+        };
+        tag_val += &format!("{}{}\t", tag, value);
+    }
+    // should always end in \t ^
+    let tag_val_op_un = tag_val.strip_suffix("\t").unwrap();
+    tag_val_op_un.to_string()
+}
+
 // not a very safe function, but works
 pub fn parse_cigar(cigar: &[u8]) -> usize {
     // check it ends with an M

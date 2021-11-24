@@ -1,6 +1,8 @@
 use crate::load::load_gfa;
+use crate::utils::get_option_string;
 use clap::value_t;
 use gfa::gfa::GFA;
+use gfa::optfields::OptionalFields;
 use petgraph::graph::{Graph, UnGraph};
 
 // parsing, editing, and making V1 GFA's
@@ -17,7 +19,7 @@ pub fn extract(matches: &clap::ArgMatches) -> Result<(), Box<dyn std::error::Err
     let sequence_id = value_t!(matches.value_of("sequence-id"), usize).unwrap_or_else(|e| e.exit());
     let iterations = value_t!(matches.value_of("iterations"), usize).unwrap_or_else(|e| e.exit());
 
-    let gfa: GFA<usize, ()> = load_gfa(gfa_file)?;
+    let gfa: GFA<usize, OptionalFields> = load_gfa(gfa_file)?;
 
     eprintln!("[+]\tReading GFA into an undirected graph.");
     let mut gfa_graph: UnGraph<usize, ()> = Graph::new_undirected();
@@ -89,11 +91,17 @@ pub fn extract(matches: &clap::ArgMatches) -> Result<(), Box<dyn std::error::Err
     // if they match our sequence ID's we print them
     for segment in &gfa.segments {
         let name = segment.name;
+        // hacky options parsing.
+        // it works but needs to me made much better.
+        let options = segment.optional.clone();
+        let tag_val = get_option_string(options);
+
         if sequences_to_keep.contains(&name) {
             println!(
-                "S\t{}\t{}\t",
+                "S\t{}\t{}\t{}",
                 segment.name,
-                std::str::from_utf8(&segment.sequence).unwrap()
+                std::str::from_utf8(&segment.sequence).unwrap(),
+                tag_val,
             )
         }
     }
@@ -105,16 +113,19 @@ pub fn extract(matches: &clap::ArgMatches) -> Result<(), Box<dyn std::error::Err
     for link in &gfa.links {
         let from = link.from_segment;
         let to = link.to_segment;
+        let options = link.optional.clone();
+        let tag_val = get_option_string(options);
 
         if !keep_track_pairs.contains(&(from, to)) || !keep_track_pairs.contains(&(to, from)) {
             if sequences_to_keep.contains(&from) || sequences_to_keep.contains(&to) {
                 println!(
-                    "L\t{}\t{}\t{}\t{}\t{}",
+                    "L\t{}\t{}\t{}\t{}\t{}\t{}",
                     from,
                     link.from_orient,
                     to,
                     link.to_orient,
-                    std::str::from_utf8(&link.overlap).unwrap()
+                    std::str::from_utf8(&link.overlap).unwrap(),
+                    tag_val
                 )
             }
         }

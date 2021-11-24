@@ -4,6 +4,26 @@ Exploratory functions to manipulate Graphical Fragment Assembly Format (GFA), an
 
 ## Usage
 
+### gfatk linear
+
+Turn a GFA into a linear sequence by traversing the graph, using each segment only once. This is an NP hard problem (Hamiltonian Path). The code currently is very much prototype and untested.
+
+```
+gfatk-linear 
+Force a linear representation of the graph.
+Each node is included once only.
+
+USAGE:
+    gfatk linear --gfa <gfa>
+
+FLAGS:
+    -h, --help       Prints help information
+    -V, --version    Prints version information
+
+OPTIONS:
+    -g, --gfa <gfa>    Input GFA file.
+```
+
 ### gfatk overlap
 
 Extract overlapping regions in a GFA between two segments, and extend the sequence either side of the overlap.
@@ -31,6 +51,8 @@ E.g.
 ### gfatk extract
 
 Extract a connected subgraph given a node. Supply a gfa, a sequence ID connected to the subgraph you want to extract, and optionally a number of iterations to search for neighbours for.
+
+I realise now this is almost identical to `gfatools view -l [node] -r [some number] gfa.gfa`.
 
 ```
 gfatk-extract 
@@ -67,3 +89,9 @@ FLAGS:
 OPTIONS:
     -g, --gaf <gaf>    Input GAF file.
 ```
+
+### TODO's
+
+In general tidy up code into struct implementations. E.g.
+- Loading gfa -> petgraph.
+- Methods on the petgraph.
