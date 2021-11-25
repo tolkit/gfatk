@@ -1,0 +1,433 @@
+// common functions for gfa structures
+
+use crate::gfa::graph::{GFAdigraph, GFAungraph};
+use crate::utils::{get_option_string, parse_cigar, reverse_complement};
+use gfa::gfa::{Orientation, GFA};
+use gfa::optfields::OptionalFields;
+use indexmap::IndexMap;
+use petgraph::graph::{Graph, NodeIndex, UnGraph};
+
+// parsing, editing, and making V1 GFA's
+const HEADER: &str = "H\tVN:Z:1.0";
+
+// the GFA type used throughout
+pub struct GFAtk(pub GFA<usize, OptionalFields>);
+impl GFAtk {
+    // return a tuple of graph indices
+    // and the graph itself
+    pub fn into_ungraph(&self) -> (Vec<(NodeIndex, usize)>, GFAungraph) {
+        // alias to get GFA out
+        let gfa = &self.0;
+        // we're reading in now
+        eprintln!("[+]\tReading GFA into an undirected graph.");
+        let mut gfa_graph: UnGraph<usize, ()> = Graph::new_undirected();
+
+        let mut graph_indices = Vec::new();
+        // read the segments into graph nodes
+        // save the indexes for populating the edges
+        for node in &gfa.segments {
+            let index = gfa_graph.add_node(node.name);
+            graph_indices.push((index, node.name));
+        }
+
+        // populate the edges
+        for edge in &gfa.links {
+            let from = edge.from_segment;
+            let to = edge.to_segment;
+
+            // get the node index for a given edge (like a map)
+            let from_index = graph_indices.iter().find(|x| x.1 == from).unwrap().0;
+            let to_index = graph_indices.iter().find(|x| x.1 == to).unwrap().0;
+
+            // add the edges
+            gfa_graph.add_edge(from_index, to_index, ());
+        }
+
+        (graph_indices, GFAungraph(gfa_graph))
+    }
+
+    pub fn into_digraph(&self) -> (Vec<(NodeIndex, usize)>, GFAdigraph) {
+        let gfa = &self.0;
+        eprintln!("[+]\tReading GFA into a directed graph.");
+        let mut gfa_graph: Graph<usize, (Orientation, Orientation)> = Graph::new();
+
+        let mut graph_indices = Vec::new();
+        // read the segments into graph nodes
+        // save the indexes for populating the edges
+        for node in &gfa.segments {
+            let index = gfa_graph.add_node(node.name);
+            graph_indices.push((index, node.name));
+        }
+
+        // populate the edges
+        for edge in &gfa.links {
+            let from = edge.from_segment;
+            let to = edge.to_segment;
+            let from_orient = edge.from_orient;
+            let to_orient = edge.to_orient;
+
+            // here filter out one strand...
+
+            // get the node index for a given edge (like a map)
+            let from_index = graph_indices.iter().find(|x| x.1 == from).unwrap().0;
+            let to_index = graph_indices.iter().find(|x| x.1 == to).unwrap().0;
+
+            // add the edges
+            // conditional on strandedness
+            if from_orient == to_orient {
+                gfa_graph.add_edge(from_index, to_index, (from_orient, to_orient));
+            } else {
+                gfa_graph.add_edge(to_index, from_index, (to_orient, from_orient));
+            }
+        }
+        (graph_indices, GFAdigraph(gfa_graph))
+    }
+
+    // print the GFA with only the sequences to keep
+    pub fn print_extract(&self, sequences_to_keep: Vec<usize>) {
+        let gfa = &self.0;
+        eprintln!("[+]\tGenerating GFA subgraph");
+
+        println!("{}", HEADER);
+        // segments are easy to print.
+        // if they match our sequence ID's we print them
+        for segment in &gfa.segments {
+            let name = segment.name;
+            // hacky options parsing.
+            // it works but needs to me made much better.
+            let options = segment.optional.clone();
+            let tag_val = get_option_string(options);
+
+            if sequences_to_keep.contains(&name) {
+                println!(
+                    "S\t{}\t{}\t{}",
+                    segment.name,
+                    std::str::from_utf8(&segment.sequence).unwrap(),
+                    tag_val,
+                )
+            }
+        }
+
+        // keep track of the segment pairs to avoid unneccesary
+        // printing of duplicate pairs in opposite orientations.
+        let mut keep_track_pairs = Vec::new();
+
+        for link in &gfa.links {
+            let from = link.from_segment;
+            let to = link.to_segment;
+            let options = link.optional.clone();
+            let tag_val = get_option_string(options);
+
+            if !keep_track_pairs.contains(&(from, to)) || !keep_track_pairs.contains(&(to, from)) {
+                if sequences_to_keep.contains(&from) || sequences_to_keep.contains(&to) {
+                    println!(
+                        "L\t{}\t{}\t{}\t{}\t{}\t{}",
+                        from,
+                        link.from_orient,
+                        to,
+                        link.to_orient,
+                        std::str::from_utf8(&link.overlap).unwrap(),
+                        tag_val
+                    )
+                }
+            }
+            // keep only unique pairs
+            keep_track_pairs.push((from, to));
+            keep_track_pairs.push((to, from));
+        }
+    }
+
+    // detect all the overlaps between joins in a GFA.
+    pub fn make_overlaps(&self, extend_length: usize) -> Overlaps {
+        let gfa = &self.0;
+        // tuple of (from: overlap - length (incl. overlap), to: overlap + length)
+        let mut from_to = Overlaps::new();
+        // outer loop over links
+        for link in &gfa.links {
+            // get all the info out of each link
+            let from_segment = link.from_segment;
+            let from_orient = link.from_orient;
+            let to_segment = link.to_segment;
+            let to_orient = link.to_orient;
+            let overlap = parse_cigar(&link.overlap);
+
+            eprintln!(
+                "From segment {} ({}) to segment {} ({})\nOverlap: {}",
+                from_segment, from_orient, to_segment, to_orient, overlap
+            );
+
+            let mut from_seq: &[u8] = &[];
+            let mut to_seq: &[u8] = &[];
+
+            // get the from and to sequences.
+            for line in gfa.lines_iter() {
+                // if we meet a segment, let's do something
+                match line.some_segment() {
+                    Some(s) => {
+                        if s.name == from_segment && s.name == to_segment {
+                            from_seq = &s.sequence;
+                            to_seq = &s.sequence;
+                        } else if s.name == from_segment {
+                            from_seq = &s.sequence;
+                        } else if s.name == to_segment {
+                            to_seq = &s.sequence;
+                        }
+                    }
+                    None => (),
+                }
+            }
+
+            // initiate so we can append to vec
+            let mut overlap_str_from_f: Option<String> = None;
+            let mut overlap_str_from_r: Option<String> = None;
+            let mut overlap_str_to_f: Option<String> = None;
+            let mut overlap_str_to_r: Option<String> = None;
+
+            // deal with the from's
+            match from_orient {
+                Orientation::Forward => {
+                    // do nothing
+                    // let overlap_seq = &from_seq[from_seq.len() - overlap - extend_length..];
+                    let overlap_seq = &from_seq.get(from_seq.len() - overlap - extend_length..);
+                    // if the extend length is too long, it means that
+                    // we hit the start of the sequence, so take full slice.
+                    let overlap_str = match overlap_seq {
+                        Some(sl) => std::str::from_utf8(sl).unwrap(),
+                        None => std::str::from_utf8(&from_seq[..]).unwrap(),
+                    };
+                    overlap_str_from_f = Some(overlap_str.to_string());
+                }
+                // if the relative negative strand matches
+                // revcomp and take the end.
+                Orientation::Backward => {
+                    let revcomp = reverse_complement(&from_seq);
+                    // let overlap_revcomp = revcomp[revcomp.len() - overlap - extend_length..].to_vec();
+                    let overlap_revcomp = revcomp.get(revcomp.len() - overlap - extend_length..);
+
+                    let overlap_str = match overlap_revcomp {
+                        Some(sl) => String::from_utf8(sl.to_vec()).unwrap(),
+                        // take the whole thing.
+                        None => String::from_utf8(revcomp).unwrap(),
+                    };
+
+                    overlap_str_from_r = Some(overlap_str);
+                }
+            }
+            // deal with the to's
+            // here we ignore the overlap, as that is
+            // captured above.
+            match to_orient {
+                Orientation::Forward => {
+                    // do nothing
+                    // let overlap = &to_seq[overlap..overlap + extend_length];
+                    let overlap_seq = &to_seq.get(overlap..overlap + extend_length);
+
+                    let overlap_str = match overlap_seq {
+                        Some(sl) => std::str::from_utf8(sl).unwrap(),
+                        // from end of overlap to the end of the sequence
+                        None => std::str::from_utf8(&to_seq[overlap..]).unwrap(),
+                    };
+
+                    overlap_str_to_f = Some(overlap_str.to_string());
+                }
+                // if the relative negative strand matches
+                // revcomp and take the start.
+                Orientation::Backward => {
+                    let revcomp = reverse_complement(&to_seq);
+                    // let overlap_revcomp = revcomp[overlap..overlap + extend_length].to_vec();
+                    let overlap_revcomp = revcomp.get(overlap..overlap + extend_length);
+
+                    let overlap_str = match overlap_revcomp {
+                        Some(sl) => String::from_utf8(sl.to_vec()).unwrap(),
+                        None => String::from_utf8(revcomp[overlap..].to_vec()).unwrap(),
+                    };
+
+                    overlap_str_to_r = Some(overlap_str);
+                }
+            }
+
+            from_to.push(Overlap {
+                overlap_str_from_f,
+                overlap_str_from_r,
+                overlap_str_to_f,
+                overlap_str_to_r,
+                from_segment,
+                to_segment,
+                from_orient,
+                to_orient,
+            });
+        }
+        from_to
+    }
+
+    pub fn determine_path_overlaps(
+        &self,
+        chosen_path: &Vec<NodeIndex>,
+        graph_indices: &Vec<(NodeIndex, usize)>,
+        chosen_path_ids: &Vec<usize>,
+    ) -> Vec<(usize, Orientation, usize, &str)> {
+        let gfa = &self.0;
+        // another new vec of (id, overlap, start/end)
+        // to sort out for fasta generation
+        let mut chosen_path_overlaps = Vec::new();
+
+        for edge in &gfa.links {
+            let from = edge.from_segment;
+            let to = edge.to_segment;
+            let from_orient = edge.from_orient;
+            let to_orient = edge.to_orient;
+
+            // println!("{} {} -> {} {}", from, from_orient, to, to_orient);
+
+            // overlap
+            let overlap = parse_cigar(&edge.overlap);
+            // here look at the strandedness between pairs of nodes
+            let path_pairs = chosen_path.windows(2);
+            for path in path_pairs {
+                let from_path = graph_indices.iter().find(|y| y.0 == path[0]).unwrap().1;
+                let to_path = graph_indices.iter().find(|y| y.0 == path[1]).unwrap().1;
+
+                // okay this appears to work.
+                if from == from_path && to == to_path {
+                    chosen_path_overlaps.push((from, from_orient, overlap, "end"));
+                    chosen_path_overlaps.push((to, to_orient, overlap, "start"));
+                } else if from == to_path && to == from_path {
+                    chosen_path_overlaps.push((from, from_orient, overlap, "start"));
+                    chosen_path_overlaps.push((to, to_orient, overlap, "end"));
+                }
+            }
+        }
+
+        chosen_path_overlaps.sort();
+        chosen_path_overlaps.dedup();
+
+        let mut sorted_chosen_path_overlaps = Vec::new();
+        // sorting (allocate to new vec)
+        for path_id in chosen_path_ids {
+            for path_id2 in &chosen_path_overlaps {
+                if &path_id2.0 == path_id {
+                    sorted_chosen_path_overlaps.push(*path_id2)
+                }
+            }
+        }
+        sorted_chosen_path_overlaps
+    }
+
+    pub fn print_path_to_fasta(
+        &self,
+        merged_sorted_chosen_path_overlaps: IndexMap<usize, Vec<(Orientation, usize, &str)>>,
+        fasta_header: &str,
+    ) {
+        let gfa = &self.0;
+
+        println!(">{}", fasta_header);
+
+        for (id, vector) in merged_sorted_chosen_path_overlaps {
+            // get the from and to sequences.
+            for line in gfa.lines_iter() {
+                // if we meet a segment, let's do something
+                match line.some_segment() {
+                    Some(s) => {
+                        // we've got the segment we wanted
+                        if s.name == id {
+                            // remove overlap
+                            // but we need to watch out for orientation
+
+                            match vector.len() {
+                                1 => {
+                                    // this is either the start or the end.
+                                    // as the start and end of each inner segment
+                                    // is stripped, this can be printed as-is
+                                    print!("{}", std::str::from_utf8(&s.sequence).unwrap());
+                                }
+                                2 => {
+                                    // this is an inner segment
+                                    let start_overlap = vector
+                                        .iter()
+                                        .find(|(_or, _ov, side)| side == &"start")
+                                        .unwrap();
+                                    let end_overlap = vector
+                                        .iter()
+                                        .find(|(_or, _ov, side)| side == &"end")
+                                        .unwrap();
+
+                                    // start and end orientation should be the same
+                                    // hence just matching on start here.
+                                    let seq_minus_overlap = match start_overlap.0 {
+                                        Orientation::Forward => {
+                                            // do nothing
+                                            let seq_minus_overlap = s
+                                                .sequence
+                                                .get(
+                                                    start_overlap.1
+                                                        ..s.sequence.len() - end_overlap.1,
+                                                )
+                                                .unwrap();
+                                            seq_minus_overlap.to_vec()
+                                        }
+                                        Orientation::Backward => {
+                                            let revcomp_seq = reverse_complement(&s.sequence);
+                                            let seq_minus_overlap = revcomp_seq
+                                                .get(
+                                                    start_overlap.1
+                                                        ..s.sequence.len() - end_overlap.1,
+                                                )
+                                                .unwrap();
+                                            seq_minus_overlap.to_vec()
+                                        }
+                                    };
+                                    print!("{}", std::str::from_utf8(&seq_minus_overlap).unwrap());
+                                }
+                                _ => {
+                                    // anything else is should not happen
+                                }
+                            }
+                        }
+                    }
+                    None => (),
+                }
+            }
+        }
+    }
+}
+
+pub struct Overlap {
+    pub overlap_str_from_f: Option<String>,
+    pub overlap_str_from_r: Option<String>,
+    pub overlap_str_to_f: Option<String>,
+    pub overlap_str_to_r: Option<String>,
+    pub from_segment: usize,
+    pub to_segment: usize,
+    pub from_orient: Orientation,
+    pub to_orient: Orientation,
+}
+
+pub struct Overlaps(Vec<Overlap>);
+
+impl Overlaps {
+    fn new() -> Self {
+        Self(Vec::new())
+    }
+    fn push(&mut self, add: Overlap) {
+        self.0.push(add)
+    }
+    pub fn print(self, extend_length: usize) {
+        // long winded...
+        for o in self.0 {
+            // unwrap None -> zero length string.
+            let ff = o.overlap_str_from_f.unwrap_or("".to_string());
+            let fr = o.overlap_str_from_r.unwrap_or("".to_string());
+            let tf = o.overlap_str_to_f.unwrap_or("".to_string());
+            let tr = o.overlap_str_to_r.unwrap_or("".to_string());
+            let from_seg = o.from_segment;
+            let to_seg = o.to_segment;
+            let from_orient = o.from_orient;
+            let to_orient = o.to_orient;
+
+            println!(
+                ">{}({})->{}({}): extend = {}\n{}{}{}{}",
+                from_seg, from_orient, to_seg, to_orient, extend_length, ff, fr, tf, tr
+            );
+        }
+    }
+}

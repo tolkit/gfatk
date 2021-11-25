@@ -83,6 +83,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         .takes_value(true)
                         .required(true)
                         .help("Input GFA file."),
+                )
+                .arg(
+                    Arg::with_name("fasta-header")
+                        .short("f")
+                        .long("fasta-header")
+                        .takes_value(true)
+                        .required(true)
+                        .default_value("gfatk-linear")
+                        .help("Name of the fasta header in the output file."),
                 ),
         )
         .get_matches();

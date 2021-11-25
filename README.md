@@ -14,14 +14,15 @@ Force a linear representation of the graph.
 Each node is included once only.
 
 USAGE:
-    gfatk linear --gfa <gfa>
+    gfatk linear --fasta-header <fasta-header> --gfa <gfa>
 
 FLAGS:
     -h, --help       Prints help information
     -V, --version    Prints version information
 
 OPTIONS:
-    -g, --gfa <gfa>    Input GFA file.
+    -f, --fasta-header <fasta-header>    Name of the fasta header in the output file. [default: gfatk-linear]
+    -g, --gfa <gfa>                      Input GFA file.
 ```
 
 ### gfatk overlap
