@@ -2,13 +2,35 @@
 
 use crate::gfa::graph::{GFAdigraph, GFAungraph};
 use crate::utils::{get_option_string, parse_cigar, reverse_complement};
+use csv::ReaderBuilder;
 use gfa::gfa::{Orientation, GFA};
 use gfa::optfields::OptionalFields;
 use indexmap::IndexMap;
 use petgraph::graph::{Graph, NodeIndex, UnGraph};
+use serde::Deserialize;
+use std::error::Error;
 
 // parsing, editing, and making V1 GFA's
 const HEADER: &str = "H\tVN:Z:1.0";
+
+#[derive(Debug, Deserialize)]
+pub struct GAFTSVRecord {
+    pub from_orient: char,
+    pub from: usize,
+    pub to_orient: char,
+    pub to: usize,
+    pub coverage: u32,
+}
+
+pub fn read_gaf_to_records(file: &str) -> Result<Vec<GAFTSVRecord>, Box<dyn Error>> {
+    let mut rdr = ReaderBuilder::new().delimiter(b'\t').from_path(file)?;
+    let mut res = Vec::new();
+    for result in rdr.deserialize() {
+        let record: GAFTSVRecord = result.expect("could not parse result");
+        res.push(record);
+    }
+    Ok(res)
+}
 
 // the GFA type used throughout
 pub struct GFAtk(pub GFA<usize, OptionalFields>);
@@ -49,7 +71,7 @@ impl GFAtk {
     pub fn into_digraph(&self) -> (Vec<(NodeIndex, usize)>, GFAdigraph) {
         let gfa = &self.0;
         eprintln!("[+]\tReading GFA into a directed graph.");
-        let mut gfa_graph: Graph<usize, (Orientation, Orientation)> = Graph::new();
+        let mut gfa_graph: Graph<usize, (Orientation, Orientation, Option<u32>)> = Graph::new();
 
         let mut graph_indices = Vec::new();
         // read the segments into graph nodes
@@ -66,19 +88,12 @@ impl GFAtk {
             let from_orient = edge.from_orient;
             let to_orient = edge.to_orient;
 
-            // here filter out one strand...
-
-            // get the node index for a given edge (like a map)
+            // get the node index for a given edge
             let from_index = graph_indices.iter().find(|x| x.1 == from).unwrap().0;
             let to_index = graph_indices.iter().find(|x| x.1 == to).unwrap().0;
 
             // add the edges
-            // conditional on strandedness
-            if from_orient == to_orient {
-                gfa_graph.add_edge(from_index, to_index, (from_orient, to_orient));
-            } else {
-                gfa_graph.add_edge(to_index, from_index, (to_orient, from_orient));
-            }
+            gfa_graph.add_edge(from_index, to_index, (from_orient, to_orient, None));
         }
         (graph_indices, GFAdigraph(gfa_graph))
     }
@@ -118,6 +133,9 @@ impl GFAtk {
             let options = link.optional.clone();
             let tag_val = get_option_string(options);
 
+            // should have an option to print both forward and
+            // reverse strands (I think this should perhaps be default...)
+
             if !keep_track_pairs.contains(&(from, to)) || !keep_track_pairs.contains(&(to, from)) {
                 if sequences_to_keep.contains(&from) || sequences_to_keep.contains(&to) {
                     println!(
@@ -131,9 +149,8 @@ impl GFAtk {
                     )
                 }
             }
-            // keep only unique pairs
+            // we want both strands to keep
             keep_track_pairs.push((from, to));
-            keep_track_pairs.push((to, from));
         }
     }
 
@@ -187,7 +204,7 @@ impl GFAtk {
             match from_orient {
                 Orientation::Forward => {
                     // do nothing
-                    // let overlap_seq = &from_seq[from_seq.len() - overlap - extend_length..];
+                    // length - overlap - extend length at the end of the sequence.
                     let overlap_seq = &from_seq.get(from_seq.len() - overlap - extend_length..);
                     // if the extend length is too long, it means that
                     // we hit the start of the sequence, so take full slice.
@@ -277,8 +294,6 @@ impl GFAtk {
             let from_orient = edge.from_orient;
             let to_orient = edge.to_orient;
 
-            // println!("{} {} -> {} {}", from, from_orient, to, to_orient);
-
             // overlap
             let overlap = parse_cigar(&edge.overlap);
             // here look at the strandedness between pairs of nodes
@@ -291,9 +306,6 @@ impl GFAtk {
                 if from == from_path && to == to_path {
                     chosen_path_overlaps.push((from, from_orient, overlap, "end"));
                     chosen_path_overlaps.push((to, to_orient, overlap, "start"));
-                } else if from == to_path && to == from_path {
-                    chosen_path_overlaps.push((from, from_orient, overlap, "start"));
-                    chosen_path_overlaps.push((to, to_orient, overlap, "end"));
                 }
             }
         }
@@ -319,6 +331,11 @@ impl GFAtk {
         fasta_header: &str,
     ) {
         let gfa = &self.0;
+
+        // debugging
+        // for (k, v) in &merged_sorted_chosen_path_overlaps {
+        //     println!("Index {}: {:?}", k, v);
+        // }
 
         println!(">{}", fasta_header);
 

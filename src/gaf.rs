@@ -5,10 +5,19 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
+// can we get it to print out in a way like this:
+// id   (+/-)   id2 (+/-)   coverage
+// I think we can.
+// this can then be passed to gfatk linear for
+// finding the most covered path through the gfa.
+
+// > is forward, < is reverse.
+
 type GAF = gfa::gafpaf::GAF<OptionalFields>;
 
 pub fn gaf_to_graph(matches: &clap::ArgMatches) -> Result<(), Box<dyn std::error::Error>> {
     let gaf_filename = matches.value_of("gaf").unwrap();
+    let directed = true;
 
     let gaf_file = File::open(gaf_filename).unwrap();
     let mut lines = BufReader::new(gaf_file);
@@ -43,36 +52,56 @@ pub fn gaf_to_graph(matches: &clap::ArgMatches) -> Result<(), Box<dyn std::error
                     // only interested in overlaps between two segments
                     if len > 1 && len < 3 {
                         // sort the tuple
+                        // why are we just unwrapping this .get()?
                         let x = match e.get(0).unwrap() {
-                            GAFStep::SegId(_, id) => {
+                            GAFStep::SegId(o, id) => {
                                 let y = std::str::from_utf8(id).unwrap();
-                                y.parse::<usize>().unwrap()
+                                let orientation = match o.plus_minus_as_byte() {
+                                    43 => "+",
+                                    45 => "-",
+                                    _ => "",
+                                };
+                                (orientation, y.parse::<usize>().unwrap())
                             }
                             _ => panic!("No segment ID"),
                         };
                         let y = match e.get(1).unwrap() {
-                            GAFStep::SegId(_, id) => {
+                            GAFStep::SegId(o, id) => {
                                 let y = std::str::from_utf8(id).unwrap();
-                                y.parse::<usize>().unwrap()
+                                let orientation = match o.plus_minus_as_byte() {
+                                    43 => "+",
+                                    45 => "-",
+                                    _ => "",
+                                };
+                                (orientation, y.parse::<usize>().unwrap())
                             }
                             _ => panic!("No segment ID"),
                         };
 
                         vector_to_tuple.push(x);
                         vector_to_tuple.push(y);
-                        vector_to_tuple.sort();
+                        // undirected might be desirable in future?
+                        if !directed {
+                            vector_to_tuple.sort();
+                        }
                         // add to map
                         *hash
                             .entry((vector_to_tuple[0], vector_to_tuple[1]))
                             .or_insert(0) += 1;
+                    } else if len > 3 {
+                        // if we want to do something with
+                        // the paths which go through multiple segments...
                     }
                 }
             }
         }
     }
 
+    // headers
+    println!("from_orient\tfrom\tto_orient\tto\tcoverage");
+    // body
     for ((k1, k2), v) in hash {
-        println!("{} <-> {}: {}", k1, k2, v);
+        println!("{}\t{}\t{}\t{}\t{}", k1.0, k1.1, k2.0, k2.1, v);
     }
 
     Ok(())

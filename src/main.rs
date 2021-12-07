@@ -92,6 +92,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         .required(true)
                         .default_value("gfatk-linear")
                         .help("Name of the fasta header in the output file."),
+                )
+                .arg(
+                    Arg::with_name("coverage-file")
+                        .short("c")
+                        .long("coverage-file")
+                        .takes_value(true)
+                        .help("Name of the text file indicating the oriented coverage of links in a GFA."),
                 ),
         )
         .get_matches();

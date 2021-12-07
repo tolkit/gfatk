@@ -1,12 +1,14 @@
 # gfatk
 
-Exploratory functions to manipulate Graphical Fragment Assembly Format (GFA), and Graph Alignment Format (GAF). Not very useful yet.
+Exploratory functions to manipulate Graphical Fragment Assembly Format (GFA), and Graph Alignment Format (GAF) files.
+
+All code should be considered a prototype, with minimal testing.
 
 ## Usage
 
 ### gfatk linear
 
-Turn a GFA into a linear sequence by traversing the graph, using each segment only once. This is an NP hard problem (Hamiltonian Path). The code currently is very much prototype and untested.
+Turn a GFA into a linear sequence by traversing the graph, using each segment only once. This is an NP hard problem (Hamiltonian Path). 
 
 ```
 gfatk-linear 
@@ -14,16 +16,19 @@ Force a linear representation of the graph.
 Each node is included once only.
 
 USAGE:
-    gfatk linear --fasta-header <fasta-header> --gfa <gfa>
+    gfatk linear [OPTIONS] --fasta-header <fasta-header> --gfa <gfa>
 
 FLAGS:
     -h, --help       Prints help information
     -V, --version    Prints version information
 
 OPTIONS:
-    -f, --fasta-header <fasta-header>    Name of the fasta header in the output file. [default: gfatk-linear]
-    -g, --gfa <gfa>                      Input GFA file.
+    -c, --coverage-file <coverage-file>    Name of the text file indicating the oriented coverage of links in a GFA.
+    -f, --fasta-header <fasta-header>      Name of the fasta header in the output file. [default: gfatk-linear]
+    -g, --gfa <gfa>                        Input GFA file.
 ```
+
+Can take the output from `gfatk gaf`, but using different starting points in the graph gives different coverages. Not currently sure how to solve this, apart from iterating through every longest path.
 
 ### gfatk overlap
 
@@ -74,7 +79,43 @@ OPTIONS:
 
 ### gfatk gaf
 
-Merge forward and reverse mappings from a .gaf.
+Count the coverage of each junction/overlap from a GAF file.
+
+Outputs a TSV of:
+
+```
+from_orient	from	to_orient	to	coverage
++       232     -       228     122
+-       229     -       231     97
++       231     +       228     148
+-       227     -       228     184
++       232     -       229     116
++       229     +       227     189
+-       233     +       231     83
+-       232     +       233     106
++       230     -       227     583
+-       230     +       231     108
+-       230     +       232     178
++       228     -       232     133
+-       228     -       231     115
++       230     -       2       3
+-       228     -       233     168
+-       233     +       232     165
+-       231     +       230     112
++       229     -       232     145
++       231     +       229     104
++       233     +       229     143
++       2       -       230     21
+-       232     +       230     132
+-       227     -       229     181
++       228     +       227     250
+-       229     -       233     160
++       233     +       228     154
+-       231     +       233     121
++       227     -       230     535
+```
+
+Without the headers though. The idea is to passs these as the edge weights in the GFA graph.
 
 ```
 gfatk-gaf 
@@ -90,9 +131,3 @@ FLAGS:
 OPTIONS:
     -g, --gaf <gaf>    Input GAF file.
 ```
-
-### TODO's
-
-In general tidy up code into struct implementations. E.g.
-- Loading gfa -> petgraph.
-- Methods on the petgraph.
