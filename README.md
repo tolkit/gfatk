@@ -8,7 +8,7 @@ All code should be considered a prototype, with minimal testing.
 
 ### gfatk linear
 
-Turn a GFA into a linear sequence by traversing the graph, using each segment only once. This is an NP hard problem (Hamiltonian Path). 
+Turn a GFA into a linear sequence by traversing the graph, using each segment only once.
 
 ```
 gfatk-linear 

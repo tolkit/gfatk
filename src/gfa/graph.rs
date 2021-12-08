@@ -2,8 +2,8 @@ use crate::gfa::gfa::GAFTSVRecord;
 use gfa::gfa::Orientation;
 use petgraph::{
     algo::is_cyclic_directed,
-    graph::{edge_index, Graph, IndexType, NodeIndex},
-    visit::{EdgeIndexable, EdgeRef, NodeIndexable},
+    graph::{Graph, IndexType, NodeIndex},
+    visit::{EdgeRef, NodeIndexable},
     Directed,
     Direction::Outgoing,
     Undirected,
@@ -248,8 +248,13 @@ impl GFAdigraph {
         let return_early = checks.iter().all(|e| *e == true);
         if return_early {
             // don't add loads of extra edges!
+            eprintln!("[+]\tGFA contains forward and reverse links.");
             return;
         }
+
+        eprintln!(
+            "[+]\tGFA does not contain forward and reverse links. Adding them to internal graph."
+        );
 
         for (source, target, from_orient, to_orient) in edge_vec {
             // if orientations differ, just swap indexes
@@ -276,11 +281,11 @@ impl GFAdigraph {
     ) -> (Vec<NodeIndex>, Vec<usize>) {
         let gfa_graph = &self.0;
         // debugging
-        use petgraph::dot::{Config, Dot};
-        eprintln!(
-            "{:?}",
-            Dot::with_config(&gfa_graph, &[Config::GraphContentOnly])
-        );
+        // use petgraph::dot::{Config, Dot};
+        // eprintln!(
+        //     "{:?}",
+        //     Dot::with_config(&gfa_graph, &[Config::GraphContentOnly])
+        // );
 
         // debugging
         eprintln!(

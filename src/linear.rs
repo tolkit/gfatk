@@ -10,8 +10,6 @@ pub fn force_linear(matches: &clap::ArgMatches) -> Result<(), Box<dyn std::error
     let fasta_header = matches.value_of("fasta-header").unwrap();
     let coverage_file = matches.value_of("coverage-file");
 
-    eprintln!("{:?}", coverage_file);
-
     let coverages = match coverage_file {
         Some(f) => Some(read_gaf_to_records(f)),
         None => None,
@@ -23,6 +21,7 @@ pub fn force_linear(matches: &clap::ArgMatches) -> Result<(), Box<dyn std::error
     let (graph_indices, mut gfa_graph) = gfa.into_digraph();
 
     // check both strands are present, if not, add them
+    // should we do this though..?
     gfa_graph.check_both_strands();
 
     // add in the coverages from the file, if there is one.
