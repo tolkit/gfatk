@@ -3,3 +3,5 @@ test.txt
 test*
 /data
 /check_oak_fasta
+.vscode
+/join_segments_tests

@@ -325,6 +325,8 @@ impl GFAtk {
         sorted_chosen_path_overlaps
     }
 
+    // logic follows Marcela's python script now (thanks!)
+    // first segment added, then segment[n+1][overlap..] added
     pub fn print_path_to_fasta(
         &self,
         merged_sorted_chosen_path_overlaps: IndexMap<usize, Vec<(Orientation, usize, &str)>>,
@@ -338,67 +340,72 @@ impl GFAtk {
         // }
 
         println!(">{}", fasta_header);
+        // create iterator over the paths
+        let mut path_iter = merged_sorted_chosen_path_overlaps.iter();
+        // get the first
+        let (id_init, vector_init) = path_iter.next().unwrap();
+        for line in gfa.lines_iter() {
+            match line.some_segment() {
+                Some(s) => {
+                    if s.name == *id_init {
+                        let orientation = vector_init[0].0;
+                        match orientation {
+                            Orientation::Forward => {
+                                // nothing
+                                print!("{}", std::str::from_utf8(&s.sequence).unwrap());
+                            }
+                            Orientation::Backward => {
+                                let revcomp_seq = reverse_complement(&s.sequence);
+                                print!("{}", std::str::from_utf8(&revcomp_seq).unwrap());
+                            }
+                        }
+                    }
+                }
+                None => (),
+            }
+        }
 
-        for (id, vector) in merged_sorted_chosen_path_overlaps {
+        // now do the rest of the paths
+        for (id, vector) in path_iter {
             // get the from and to sequences.
             for line in gfa.lines_iter() {
                 // if we meet a segment, let's do something
                 match line.some_segment() {
                     Some(s) => {
                         // we've got the segment we wanted
-                        if s.name == id {
-                            // remove overlap
+                        if s.name == *id {
+                            // remove start overlap
                             // but we need to watch out for orientation
+                            // only need the starting overlaps
+                            let start_overlap = vector
+                                .iter()
+                                .find(|(_or, _ov, side)| side == &"start")
+                                .unwrap();
 
-                            match vector.len() {
-                                1 => {
-                                    // this is either the start or the end.
-                                    // as the start and end of each inner segment
-                                    // is stripped, this can be printed as-is
-                                    print!("{}", std::str::from_utf8(&s.sequence).unwrap());
-                                }
-                                2 => {
-                                    // this is an inner segment
-                                    let start_overlap = vector
-                                        .iter()
-                                        .find(|(_or, _ov, side)| side == &"start")
+                            // start and end orientation should be the same
+                            // hence just matching on start here.
+                            let seq_minus_overlap = match start_overlap.0 {
+                                Orientation::Forward => {
+                                    // do nothing
+                                    let seq_minus_overlap = s
+                                        .sequence
+                                        .get(
+                                            start_overlap.1 - 1.., // ..s.sequence.len() - end_overlap.1 - 2,
+                                        )
                                         .unwrap();
-                                    let end_overlap = vector
-                                        .iter()
-                                        .find(|(_or, _ov, side)| side == &"end")
+                                    seq_minus_overlap.to_vec()
+                                }
+                                Orientation::Backward => {
+                                    let revcomp_seq = reverse_complement(&s.sequence);
+                                    let seq_minus_overlap = revcomp_seq
+                                        .get(
+                                            start_overlap.1 - 1.., // ..s.sequence.len() - end_overlap.1 - 2,
+                                        )
                                         .unwrap();
-
-                                    // start and end orientation should be the same
-                                    // hence just matching on start here.
-                                    let seq_minus_overlap = match start_overlap.0 {
-                                        Orientation::Forward => {
-                                            // do nothing
-                                            let seq_minus_overlap = s
-                                                .sequence
-                                                .get(
-                                                    start_overlap.1
-                                                        ..s.sequence.len() - end_overlap.1,
-                                                )
-                                                .unwrap();
-                                            seq_minus_overlap.to_vec()
-                                        }
-                                        Orientation::Backward => {
-                                            let revcomp_seq = reverse_complement(&s.sequence);
-                                            let seq_minus_overlap = revcomp_seq
-                                                .get(
-                                                    start_overlap.1
-                                                        ..s.sequence.len() - end_overlap.1,
-                                                )
-                                                .unwrap();
-                                            seq_minus_overlap.to_vec()
-                                        }
-                                    };
-                                    print!("{}", std::str::from_utf8(&seq_minus_overlap).unwrap());
+                                    seq_minus_overlap.to_vec()
                                 }
-                                _ => {
-                                    // anything else is should not happen
-                                }
-                            }
+                            };
+                            print!("{}", std::str::from_utf8(&seq_minus_overlap).unwrap());
                         }
                     }
                     None => (),

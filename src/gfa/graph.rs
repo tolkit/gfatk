@@ -377,18 +377,44 @@ impl GFAdigraph {
         if paths.is_empty() {
             panic!("No simple paths were found.")
         }
-        // sort & dedup paths and pick longest one
-        // paths.sort_by(|a, b| b.len().cmp(&a.len()));
 
         // format string just for my (and user) interest
-        let chosen_path_string = final_path
-            .iter()
-            .map(|e| format!("{}", graph_indices.iter().find(|y| y.0 == *e).unwrap().1))
-            .collect::<Vec<String>>();
+        // let chosen_path_string = final_path
+        //     .iter()
+        //     .map(|e| format!("{}", graph_indices.iter().find(|y| y.0 == *e).unwrap().1))
+        //     .collect::<Vec<String>>();
+
+        let mut chosen_path_string2 = Vec::new();
+        let final_path_node_pairs = final_path.windows(2);
+        for (index, pair) in final_path_node_pairs.enumerate() {
+            let from = pair[0];
+            let to = pair[1];
+            let connecting = &mut gfa_graph.edges_connecting(from, to);
+            let weight = connecting.next().unwrap();
+            let from_orient = weight.weight().0;
+            let to_orient = weight.weight().1;
+            let from = graph_indices
+                .iter()
+                .find(|y| y.0 == weight.source())
+                .unwrap()
+                .1;
+            let to = graph_indices
+                .iter()
+                .find(|y| y.0 == weight.target())
+                .unwrap()
+                .1;
+
+            if index == 0 {
+                chosen_path_string2
+                    .push(format!("{} {} -> {} {}", from_orient, from, to_orient, to));
+            } else {
+                chosen_path_string2.push(format!(" -> {} {}", to_orient, to));
+            }
+        }
 
         eprintln!(
             "[+]\tChosen path through graph: {}",
-            chosen_path_string.join(" -> ")
+            chosen_path_string2.join("")
         );
 
         // sort out the path now
