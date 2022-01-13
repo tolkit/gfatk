@@ -4,6 +4,8 @@ Exploratory functions to manipulate Graphical Fragment Assembly Format (GFA), an
 
 All code should be considered a prototype, with minimal testing.
 
+Add a fasta extractor, removing overlaps.
+
 ## Usage
 
 ### gfatk linear

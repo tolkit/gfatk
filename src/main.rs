@@ -1,5 +1,6 @@
 use clap::{App, Arg};
 use gfatk::extract;
+use gfatk::fasta;
 use gfatk::gaf;
 use gfatk::linear;
 use gfatk::overlap;
@@ -101,6 +102,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         .help("Name of the text file indicating the oriented coverage of links in a GFA."),
                 ),
         )
+        .subcommand(
+            clap::SubCommand::with_name("fasta")
+                .about(
+                    "Extract a fasta file.\nAlmost as simple as: awk \'/^S/{print \">\"$2\"\\n\"$3}\'.",
+                )
+                // output file name
+                .arg(
+                    Arg::with_name("gfa")
+                        .short("g")
+                        .long("gfa")
+                        .takes_value(true)
+                        .required(true)
+                        .help("Input GFA file."),
+                ),
+        )
         .get_matches();
 
     let subcommand = matches.subcommand();
@@ -120,6 +136,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "linear" => {
             let matches = subcommand.1.unwrap();
             linear::force_linear(matches)?;
+        }
+        "fasta" => {
+            let matches = subcommand.1.unwrap();
+            fasta::fasta(matches)?;
         }
         _ => {
             println!("Subcommand invalid, run with '--help' for subcommand options. Exiting.");

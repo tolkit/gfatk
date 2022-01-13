@@ -413,6 +413,21 @@ impl GFAtk {
             }
         }
     }
+
+    pub fn print_sequences(&self) {
+        let gfa = &self.0;
+
+        for line in gfa.lines_iter() {
+            match line.some_segment() {
+                Some(s) => {
+                    let seq = std::str::from_utf8(&s.sequence).expect("Badly formatted sequence.");
+                    let id = s.name;
+                    println!(">{}\n{}", id, seq);
+                }
+                None => (),
+            }
+        }
+    }
 }
 
 pub struct Overlap {

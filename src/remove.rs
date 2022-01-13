@@ -1,1 +1,0 @@
-// remove a segment and all links to this segment
