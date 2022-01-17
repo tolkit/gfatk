@@ -1,7 +1,7 @@
 use crate::gfa::gfa::GAFTSVRecord;
 use gfa::gfa::Orientation;
 use petgraph::{
-    algo::is_cyclic_directed,
+    algo::{is_cyclic_directed, kosaraju_scc},
     graph::{Graph, IndexType, NodeIndex},
     visit::{EdgeRef, NodeIndexable},
     Directed,
@@ -60,9 +60,112 @@ impl GFAungraph {
 
 // weights are the orientations, used at various points, and an optional
 // coverage weight, used in gfatk linear.
+// GFA's should always specify Links in a specific direction..?
+// so digraphs should be where all the functionality lies.
 pub struct GFAdigraph(pub Graph<usize, (Orientation, Orientation, Option<u32>)>);
 
 impl GFAdigraph {
+    // we want weakly connected components, as there may only be an edge in one
+    // orientation (perhaps unlikely... but still)
+
+    // thanks https://github.com/Qiskit/retworkx/blob/79900cf8da0c0665ac5ce1ccb0f57373434b14b8/src/connectivity/mod.rs
+    pub fn weakly_connected_components(
+        &self,
+        graph_indices: Vec<(NodeIndex, usize)>,
+    ) -> Vec<Vec<usize>> {
+        let graph = &self.0;
+        let mut seen: HashSet<NodeIndex> = HashSet::with_capacity(graph.node_count());
+        let mut out_vec: Vec<Vec<usize>> = Vec::new();
+
+        for node in graph.node_indices() {
+            if !seen.contains(&node) {
+                // BFS node generator
+
+                let mut component_set: std::collections::BTreeSet<NodeIndex> =
+                    std::collections::BTreeSet::new();
+
+                let mut bfs_seen: HashSet<NodeIndex> = HashSet::new();
+
+                let mut next_level: HashSet<NodeIndex> = HashSet::new();
+
+                next_level.insert(node);
+
+                while !next_level.is_empty() {
+                    let this_level = next_level;
+
+                    next_level = HashSet::new();
+
+                    for bfs_node in this_level {
+                        if !bfs_seen.contains(&bfs_node) {
+                            component_set.insert(bfs_node);
+
+                            bfs_seen.insert(bfs_node);
+
+                            for neighbor in graph.neighbors_undirected(bfs_node) {
+                                next_level.insert(neighbor);
+                            }
+                        }
+                    }
+                }
+                let set_to_vec: Vec<_> = component_set.iter().cloned().collect();
+                // convert node indices to segment ID's
+                let x = set_to_vec
+                    .iter()
+                    .map(|e| graph_indices.iter().find(|y| y.0 == *e).unwrap().1)
+                    .collect::<Vec<usize>>();
+
+                out_vec.push(x);
+
+                seen.extend(bfs_seen);
+            }
+        }
+        out_vec
+    }
+    pub fn stats(&self) {}
+    // split the input GFA graph representation into subgraphs
+    // where one subgraph might be e.g. the mitochondria.
+    // don't know how efficient this function is.
+    pub fn split_into_connected_digraphs(&self) -> Vec<Self> {
+        let gfa_graph = &self.0;
+
+        // thanks https://github.com/ybyygu/gchemol/blob/f2d139311b71f927b23daca128b8d8d1a240a96d/core/src/molecule/fragment.rs
+        let components = kosaraju_scc(gfa_graph);
+        println!("Components: {:?}", components);
+
+        println!(
+            "Connected component algo: {}",
+            petgraph::algo::connected_components(gfa_graph)
+        );
+
+        let mut graphs = vec![];
+        for nodes in components {
+            let g = gfa_graph.filter_map(
+                // node closure:
+                // keep nodes in the same component
+                |i, n| {
+                    if nodes.contains(&i) {
+                        Some(n.clone())
+                    } else {
+                        None
+                    }
+                },
+                // edge closure:
+                // keep the edge if connected nodes are both in the same component
+                |i, e| {
+                    let (n1, n2) = gfa_graph.edge_endpoints(i).unwrap();
+                    if nodes.contains(&n1) && nodes.contains(&n2) {
+                        Some(e.clone())
+                    } else {
+                        None
+                    }
+                },
+            );
+            graphs.push(GFAdigraph(g));
+        }
+
+        graphs
+    }
+
     // check if graph is cyclic
     // do we want to check this? Does it need to be cyclic?
     pub fn check_is_cyclic_directed(&self) {
@@ -428,6 +531,19 @@ impl GFAdigraph {
 
         (final_path.to_vec(), chosen_path_ids.to_vec())
     }
+
+    // simple graph stats
+    pub fn node_count(&self) -> usize {
+        let gfa_graph = &self.0;
+
+        gfa_graph.node_count()
+    }
+
+    pub fn edge_count(&self) -> usize {
+        let gfa_graph = &self.0;
+
+        gfa_graph.edge_count()
+    }
 }
 
 // thanks
@@ -471,5 +587,57 @@ fn all_paths_helper<T, U, Ix: IndexType>(
             }
         }
         paths
+    }
+}
+
+use gfa::gfa::GFA;
+use gfa::optfields::OptFields;
+
+// Returns a subgraph GFA that only contains elements with the
+// provided segment names
+// https://github.com/chfi/rs-gfa-utils/blob/master/src/subgraph.rs
+
+pub fn segments_subgraph<T: OptFields + Clone>(
+    gfa: &GFA<usize, T>,
+    segment_names: Vec<usize>,
+) -> GFA<usize, T> {
+    let segments = gfa
+        .segments
+        .iter()
+        .filter(|s| segment_names.contains(&s.name))
+        .cloned()
+        .collect();
+
+    let links = gfa
+        .links
+        .iter()
+        .filter(|l| {
+            segment_names.contains(&l.from_segment) && segment_names.contains(&l.to_segment)
+        })
+        .cloned()
+        .collect();
+
+    let containments = gfa
+        .containments
+        .iter()
+        .filter(|l| {
+            segment_names.contains(&l.container_name) && segment_names.contains(&l.contained_name)
+        })
+        .cloned()
+        .collect();
+
+    let paths: Vec<_> = gfa
+        .paths
+        .iter()
+        .filter(|p| p.iter().any(|(s, _)| segment_names.contains(&s)))
+        .cloned()
+        .collect();
+
+    GFA {
+        header: gfa.header.clone(),
+        segments,
+        links,
+        paths,
+        containments,
     }
 }

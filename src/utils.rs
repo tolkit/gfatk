@@ -1,4 +1,5 @@
 use gfa::optfields::{OptField, OptFieldVal::*};
+use std::collections::HashMap;
 
 pub fn get_option_string(options: Vec<OptField>) -> String {
     let mut tag_val = String::new();
@@ -72,4 +73,27 @@ fn switch_base(c: u8) -> u8 {
         b'n' => b'n',
         _ => b'N',
     }
+}
+
+// pinched from past Max
+// https://github.com/tolkit/fasta_windows/blob/master/src/seq_statsu8.rs
+
+fn nucleotide_counts(dna: &[u8]) -> HashMap<&u8, i32> {
+    let mut map = HashMap::new();
+    for nucleotide in dna {
+        let count = map.entry(nucleotide).or_insert(0);
+        *count += 1;
+    }
+    map
+}
+
+pub fn gc_content(dna: &[u8]) -> f32 {
+    // G/C/A/T counts
+    let counts = nucleotide_counts(dna);
+    let g_counts = counts.get(&71).unwrap_or(&0) + counts.get(&103).unwrap_or(&0);
+    let c_counts = counts.get(&67).unwrap_or(&0) + counts.get(&99).unwrap_or(&0);
+    let a_counts = counts.get(&65).unwrap_or(&0) + counts.get(&97).unwrap_or(&0);
+    let t_counts = counts.get(&84).unwrap_or(&0) + counts.get(&116).unwrap_or(&0);
+
+    (g_counts + c_counts) as f32 / (g_counts + c_counts + a_counts + t_counts) as f32
 }

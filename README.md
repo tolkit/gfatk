@@ -133,3 +133,8 @@ FLAGS:
 OPTIONS:
     -g, --gaf <gaf>    Input GAF file.
 ```
+
+## TODO
+
+- goat has many values for GC content of plastid genomes
+  - compute GC content for each subgraph and compare to reference panel?

@@ -68,9 +68,11 @@ impl GFAtk {
         (graph_indices, GFAungraph(gfa_graph))
     }
 
+    // the Option<u32> here is for the coverages of the edges
+    // which we optionally annotate later
     pub fn into_digraph(&self) -> (Vec<(NodeIndex, usize)>, GFAdigraph) {
         let gfa = &self.0;
-        eprintln!("[+]\tReading GFA into a directed graph.");
+        // eprintln!("[+]\tReading GFA into a directed graph.");
         let mut gfa_graph: Graph<usize, (Orientation, Orientation, Option<u32>)> = Graph::new();
 
         let mut graph_indices = Vec::new();
@@ -99,6 +101,9 @@ impl GFAtk {
     }
 
     // print the GFA with only the sequences to keep
+    // this function is rubbish. redo.
+    // loop
+
     pub fn print_extract(&self, sequences_to_keep: Vec<usize>) {
         let gfa = &self.0;
         eprintln!("[+]\tGenerating GFA subgraph");
@@ -427,6 +432,36 @@ impl GFAtk {
                 None => (),
             }
         }
+    }
+
+    pub fn sequence_stats(&self) {
+        let gfa = &self.0;
+
+        let mut total_overlap_length = 0;
+        for link in &gfa.links {
+            total_overlap_length += parse_cigar(&link.overlap);
+        }
+
+        let mut total_sequence_length = 0;
+        let mut gc_vec = Vec::new();
+
+        for segment in &gfa.segments {
+            let seq = &segment.sequence;
+            total_sequence_length += seq.len();
+
+            let gc = crate::utils::gc_content(&seq);
+            gc_vec.push(gc);
+        }
+
+        let avg_gc = gc_vec.iter().sum::<f32>() / gc_vec.len() as f32;
+
+        println!("\tTotal sequence length:\t{}", total_sequence_length);
+        println!("\tTotal sequence overlap length:\t{}", total_overlap_length);
+        println!(
+            "\tSequence length minus overlaps:\t{}",
+            total_sequence_length as i32 - total_overlap_length as i32
+        );
+        println!("\tGC content of sequence (incl overlaps):\t{}", avg_gc);
     }
 }
 

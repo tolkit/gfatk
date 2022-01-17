@@ -4,6 +4,7 @@ use gfatk::fasta;
 use gfatk::gaf;
 use gfatk::linear;
 use gfatk::overlap;
+use gfatk::stats;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let matches = App::new("gfatk")
@@ -117,6 +118,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         .help("Input GFA file."),
                 ),
         )
+        .subcommand(
+            clap::SubCommand::with_name("stats")
+                .about(
+                    "Some stats about the input GFA.",
+                )
+                // output file name
+                .arg(
+                    Arg::with_name("gfa")
+                        .short("g")
+                        .long("gfa")
+                        .takes_value(true)
+                        .required(true)
+                        .help("Input GFA file."),
+                ),
+        )
         .get_matches();
 
     let subcommand = matches.subcommand();
@@ -140,6 +156,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "fasta" => {
             let matches = subcommand.1.unwrap();
             fasta::fasta(matches)?;
+        }
+        "stats" => {
+            let matches = subcommand.1.unwrap();
+            stats::stats(matches)?;
         }
         _ => {
             println!("Subcommand invalid, run with '--help' for subcommand options. Exiting.");
