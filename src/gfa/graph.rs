@@ -2,6 +2,7 @@ use crate::gfa::gfa::GAFTSVRecord;
 use gfa::gfa::Orientation;
 use petgraph::{
     algo::{is_cyclic_directed, kosaraju_scc},
+    dot::{Config, Dot},
     graph::{Graph, IndexType, NodeIndex},
     visit::{EdgeRef, NodeIndexable},
     Directed,
@@ -65,6 +66,13 @@ impl GFAungraph {
 pub struct GFAdigraph(pub Graph<usize, (Orientation, Orientation, Option<u32>)>);
 
 impl GFAdigraph {
+    pub fn debug_with_dot(&self) {
+        let gfa_graph = &self.0;
+        eprintln!(
+            "{:?}",
+            Dot::with_config(&gfa_graph, &[Config::GraphContentOnly])
+        );
+    }
     // we want weakly connected components, as there may only be an edge in one
     // orientation (perhaps unlikely... but still)
 
@@ -121,7 +129,6 @@ impl GFAdigraph {
         }
         out_vec
     }
-    pub fn stats(&self) {}
     // split the input GFA graph representation into subgraphs
     // where one subgraph might be e.g. the mitochondria.
     // don't know how efficient this function is.
@@ -383,12 +390,6 @@ impl GFAdigraph {
         coverages: Option<Result<Vec<GAFTSVRecord>, Box<dyn Error>>>,
     ) -> (Vec<NodeIndex>, Vec<usize>) {
         let gfa_graph = &self.0;
-        // debugging
-        // use petgraph::dot::{Config, Dot};
-        // eprintln!(
-        //     "{:?}",
-        //     Dot::with_config(&gfa_graph, &[Config::GraphContentOnly])
-        // );
 
         // debugging
         eprintln!(

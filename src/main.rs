@@ -1,5 +1,6 @@
-use clap::{App, Arg};
+use clap::{App, AppSettings, Arg};
 use gfatk::extract;
+use gfatk::extract_mito;
 use gfatk::fasta;
 use gfatk::gaf;
 use gfatk::linear;
@@ -8,64 +9,65 @@ use gfatk::stats;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let matches = App::new("gfatk")
-        .version(clap::crate_version!())
+        .global_setting(AppSettings::PropagateVersion)
+        .global_setting(AppSettings::UseLongFormatForHelpSubcommand)
         .author("Max Brown <mb39@sanger.ac.uk>")
         .about("Some functions to process GFA files.")
         .subcommand(
-            clap::SubCommand::with_name("overlap")
+            App::new("overlap")
                 .about("Extract overlaps from a GFA.")
                 // output file name
                 .arg(
-                    Arg::with_name("gfa")
-                        .short("g")
+                    Arg::new("gfa")
+                        .short('g')
                         .long("gfa")
                         .takes_value(true)
                         .required(true)
                         .help("Input GFA file."),
                 )
                 .arg(
-                    Arg::with_name("size")
-                        .short("s")
+                    Arg::new("size")
+                        .short('s')
                         .long("size")
                         .default_value("1000")
                         .help("Region around overlap to extract."),
                 ),
         )
         .subcommand(
-            clap::SubCommand::with_name("extract")
+            App::new("extract")
                 .about("Extract subgraph from a GFA, given a segment name.")
                 // output file name
                 .arg(
-                    Arg::with_name("gfa")
-                        .short("g")
+                    Arg::new("gfa")
+                        .short('g')
                         .long("gfa")
                         .takes_value(true)
                         .required(true)
                         .help("Input GFA file."),
                 )
                 .arg(
-                    Arg::with_name("sequence-id")
-                        .short("s")
+                    Arg::new("sequence-id")
+                        .short('s')
                         .long("sequence-id")
                         .takes_value(true)
                         .required(true)
                         .help("Extract subgraph of which this sequence is part of."),
                 )
                 .arg(
-                    Arg::with_name("iterations")
-                        .short("i")
+                    Arg::new("iterations")
+                        .short('i')
                         .long("iterations")
                         .default_value("3")
                         .help("Number of iterations to recursively search for connecting nodes."),
                 ),
         )
         .subcommand(
-            clap::SubCommand::with_name("gaf")
-                .about("gaf")
+            App::new("gaf")
+                .about("Extract coverages from GAF file.")
                 // output file name
                 .arg(
-                    Arg::with_name("gaf")
-                        .short("g")
+                    Arg::new("gaf")
+                        .short('g')
                         .long("gaf")
                         .takes_value(true)
                         .required(true)
@@ -73,22 +75,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 ),
         )
         .subcommand(
-            clap::SubCommand::with_name("linear")
+            App::new("linear")
                 .about(
                     "Force a linear representation of the graph.\nEach node is included once only.",
                 )
                 // output file name
                 .arg(
-                    Arg::with_name("gfa")
-                        .short("g")
+                    Arg::new("gfa")
+                        .short('g')
                         .long("gfa")
                         .takes_value(true)
                         .required(true)
                         .help("Input GFA file."),
                 )
                 .arg(
-                    Arg::with_name("fasta-header")
-                        .short("f")
+                    Arg::new("fasta-header")
+                        .short('f')
                         .long("fasta-header")
                         .takes_value(true)
                         .required(true)
@@ -96,22 +98,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         .help("Name of the fasta header in the output file."),
                 )
                 .arg(
-                    Arg::with_name("coverage-file")
-                        .short("c")
+                    Arg::new("coverage-file")
+                        .short('c')
                         .long("coverage-file")
                         .takes_value(true)
                         .help("Name of the text file indicating the oriented coverage of links in a GFA."),
                 ),
         )
         .subcommand(
-            clap::SubCommand::with_name("fasta")
+            App::new("fasta")
                 .about(
                     "Extract a fasta file.\nAlmost as simple as: awk \'/^S/{print \">\"$2\"\\n\"$3}\'.",
                 )
                 // output file name
                 .arg(
-                    Arg::with_name("gfa")
-                        .short("g")
+                    Arg::new("gfa")
+                        .short('g')
                         .long("gfa")
                         .takes_value(true)
                         .required(true)
@@ -119,14 +121,29 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 ),
         )
         .subcommand(
-            clap::SubCommand::with_name("stats")
+            App::new("stats")
                 .about(
                     "Some stats about the input GFA.",
                 )
                 // output file name
                 .arg(
-                    Arg::with_name("gfa")
-                        .short("g")
+                    Arg::new("gfa")
+                        .short('g')
+                        .long("gfa")
+                        .takes_value(true)
+                        .required(true)
+                        .help("Input GFA file."),
+                ),
+        )
+        .subcommand(
+            App::new("extract-mito")
+                .about(
+                    "Extract the mitochondria from a GFA.",
+                )
+                // output file name
+                .arg(
+                    Arg::new("gfa")
+                        .short('g')
                         .long("gfa")
                         .takes_value(true)
                         .required(true)
@@ -135,31 +152,27 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         )
         .get_matches();
 
-    let subcommand = matches.subcommand();
-    match subcommand.0 {
-        "overlap" => {
-            let matches = subcommand.1.unwrap();
+    match matches.subcommand() {
+        Some(("overlap", matches)) => {
             overlap::overlap(matches)?;
         }
-        "extract" => {
-            let matches = subcommand.1.unwrap();
+        Some(("extract", matches)) => {
             extract::extract(matches)?;
         }
-        "gaf" => {
-            let matches = subcommand.1.unwrap();
+        Some(("gaf", matches)) => {
             gaf::gaf_to_graph(matches)?;
         }
-        "linear" => {
-            let matches = subcommand.1.unwrap();
+        Some(("linear", matches)) => {
             linear::force_linear(matches)?;
         }
-        "fasta" => {
-            let matches = subcommand.1.unwrap();
+        Some(("fasta", matches)) => {
             fasta::fasta(matches)?;
         }
-        "stats" => {
-            let matches = subcommand.1.unwrap();
-            stats::stats(matches)?;
+        Some(("stats", matches)) => {
+            stats::stats(matches, false)?;
+        }
+        Some(("extract-mito", matches)) => {
+            extract_mito::extract_mito(matches)?;
         }
         _ => {
             println!("Subcommand invalid, run with '--help' for subcommand options. Exiting.");

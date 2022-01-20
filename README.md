@@ -4,9 +4,26 @@ Exploratory functions to manipulate Graphical Fragment Assembly Format (GFA), an
 
 All code should be considered a prototype, with minimal testing.
 
-Add a fasta extractor, removing overlaps.
-
 ## Usage
+
+### gfatk stats
+
+Some stats about the GFA, splitting the GFA into subgraphs if there are any. Number of nodes, edges, sequence length (incl & excl overlaps), and GC content of sequence reported. Requires only an input GFA.
+
+```
+gfatk-stats 
+Some stats about the input GFA.
+
+USAGE:
+    gfatk stats --gfa <gfa>
+
+FLAGS:
+    -h, --help       Prints help information
+    -V, --version    Prints version information
+
+OPTIONS:
+    -g, --gfa <gfa>    Input GFA file.
+```
 
 ### gfatk linear
 
@@ -136,5 +153,6 @@ OPTIONS:
 
 ## TODO
 
-- goat has many values for GC content of plastid genomes
-  - compute GC content for each subgraph and compare to reference panel?
+- Mitochondrial genomes have higher GC content on average than chloroplast genomes. This, coupled with the fact they are larger should be able to filter out the mito graph.
+- Incorporate coverage information to extract the linear path through a graph for any given input graph, not easy cases (e.g. *Quercus*)
+- graphalgs might be my friend here: https://github.com/PrototypeRailGun/graphalgs/blob/27c6f8adf1fbeeb702f69c4c87d53b203767f85b/src/metrics.rs

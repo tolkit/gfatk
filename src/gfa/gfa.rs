@@ -1,17 +1,16 @@
 // common functions for gfa structures
 
-use crate::gfa::graph::{GFAdigraph, GFAungraph};
-use crate::utils::{get_option_string, parse_cigar, reverse_complement};
+use crate::gfa::graph::{segments_subgraph, GFAdigraph, GFAungraph};
+use crate::gfa::writer;
+use crate::utils;
+use crate::utils::{parse_cigar, reverse_complement};
 use csv::ReaderBuilder;
 use gfa::gfa::{Orientation, GFA};
-use gfa::optfields::OptionalFields;
+use gfa::optfields::{OptFieldVal, OptionalFields};
 use indexmap::IndexMap;
 use petgraph::graph::{Graph, NodeIndex, UnGraph};
 use serde::Deserialize;
 use std::error::Error;
-
-// parsing, editing, and making V1 GFA's
-const HEADER: &str = "H\tVN:Z:1.0";
 
 #[derive(Debug, Deserialize)]
 pub struct GAFTSVRecord {
@@ -70,6 +69,9 @@ impl GFAtk {
 
     // the Option<u32> here is for the coverages of the edges
     // which we optionally annotate later
+    // maybe all these functions should be ported to ungraphs with weights?
+    // not sure what the digraph does for GFA?
+
     pub fn into_digraph(&self) -> (Vec<(NodeIndex, usize)>, GFAdigraph) {
         let gfa = &self.0;
         // eprintln!("[+]\tReading GFA into a directed graph.");
@@ -101,62 +103,11 @@ impl GFAtk {
     }
 
     // print the GFA with only the sequences to keep
-    // this function is rubbish. redo.
-    // loop
-
     pub fn print_extract(&self, sequences_to_keep: Vec<usize>) {
         let gfa = &self.0;
-        eprintln!("[+]\tGenerating GFA subgraph");
+        let subgraph_gfa = GFAtk(segments_subgraph(&gfa, sequences_to_keep));
 
-        println!("{}", HEADER);
-        // segments are easy to print.
-        // if they match our sequence ID's we print them
-        for segment in &gfa.segments {
-            let name = segment.name;
-            // hacky options parsing.
-            // it works but needs to me made much better.
-            let options = segment.optional.clone();
-            let tag_val = get_option_string(options);
-
-            if sequences_to_keep.contains(&name) {
-                println!(
-                    "S\t{}\t{}\t{}",
-                    segment.name,
-                    std::str::from_utf8(&segment.sequence).unwrap(),
-                    tag_val,
-                )
-            }
-        }
-
-        // keep track of the segment pairs to avoid unneccesary
-        // printing of duplicate pairs in opposite orientations.
-        let mut keep_track_pairs = Vec::new();
-
-        for link in &gfa.links {
-            let from = link.from_segment;
-            let to = link.to_segment;
-            let options = link.optional.clone();
-            let tag_val = get_option_string(options);
-
-            // should have an option to print both forward and
-            // reverse strands (I think this should perhaps be default...)
-
-            if !keep_track_pairs.contains(&(from, to)) || !keep_track_pairs.contains(&(to, from)) {
-                if sequences_to_keep.contains(&from) || sequences_to_keep.contains(&to) {
-                    println!(
-                        "L\t{}\t{}\t{}\t{}\t{}\t{}",
-                        from,
-                        link.from_orient,
-                        to,
-                        link.to_orient,
-                        std::str::from_utf8(&link.overlap).unwrap(),
-                        tag_val
-                    )
-                }
-            }
-            // we want both strands to keep
-            keep_track_pairs.push((from, to));
-        }
+        print!("{}", writer::gfa_string(&subgraph_gfa.0));
     }
 
     // detect all the overlaps between joins in a GFA.
@@ -392,21 +343,14 @@ impl GFAtk {
                             let seq_minus_overlap = match start_overlap.0 {
                                 Orientation::Forward => {
                                     // do nothing
-                                    let seq_minus_overlap = s
-                                        .sequence
-                                        .get(
-                                            start_overlap.1 - 1.., // ..s.sequence.len() - end_overlap.1 - 2,
-                                        )
-                                        .unwrap();
+                                    let seq_minus_overlap =
+                                        s.sequence.get(start_overlap.1 - 1..).unwrap();
                                     seq_minus_overlap.to_vec()
                                 }
                                 Orientation::Backward => {
                                     let revcomp_seq = reverse_complement(&s.sequence);
-                                    let seq_minus_overlap = revcomp_seq
-                                        .get(
-                                            start_overlap.1 - 1.., // ..s.sequence.len() - end_overlap.1 - 2,
-                                        )
-                                        .unwrap();
+                                    let seq_minus_overlap =
+                                        revcomp_seq.get(start_overlap.1 - 1..).unwrap();
                                     seq_minus_overlap.to_vec()
                                 }
                             };
@@ -434,8 +378,42 @@ impl GFAtk {
         }
     }
 
-    pub fn sequence_stats(&self) {
+    // get the average of the coverages from a GFA.
+    fn parse_coverage_opt(opt: &OptFieldVal) -> &f32 {
+        let ll = match opt {
+            OptFieldVal::Float(f) => f,
+            _ => panic!("ll: coverage should be Float()"),
+        };
+        ll
+    }
+
+    fn get_coverage(&self) -> f32 {
         let gfa = &self.0;
+
+        let ll_tag: [u8; 2] = [108, 108];
+        let mut ll_tag_vec = Vec::new();
+
+        for seg in &gfa.segments {
+            let opts = &seg.optional;
+            for opt in opts {
+                if opt.tag == ll_tag {
+                    ll_tag_vec.push(GFAtk::parse_coverage_opt(&opt.value));
+                }
+            }
+        }
+        let len = ll_tag_vec.len() as f32;
+        let sum: f32 = ll_tag_vec.iter().fold(0.0, |a, b| a + **b);
+
+        sum / len
+    }
+
+    // we actually return only a float here
+    // but could change this later...
+
+    pub fn sequence_stats(&self, further: bool) -> (f32, f32) {
+        let gfa = &self.0;
+
+        let cov = Self::get_coverage(&self);
 
         let mut total_overlap_length = 0;
         for link in &gfa.links {
@@ -449,19 +427,24 @@ impl GFAtk {
             let seq = &segment.sequence;
             total_sequence_length += seq.len();
 
-            let gc = crate::utils::gc_content(&seq);
+            let gc = utils::gc_content(&seq);
             gc_vec.push(gc);
         }
 
         let avg_gc = gc_vec.iter().sum::<f32>() / gc_vec.len() as f32;
 
-        println!("\tTotal sequence length:\t{}", total_sequence_length);
-        println!("\tTotal sequence overlap length:\t{}", total_overlap_length);
-        println!(
-            "\tSequence length minus overlaps:\t{}",
-            total_sequence_length as i32 - total_overlap_length as i32
-        );
-        println!("\tGC content of sequence (incl overlaps):\t{}", avg_gc);
+        if !further {
+            println!("\tTotal sequence length:\t{}", total_sequence_length);
+            println!("\tTotal sequence overlap length:\t{}", total_overlap_length);
+            println!(
+                "\tSequence length minus overlaps:\t{}",
+                total_sequence_length as i32 - total_overlap_length as i32
+            );
+            println!("\tGC content of total sequence:\t{}", avg_gc);
+            println!("\tAverage coverage of total segments:\t{}", cov);
+        }
+
+        (avg_gc, cov)
     }
 }
 

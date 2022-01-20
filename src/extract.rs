@@ -1,17 +1,15 @@
 use crate::gfa::gfa::GFAtk;
 use crate::load::load_gfa;
-use clap::value_t;
-
-// TODO: I haven't added in paths/containments etc...
-// just segements and links.
-// also the optional extra bits are useful - e.g. sequence length
-// if they are present in a gfa. Work out the best bits to keep.
 
 pub fn extract(matches: &clap::ArgMatches) -> Result<(), Box<dyn std::error::Error>> {
     // read in path and parse gfa
     let gfa_file = matches.value_of("gfa").unwrap();
-    let sequence_id = value_t!(matches.value_of("sequence-id"), usize).unwrap_or_else(|e| e.exit());
-    let iterations = value_t!(matches.value_of("iterations"), i32).unwrap_or_else(|e| e.exit());
+    let sequence_id: usize = matches
+        .value_of_t("sequence-id")
+        .unwrap_or_else(|e| e.exit());
+    let iterations: i32 = matches
+        .value_of_t("iterations")
+        .unwrap_or_else(|e| e.exit());
 
     let gfa: GFAtk = GFAtk(load_gfa(gfa_file)?);
 

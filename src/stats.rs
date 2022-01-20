@@ -1,9 +1,35 @@
 use crate::gfa::gfa::GFAtk;
 use crate::gfa::graph::segments_subgraph;
-// use crate::gfa::writer;
 use crate::load::load_gfa;
 
-pub fn stats(matches: &clap::ArgMatches) -> Result<(), Box<dyn std::error::Error>> {
+// so we can extract the segments with highest GC content.
+#[derive(Clone)]
+pub struct Stat {
+    pub index: usize,
+    pub gc: f32,
+    pub cov: f32,
+    pub segments: Vec<usize>,
+}
+
+pub struct Stats(pub Vec<Stat>);
+
+impl Stats {
+    pub fn push(&mut self, stat: Stat) {
+        let stats = &mut self.0;
+        stats.push(stat);
+    }
+    pub fn higest_gc_segments(&mut self) -> Vec<usize> {
+        let stat_vec = &mut self.0;
+        stat_vec.sort_by(|a, b| b.gc.partial_cmp(&a.gc).unwrap());
+        stat_vec[0].segments.clone()
+    }
+}
+
+// I've handled 'further' here really badly...
+pub fn stats(
+    matches: &clap::ArgMatches,
+    further: bool,
+) -> Result<Option<Vec<usize>>, Box<dyn std::error::Error>> {
     // required so unwrap safely
     let gfa_file = matches.value_of("gfa").unwrap();
 
@@ -15,23 +41,36 @@ pub fn stats(matches: &clap::ArgMatches) -> Result<(), Box<dyn std::error::Error
     let subgraphs = gfa_graph.weakly_connected_components(graph_indices);
 
     let mut no_subgraphs = 0;
-    for id_set in subgraphs {
-        let subgraph_gfa = GFAtk(segments_subgraph(&gfa.0, id_set));
+    let mut store_stats = Stats(Vec::new());
+
+    for id_set in &subgraphs {
+        let subgraph_gfa = GFAtk(segments_subgraph(&gfa.0, id_set.to_vec()));
 
         let (_, subgraph) = subgraph_gfa.into_digraph();
 
         // print stats
-        println!("Subgraph {}:", no_subgraphs + 1);
-        println!("\tNumber of nodes: {}", subgraph.node_count());
-        println!("\tNumber of edges: {}", subgraph.edge_count());
-        subgraph_gfa.sequence_stats();
+        if !further {
+            println!("Subgraph {}:", no_subgraphs + 1);
+            println!("\tNumber of nodes (segments): {}", subgraph.node_count());
+            println!("\tNumber of edges (links): {}", subgraph.edge_count());
+        }
+        let (avg_gc, cov) = subgraph_gfa.sequence_stats(further);
 
-        // that appears to work
-        // println!("{}\n", writer::gfa_string(&subgraph_gfa.0));
+        store_stats.push(Stat {
+            index: no_subgraphs,
+            gc: avg_gc,
+            cov,
+            segments: id_set.clone(),
+        });
         no_subgraphs += 1;
     }
 
-    println!("Total number of subgraphs: {}", no_subgraphs);
+    // if we want to do more stat things
+    if further {
+        return Ok(Some(store_stats.higest_gc_segments()));
+    } else {
+        println!("Total number of subgraphs: {}", no_subgraphs);
+    }
 
-    Ok(())
+    Ok(None)
 }
