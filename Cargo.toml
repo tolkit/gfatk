@@ -14,3 +14,6 @@ byteorder = "1.4.3"
 indexmap = "1.7.0"
 csv = "1.1"
 serde = { version = "1", features = ["derive"] }
+itertools = "0.10.2"
+#genome-graph = "0.6.2"
+#handlegraph = "0.6.0"

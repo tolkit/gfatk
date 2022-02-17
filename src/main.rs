@@ -106,6 +106,37 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 ),
         )
         .subcommand(
+            App::new("linear-bigraph")
+                .about(
+                    "Force a linear representation of the graph.\nEach node is included once only.",
+                )
+                // output file name
+                .arg(
+                    Arg::new("gfa")
+                        .short('g')
+                        .long("gfa")
+                        .takes_value(true)
+                        .required(true)
+                        .help("Input GFA file."),
+                )
+                .arg(
+                    Arg::new("fasta-header")
+                        .short('f')
+                        .long("fasta-header")
+                        .takes_value(true)
+                        .required(true)
+                        .default_value("gfatk-linear")
+                        .help("Name of the fasta header in the output file."),
+                )
+                .arg(
+                    Arg::new("coverage-file")
+                        .short('c')
+                        .long("coverage-file")
+                        .takes_value(true)
+                        .help("Name of the text file indicating the oriented coverage of links in a GFA."),
+                ),
+        )
+        .subcommand(
             App::new("fasta")
                 .about(
                     "Extract a fasta file.\nAlmost as simple as: awk \'/^S/{print \">\"$2\"\\n\"$3}\'.",

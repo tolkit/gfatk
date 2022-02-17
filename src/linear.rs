@@ -21,8 +21,8 @@ pub fn force_linear(matches: &clap::ArgMatches) -> Result<(), Box<dyn std::error
     let (graph_indices, mut gfa_graph) = gfa.into_digraph();
 
     // check both strands are present, if not, add them
-    // should we do this though..?
-    gfa_graph.check_both_strands();
+    // should we do this though..? Probably not.
+    // gfa_graph.check_both_strands();
 
     // add in the coverages from the file, if there is one.
     gfa_graph.add_coverages(&coverages, &graph_indices);
@@ -31,16 +31,18 @@ pub fn force_linear(matches: &clap::ArgMatches) -> Result<(), Box<dyn std::error
     gfa_graph.check_is_cyclic_directed();
 
     // get the counts of number of links per node
-    let node_edge_counts = gfa_graph.get_edge_counts();
+    // let node_edge_counts = gfa_graph.get_edge_counts();
 
-    let source_target_pair = gfa_graph.get_source_target_pair(&graph_indices, node_edge_counts);
+    // let source_target_pair = gfa_graph.get_source_target_pair(&graph_indices, node_edge_counts);
 
-    if source_target_pair.is_none() {
-        panic!("Did not find a pair of adjacent segments, each themselves with connections.");
-    }
+    // if source_target_pair.is_none() {
+    //     panic!("Did not find a pair of adjacent segments, each themselves with connections.");
+    // }
 
     let (chosen_path, chosen_path_ids) =
-        gfa_graph.find_hamiltonian_path(source_target_pair, &graph_indices, coverages);
+        gfa_graph.all_paths_all_node_pairs(&graph_indices, coverages);
+    // gfa_graph.find_hamiltonian_path(source_target_pair, &graph_indices, coverages);
+    gfa_graph.debug_with_dot();
 
     let sorted_chosen_path_overlaps =
         gfa.determine_path_overlaps(&chosen_path, &graph_indices, &chosen_path_ids);
