@@ -358,16 +358,14 @@ impl GFAdigraph {
             true => valid_paths.to_vec()[0].clone(),
             false => {
                 // now iterate over all the paths again
-                let mut final_paths_and_coverages = Vec::new();
                 let mut index = 0;
+                // iterate over all the paths of this length
+                // keep track of lengths
+                let mut track_coverage = Vec::new();
+                let mut final_path = vec![];
+                let mut final_coverage = 0;
 
                 for path in &valid_paths {
-                    // iterate over all the paths of this length
-                    // keep track of lengths
-                    let mut track_coverage = Vec::new();
-                    let mut final_path = vec![];
-                    let mut final_coverage = 0;
-
                     let mut path_coverage = 0;
                     let node_pairs = path.windows(2);
                     for pair in node_pairs {
@@ -389,11 +387,9 @@ impl GFAdigraph {
                     }
 
                     index += 1;
-
-                    final_paths_and_coverages.push((final_coverage, final_path));
                 }
-                final_paths_and_coverages.sort_by(|(a, _), (b, _)| b.cmp(&a));
-                final_paths_and_coverages[0].1.to_vec()
+                eprintln!("[+]\tHighest cumulative coverage path = {}", final_coverage);
+                final_path
             }
         };
 
