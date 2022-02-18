@@ -397,7 +397,7 @@ impl GFAtk {
             let opts = &seg.optional;
             for opt in opts {
                 if opt.tag == ll_tag {
-                    ll_tag_vec.push(GFAtk::parse_coverage_opt(&opt.value));
+                    ll_tag_vec.push(Self::parse_coverage_opt(&opt.value));
                 }
             }
         }

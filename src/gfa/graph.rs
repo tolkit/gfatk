@@ -2,13 +2,12 @@ use crate::gfa::gfa::GAFTSVRecord;
 use gfa::gfa::Orientation;
 use itertools::Itertools;
 use petgraph::{
-    algo::{is_cyclic_directed, kosaraju_scc},
     dot::{Config, Dot},
     graph::{Graph, IndexType, NodeIndex},
-    visit::{EdgeRef, IntoNodeIdentifiers, NodeIndexable},
+    visit::{EdgeRef, IntoNodeIdentifiers},
     Directed,
     Direction::Outgoing,
-    EdgeDirection, Undirected,
+    Undirected,
 };
 use std::collections::HashSet;
 use std::error::Error;
@@ -130,160 +129,6 @@ impl GFAdigraph {
         }
         out_vec
     }
-    // split the input GFA graph representation into subgraphs
-    // where one subgraph might be e.g. the mitochondria.
-    // don't know how efficient this function is.
-    pub fn split_into_connected_digraphs(&self) -> Vec<Self> {
-        let gfa_graph = &self.0;
-
-        // thanks https://github.com/ybyygu/gchemol/blob/f2d139311b71f927b23daca128b8d8d1a240a96d/core/src/molecule/fragment.rs
-        let components = kosaraju_scc(gfa_graph);
-        println!("Components: {:?}", components);
-
-        println!(
-            "Connected component algo: {}",
-            petgraph::algo::connected_components(gfa_graph)
-        );
-
-        let mut graphs = vec![];
-        for nodes in components {
-            let g = gfa_graph.filter_map(
-                // node closure:
-                // keep nodes in the same component
-                |i, n| {
-                    if nodes.contains(&i) {
-                        Some(n.clone())
-                    } else {
-                        None
-                    }
-                },
-                // edge closure:
-                // keep the edge if connected nodes are both in the same component
-                |i, e| {
-                    let (n1, n2) = gfa_graph.edge_endpoints(i).unwrap();
-                    if nodes.contains(&n1) && nodes.contains(&n2) {
-                        Some(e.clone())
-                    } else {
-                        None
-                    }
-                },
-            );
-            graphs.push(GFAdigraph(g));
-        }
-
-        graphs
-    }
-
-    // check if graph is cyclic
-    // do we want to check this? Does it need to be cyclic?
-    pub fn check_is_cyclic_directed(&self) {
-        let gfa_graph = &self.0;
-        match is_cyclic_directed(&gfa_graph) {
-            true => eprintln!("[+]\tLoaded GFA is a cyclic digraph."),
-            false => eprintln!("[+]\tLoaded GFA is not a cyclic digraph."),
-        }
-    }
-
-    // maybe this should be changed
-    // to edge at each end of the segment. how?
-    pub fn get_edge_counts(&self) -> Vec<(usize, i32)> {
-        let gfa_graph = &self.0;
-
-        // iterate over the nodes
-        // just increment until there are no more nodes.
-        let mut node_index = 0;
-        // collect nodes and their edge counts
-        let mut node_edge_counts = Vec::new();
-        loop {
-            // need to peek ahead so we don't loop forever
-            let mut peekable_iter = gfa_graph
-                .neighbors_undirected(NodeIndex::new(node_index))
-                .peekable();
-
-            // need a different way of breaking here...
-            match peekable_iter.peek().is_some() {
-                true => {
-                    let mut node_count = 0;
-                    for _ in gfa_graph.neighbors_undirected(NodeIndex::new(node_index)) {
-                        node_count += 1;
-                    }
-                    node_edge_counts.push((node_index, node_count));
-                    node_index += 1;
-                }
-                false => {
-                    if node_index == gfa_graph.node_bound() {
-                        break;
-                    } else {
-                        node_index += 1;
-                        continue;
-                    }
-                }
-            }
-        }
-        node_edge_counts
-    }
-
-    // this currently is only reliable for cyclic graphs.
-    // how do we get a source target pair from a linear graph
-    // if it's not cyclic, we could find paths between all
-    // pairs which have only two connections (i.e. only connect to one
-    // other segment +/-)
-    pub fn get_source_target_pair(
-        &self,
-        graph_indices: &Vec<(NodeIndex, usize)>,
-        node_edge_counts: Vec<(usize, i32)>,
-    ) -> Option<(NodeIndex, NodeIndex)> {
-        let gfa_graph = &self.0;
-        // calculate adjecent nodes, each of which have two neighbours
-        // iterate over edges again but stop when we hit a neighbouring
-        // pair of nodes which are connected each themselves to at least 2 others
-        let mut node_index = 0;
-        let mut source_target_pair: Option<(NodeIndex, NodeIndex)> = None;
-
-        loop {
-            // need to peek ahead so we don't loop forever
-            let mut peekable_iter = gfa_graph.edges(NodeIndex::new(node_index)).peekable();
-            match peekable_iter.peek().is_some() {
-                true => {
-                    for edge in gfa_graph.edges(NodeIndex::new(node_index)) {
-                        let source = edge.source();
-                        let target = edge.target();
-
-                        let source_id = graph_indices.iter().find(|x| x.0 == source).unwrap().0;
-                        let target_id = graph_indices.iter().find(|x| x.0 == target).unwrap().0;
-
-                        let source_edge_count = node_edge_counts
-                            .iter()
-                            .filter(|e| NodeIndex::new(e.0) == source_id)
-                            .collect::<Vec<&(usize, i32)>>()[0]
-                            .1;
-                        let target_edge_count = node_edge_counts
-                            .iter()
-                            .filter(|e| NodeIndex::new(e.0) == target_id)
-                            .collect::<Vec<&(usize, i32)>>()[0]
-                            .1;
-
-                        node_index += 1;
-
-                        if source_edge_count > 1 && target_edge_count > 1 {
-                            source_target_pair = Some((source, target));
-                            // and break early here
-                            break;
-                        }
-                    }
-                }
-                false => {
-                    if node_index == gfa_graph.node_bound() {
-                        break;
-                    } else {
-                        node_index += 1;
-                        continue;
-                    }
-                }
-            }
-        }
-        source_target_pair
-    }
 
     // mutably insert the coverages
     pub fn add_coverages(
@@ -385,161 +230,11 @@ impl GFAdigraph {
         }
     }
 
-    // get the path out as both a vec of node indices
-    // and as actual node names
+    // core algorithm for gfatk linear
+    // iterate over all pairs of nodes to find the paths
+    // then search though all these paths to find the
+    // longest which doesn't violate sequence orientation
 
-    // this is wrong when there are edges coming only
-    // from a single orientation from a segment.
-
-    // pub fn find_hamiltonian_path(
-    //     &self,
-    //     source_target_pair: Option<(NodeIndex, NodeIndex)>,
-    //     graph_indices: &Vec<(NodeIndex, usize)>,
-    //     coverages: Option<Result<Vec<GAFTSVRecord>, Box<dyn Error>>>,
-    // ) -> (Vec<NodeIndex>, Vec<usize>) {
-    //     let gfa_graph = &self.0;
-
-    //     // debugging
-    //     eprintln!(
-    //         "[+]\tSearching between nodes {} and {}",
-    //         graph_indices
-    //             .iter()
-    //             .find(|y| y.0 == source_target_pair.unwrap().0)
-    //             .unwrap()
-    //             .1,
-    //         graph_indices
-    //             .iter()
-    //             .find(|y| y.0 == source_target_pair.unwrap().1)
-    //             .unwrap()
-    //             .1
-    //     );
-
-    //     // for cyclic digraphs this below works
-    //     // for more linear graphs, choosing the
-    //     // start and end node is a bit more complex.
-    //     // maybe user can input start & end nodes.
-
-    //     let mut paths = all_paths(
-    //         &gfa_graph,
-    //         source_target_pair.unwrap().1,
-    //         source_target_pair.unwrap().0,
-    //     );
-    //     // debugging
-    //     // eprintln!("{:?}", source_target_pair);
-    //     for path in &paths {
-    //         eprintln!("{:?}", path);
-    //     }
-    //     // TODO: in all the paths, check that there are links at either end.
-
-    //     // need a conditional here, if we have the data...
-    //     // else...
-    //     let final_path = match coverages.is_none() {
-    //         true => {
-    //             // just take the longest path (slight randomness to this)
-    //             // sort & dedup paths and pick longest one
-    //             paths.sort_by(|a, b| b.len().cmp(&a.len()));
-    //             // paths.iter().for_each(|e| eprintln!("{}", e.len()));
-    //             let final_path = paths[0].to_vec();
-    //             final_path
-    //         }
-    //         false => {
-    //             // or by taking into account coverages
-    //             // length of the longest path
-    //             let longest_path_length_vec = paths.iter().map(|e| e.len()).collect::<Vec<usize>>();
-    //             let longest_path_length = longest_path_length_vec.iter().max().unwrap();
-    //             // iterate over all the paths of this length
-    //             // keep track of lengths
-    //             let mut track_lens = Vec::new();
-    //             let mut index = 0;
-    //             let mut final_path = vec![];
-    //             let mut final_coverage = 0;
-    //             for path in &paths {
-    //                 // if the length of the path is maximal
-    //                 if &path.len() == longest_path_length {
-    //                     let mut path_len = 0;
-    //                     // for each node in the path
-    //                     // find the corresponding
-    //                     let node_pairs = path.windows(2);
-    //                     for pair in node_pairs {
-    //                         let from = pair[0];
-    //                         let to = pair[1];
-    //                         let connecting = &mut gfa_graph.edges_connecting(from, to);
-    //                         let coverage = connecting.next().unwrap().weight().2;
-    //                         match coverage {
-    //                             Some(c) => path_len += c,
-    //                             None => (),
-    //                         }
-    //                     }
-    //                     track_lens.push(path_len);
-    //                     let prev = track_lens.get(index - 1).unwrap_or(&0);
-    //                     let cur = track_lens[index];
-    //                     if &cur > prev {
-    //                         final_path = path.to_vec();
-    //                         final_coverage = path_len;
-    //                     }
-
-    //                     index += 1;
-    //                 }
-    //             }
-    //             eprintln!("[+]\tTotal coverage for chosen path is {}", final_coverage);
-    //             final_path
-    //         }
-    //     };
-
-    //     // eprintln!("Final path is {:?}", final_path);
-    //     // calculate the total coverage for each path
-
-    //     // if paths length is zero, bail out here.
-    //     if paths.is_empty() {
-    //         panic!("No simple paths were found.")
-    //     }
-
-    //     let mut chosen_path_string2 = Vec::new();
-    //     let final_path_node_pairs = final_path.windows(2);
-    //     for (index, pair) in final_path_node_pairs.enumerate() {
-    //         let from = pair[0];
-    //         let to = pair[1];
-    //         let connecting = &mut gfa_graph.edges_connecting(from, to);
-    //         let weight = connecting.next().unwrap();
-    //         let from_orient = weight.weight().0;
-    //         let to_orient = weight.weight().1;
-    //         let from = graph_indices
-    //             .iter()
-    //             .find(|y| y.0 == weight.source())
-    //             .unwrap()
-    //             .1;
-    //         let to = graph_indices
-    //             .iter()
-    //             .find(|y| y.0 == weight.target())
-    //             .unwrap()
-    //             .1;
-
-    //         if index == 0 {
-    //             chosen_path_string2
-    //                 .push(format!("{} {} -> {} {}", from_orient, from, to_orient, to));
-    //         } else {
-    //             chosen_path_string2.push(format!(" -> {} {}", to_orient, to));
-    //         }
-    //     }
-
-    //     eprintln!(
-    //         "[+]\tChosen path through graph: {}",
-    //         chosen_path_string2.join("")
-    //     );
-
-    //     // sort out the path now
-    //     // we need the strandedness information
-    //     // now sort these overlaps so they are the same order
-    //     // chosen path -> id's
-    //     let chosen_path_ids = final_path
-    //         .iter()
-    //         .map(|e| graph_indices.iter().find(|y| y.0 == *e).unwrap().1)
-    //         .collect::<Vec<_>>();
-
-    //     (final_path.to_vec(), chosen_path_ids.to_vec())
-    // }
-
-    // this might be crazy
     pub fn all_paths_all_node_pairs(
         &self,
         graph_indices: &Vec<(NodeIndex, usize)>,
@@ -558,102 +253,143 @@ impl GFAdigraph {
             })
             .collect();
 
+        // make the set of legal paths through the GFA
+
+        let mut valid_paths = Vec::new();
+        // iterate over the paths
+        for paths in all_paths {
+            // iterate over each path
+            for path in paths {
+                // iterate over adjacent nodes
+                let node_pairs = path.windows(2);
+                // and the skipped iterator
+                let node_pairs_skip = path.windows(2).skip(1);
+                // assess whether we should keep a path
+                let mut keep = false;
+                // so we can compare NodeIndex(0), NodeIndex(1), and NodeIndex(2) directly
+                'node_pairs_loop: for (pair1, pair2) in node_pairs.zip(node_pairs_skip) {
+                    // first node
+                    let from_p1 = pair1[0];
+                    // second node
+                    let to_p1 = pair1[1];
+                    // second node (again)
+                    let from_p2 = pair2[0];
+                    // third node
+                    let to_p2 = pair2[1];
+
+                    // so what we really want is to take the first and second nodes
+                    // get all the edges
+                    // then get all the edges from the third to the second node
+                    // added NodeIndexes here for debugging
+                    let a_b_edges: Vec<(
+                        NodeIndex,
+                        NodeIndex,
+                        (Orientation, Orientation, Option<u32>),
+                    )> = graph
+                        .edges_connecting(from_p1, to_p1)
+                        .map(|e| {
+                            let s = e.source();
+                            let t = e.target();
+                            (s, t, *e.weight())
+                        })
+                        .collect();
+
+                    let c_b_edges: Vec<(
+                        NodeIndex,
+                        NodeIndex,
+                        (Orientation, Orientation, Option<u32>),
+                    )> = graph
+                        .edges_connecting(to_p2, from_p2)
+                        .map(|e| {
+                            let s = e.source();
+                            let t = e.target();
+                            (s, t, *e.weight())
+                        })
+                        .collect();
+
+                    // we can then compare the orientation of the 'to' Orientation
+                    // for a->b and c->b
+                    let mut keep_vec = Vec::new();
+                    for e in &a_b_edges {
+                        for f in &c_b_edges {
+                            let (_, a_b_to, _) = e.2;
+                            let (_, c_b_to, _) = f.2;
+                            // we found a path through!
+                            // i.e. the links are not connected to the
+                            if a_b_to != c_b_to {
+                                // keep = true;
+                                keep_vec.push(true);
+                            } else if a_b_to == c_b_to {
+                                keep_vec.push(false);
+                            }
+                        }
+                    }
+                    // keep if any of the elements is true
+                    let do_keep = keep_vec.iter().any(|e| *e == true);
+
+                    // debugging...
+                    // eprintln!("a->b: {:?}", a_b_edges);
+                    // eprintln!("c->b: {:?}", c_b_edges);
+                    // eprintln!("Do not keep: {}", do_keep);
+                    // eprintln!("");
+
+                    // if we got to here and diff is still false, break out of this path
+                    // it's a no-go...
+                    if do_keep {
+                        keep = true;
+                    } else {
+                        keep = false;
+                        break 'node_pairs_loop;
+                    }
+                }
+                if keep {
+                    valid_paths.push(path);
+                }
+            }
+        }
+        valid_paths.sort_by(|a, b| b.len().cmp(&a.len()));
+        valid_paths.dedup();
+
         // check if we have coverages
         // if we do then we shall incorporate this information
 
         let final_path = match coverages.is_none() {
-            true => {
-                // let mut valid_paths = Vec::new();
-                // iterate over the paths
-                for paths in all_paths {
-                    // iterate over each path
-                    for path in paths {
-                        // iterate over adjacent nodes
-                        let node_pairs = path.windows(2);
-                        // and the skipped iterator
-                        let node_pairs_skip = path.windows(2).skip(1);
-                        // so we can compare NodeIndex(0), NodeIndex(1), and NodeIndex(2) directly
-                        for (pair1, pair2) in node_pairs.zip(node_pairs_skip) {
-                            let from_p1 = pair1[0];
-                            let to_p1 = pair1[1];
-                            let from_p2 = pair2[0];
-                            let to_p2 = pair2[1];
-
-                            // get the edge outgoing NodeIndex(0) -> NodeIndex(1)
-                            let edge_outgoing_p1 = graph.find_edge(from_p1, to_p1).unwrap();
-                            // get the edge incoming NodeIndex(2) -> NodeIndex(1) 
-                            let edge_incoming_p2 = graph.find_edge(to_p2, from_p2).unwrap();
-                            // get the weights for the focal node
-                            let w_out = graph.edge_weight(edge_outgoing_p1).unwrap().1;
-                            let w_in = graph.edge_weight(edge_incoming_p2).unwrap().1;
-                            // debug
-                            // YEEEEEEEEEEEEEEEES
-                            if w_out == w_in {
-                                eprintln!(
-                                    "Between nodes: {:?}, {:?}, {:?}, {:?} :: {}/{}",
-                                    from_p1, to_p1, from_p2, to_p2, w_out, w_in
-                                );
-                            }
-                        }
-                    }
-                }
-                vec![petgraph::graph::NodeIndex::new(0)]
-            }
+            // if no coverage, take (one of) the longest path(s).
+            true => valid_paths.to_vec()[0].clone(),
             false => {
-                // or by taking into account coverages
-                // length of the longest path
-
-                // keep track of longest path length
-                let mut longest_path_length = 0usize;
-                // search through all_paths to find length of longest path
-                for paths in &all_paths {
-                    let longest_path_length_vec =
-                        paths.iter().map(|e| e.len()).collect::<Vec<usize>>();
-                    let longest_path_length_temp = longest_path_length_vec.iter().max().unwrap();
-
-                    if longest_path_length_temp > &longest_path_length {
-                        longest_path_length = *longest_path_length_temp;
-                    }
-                }
-
                 // now iterate over all the paths again
                 let mut final_paths_and_coverages = Vec::new();
+                let mut index = 0;
 
-                for paths in &all_paths {
+                for path in &valid_paths {
                     // iterate over all the paths of this length
                     // keep track of lengths
-                    let mut track_lens = Vec::new();
-                    let mut index = 0;
+                    let mut track_coverage = Vec::new();
                     let mut final_path = vec![];
                     let mut final_coverage = 0;
-                    for path in paths.to_vec() {
-                        // if the length of the path is maximal
-                        if path.len() == longest_path_length {
-                            let mut path_len = 0;
-                            // for each node in the path
-                            // find the corresponding
-                            let node_pairs = path.windows(2);
-                            for pair in node_pairs {
-                                let from = pair[0];
-                                let to = pair[1];
-                                let connecting = &mut graph.edges_connecting(from, to);
-                                let coverage = connecting.next().unwrap().weight().2;
-                                match coverage {
-                                    Some(c) => path_len += c,
-                                    None => (),
-                                }
-                            }
-                            track_lens.push(path_len);
-                            let prev = track_lens.get(index - 1).unwrap_or(&0);
-                            let cur = track_lens[index];
-                            if &cur > prev {
-                                final_path = path.to_vec();
-                                final_coverage = path_len;
-                            }
 
-                            index += 1;
+                    let mut path_coverage = 0;
+                    let node_pairs = path.windows(2);
+                    for pair in node_pairs {
+                        let from = pair[0];
+                        let to = pair[1];
+                        let connecting = &mut graph.edges_connecting(from, to);
+                        let coverage = connecting.next().unwrap().weight().2;
+                        match coverage {
+                            Some(c) => path_coverage += c,
+                            None => (),
                         }
                     }
+                    track_coverage.push(path_coverage);
+                    let prev = track_coverage.get(index - 1).unwrap_or(&0);
+                    let cur = track_coverage[index];
+                    if &cur > prev {
+                        final_path = path.to_vec();
+                        final_coverage = path_coverage;
+                    }
+
+                    index += 1;
+
                     final_paths_and_coverages.push((final_coverage, final_path));
                 }
                 final_paths_and_coverages.sort_by(|(a, _), (b, _)| b.cmp(&a));
@@ -661,7 +397,7 @@ impl GFAdigraph {
             }
         };
 
-        let mut chosen_path_string2 = Vec::new();
+        let mut chosen_path_string = Vec::new();
         let final_path_node_pairs = final_path.windows(2);
         for (index, pair) in final_path_node_pairs.enumerate() {
             let from = pair[0];
@@ -682,16 +418,16 @@ impl GFAdigraph {
                 .1;
 
             if index == 0 {
-                chosen_path_string2
+                chosen_path_string
                     .push(format!("{} {} -> {} {}", from_orient, from, to_orient, to));
             } else {
-                chosen_path_string2.push(format!(" -> {} {}", to_orient, to));
+                chosen_path_string.push(format!(" -> {} {}", to_orient, to));
             }
         }
 
         eprintln!(
             "[+]\tChosen path through graph: {}",
-            chosen_path_string2.join("")
+            chosen_path_string.join("")
         );
 
         // sort out the path now
