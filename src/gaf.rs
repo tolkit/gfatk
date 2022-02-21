@@ -1,3 +1,4 @@
+use anyhow::Result;
 use bstr::ByteSlice;
 use gfa::gafpaf::GAFStep;
 use gfa::{gafpaf::parse_gaf, gafpaf::GAFPath, optfields::OptionalFields};
@@ -5,17 +6,9 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
-// can we get it to print out in a way like this:
-// id   (+/-)   id2 (+/-)   coverage
-// I think we can.
-// this can then be passed to gfatk linear for
-// finding the most covered path through the gfa.
-
-// > is forward, < is reverse.
-
 type GAF = gfa::gafpaf::GAF<OptionalFields>;
 
-pub fn gaf_to_graph(matches: &clap::ArgMatches) -> Result<(), Box<dyn std::error::Error>> {
+pub fn gaf_to_graph(matches: &clap::ArgMatches) -> Result<()> {
     let gaf_filename = matches.value_of("gaf").unwrap();
     let directed = true;
 

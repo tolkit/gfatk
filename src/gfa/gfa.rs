@@ -3,14 +3,14 @@
 use crate::gfa::graph::{segments_subgraph, GFAdigraph, GFAungraph};
 use crate::gfa::writer;
 use crate::utils;
-use crate::utils::{parse_cigar, reverse_complement};
+use crate::utils::{parse_cigar, reverse_complement, GFAGraphLookups, GFAGraphPair};
+use anyhow::{bail, Context, Result};
 use csv::ReaderBuilder;
 use gfa::gfa::{Orientation, GFA};
 use gfa::optfields::{OptFieldVal, OptionalFields};
 use indexmap::IndexMap;
 use petgraph::graph::{Graph, NodeIndex, UnGraph};
 use serde::Deserialize;
-use std::error::Error;
 
 #[derive(Debug, Deserialize)]
 pub struct GAFTSVRecord {
@@ -21,11 +21,14 @@ pub struct GAFTSVRecord {
     pub coverage: u32,
 }
 
-pub fn read_gaf_to_records(file: &str) -> Result<Vec<GAFTSVRecord>, Box<dyn Error>> {
-    let mut rdr = ReaderBuilder::new().delimiter(b'\t').from_path(file)?;
+pub fn read_gaf_to_records(file: &str) -> Result<Vec<GAFTSVRecord>> {
+    let mut rdr = ReaderBuilder::new()
+        .delimiter(b'\t')
+        .from_path(file)
+        .with_context(|| format!("File: {} not found.", file))?;
     let mut res = Vec::new();
     for result in rdr.deserialize() {
-        let record: GAFTSVRecord = result.expect("could not parse result");
+        let record: GAFTSVRecord = result.context("Could not parse record.")?;
         res.push(record);
     }
     Ok(res)
@@ -33,22 +36,26 @@ pub fn read_gaf_to_records(file: &str) -> Result<Vec<GAFTSVRecord>, Box<dyn Erro
 
 // the GFA type used throughout
 pub struct GFAtk(pub GFA<usize, OptionalFields>);
+
 impl GFAtk {
     // return a tuple of graph indices
     // and the graph itself
-    pub fn into_ungraph(&self) -> (Vec<(NodeIndex, usize)>, GFAungraph) {
+    pub fn into_ungraph(&self) -> Result<(GFAGraphLookups, GFAungraph)> {
         // alias to get GFA out
         let gfa = &self.0;
         // we're reading in now
         eprintln!("[+]\tReading GFA into an undirected graph.");
         let mut gfa_graph: UnGraph<usize, ()> = Graph::new_undirected();
 
-        let mut graph_indices = Vec::new();
+        let mut graph_indices = GFAGraphLookups::new();
         // read the segments into graph nodes
         // save the indexes for populating the edges
         for node in &gfa.segments {
             let index = gfa_graph.add_node(node.name);
-            graph_indices.push((index, node.name));
+            graph_indices.push(GFAGraphPair {
+                node_index: index,
+                seg_id: node.name,
+            });
         }
 
         // populate the edges
@@ -57,14 +64,14 @@ impl GFAtk {
             let to = edge.to_segment;
 
             // get the node index for a given edge (like a map)
-            let from_index = graph_indices.iter().find(|x| x.1 == from).unwrap().0;
-            let to_index = graph_indices.iter().find(|x| x.1 == to).unwrap().0;
+            let from_index = graph_indices.seg_id_to_node_index(from)?;
+            let to_index = graph_indices.seg_id_to_node_index(to)?;
 
             // add the edges
             gfa_graph.add_edge(from_index, to_index, ());
         }
 
-        (graph_indices, GFAungraph(gfa_graph))
+        Ok((graph_indices, GFAungraph(gfa_graph)))
     }
 
     // the Option<u32> here is for the coverages of the edges
@@ -72,17 +79,20 @@ impl GFAtk {
     // maybe all these functions should be ported to ungraphs with weights?
     // not sure what the digraph does for GFA?
 
-    pub fn into_digraph(&self) -> (Vec<(NodeIndex, usize)>, GFAdigraph) {
+    pub fn into_digraph(&self) -> Result<(GFAGraphLookups, GFAdigraph)> {
         let gfa = &self.0;
         // eprintln!("[+]\tReading GFA into a directed graph.");
         let mut gfa_graph: Graph<usize, (Orientation, Orientation, Option<u32>)> = Graph::new();
 
-        let mut graph_indices = Vec::new();
+        let mut graph_indices = GFAGraphLookups::new();
         // read the segments into graph nodes
         // save the indexes for populating the edges
         for node in &gfa.segments {
             let index = gfa_graph.add_node(node.name);
-            graph_indices.push((index, node.name));
+            graph_indices.push(GFAGraphPair {
+                node_index: index,
+                seg_id: node.name,
+            });
         }
 
         // populate the edges
@@ -93,13 +103,14 @@ impl GFAtk {
             let to_orient = edge.to_orient;
 
             // get the node index for a given edge
-            let from_index = graph_indices.iter().find(|x| x.1 == from).unwrap().0;
-            let to_index = graph_indices.iter().find(|x| x.1 == to).unwrap().0;
+            let from_index = graph_indices.seg_id_to_node_index(from)?;
+            let to_index = graph_indices.seg_id_to_node_index(to)?;
 
             // add the edges
             gfa_graph.add_edge(from_index, to_index, (from_orient, to_orient, None));
         }
-        (graph_indices, GFAdigraph(gfa_graph))
+
+        Ok((graph_indices, GFAdigraph(gfa_graph)))
     }
 
     // print the GFA with only the sequences to keep
@@ -111,7 +122,7 @@ impl GFAtk {
     }
 
     // detect all the overlaps between joins in a GFA.
-    pub fn make_overlaps(&self, extend_length: usize) -> Overlaps {
+    pub fn make_overlaps(&self, extend_length: usize) -> Result<Overlaps> {
         let gfa = &self.0;
         // tuple of (from: overlap - length (incl. overlap), to: overlap + length)
         let mut from_to = Overlaps::new();
@@ -122,7 +133,7 @@ impl GFAtk {
             let from_orient = link.from_orient;
             let to_segment = link.to_segment;
             let to_orient = link.to_orient;
-            let overlap = parse_cigar(&link.overlap);
+            let overlap = parse_cigar(&link.overlap)?;
 
             eprintln!(
                 "From segment {} ({}) to segment {} ({})\nOverlap: {}",
@@ -165,8 +176,10 @@ impl GFAtk {
                     // if the extend length is too long, it means that
                     // we hit the start of the sequence, so take full slice.
                     let overlap_str = match overlap_seq {
-                        Some(sl) => std::str::from_utf8(sl).unwrap(),
-                        None => std::str::from_utf8(&from_seq[..]).unwrap(),
+                        Some(sl) => std::str::from_utf8(sl)
+                            .with_context(|| format!("Malformed UTF8: {:?}", sl))?,
+                        None => std::str::from_utf8(&from_seq[..])
+                            .with_context(|| format!("Malformed UTF8: {:?}", &from_seq[..]))?,
                     };
                     overlap_str_from_f = Some(overlap_str.to_string());
                 }
@@ -178,9 +191,10 @@ impl GFAtk {
                     let overlap_revcomp = revcomp.get(revcomp.len() - overlap - extend_length..);
 
                     let overlap_str = match overlap_revcomp {
-                        Some(sl) => String::from_utf8(sl.to_vec()).unwrap(),
+                        Some(sl) => String::from_utf8(sl.to_vec())
+                            .with_context(|| format!("Malformed UTF8: {:?}", sl))?,
                         // take the whole thing.
-                        None => String::from_utf8(revcomp).unwrap(),
+                        None => String::from_utf8(revcomp).context("Malformed UTF8.")?,
                     };
 
                     overlap_str_from_r = Some(overlap_str);
@@ -196,9 +210,11 @@ impl GFAtk {
                     let overlap_seq = &to_seq.get(overlap..overlap + extend_length);
 
                     let overlap_str = match overlap_seq {
-                        Some(sl) => std::str::from_utf8(sl).unwrap(),
+                        Some(sl) => std::str::from_utf8(sl)
+                            .with_context(|| format!("Malformed UTF8: {:?}", sl))?,
                         // from end of overlap to the end of the sequence
-                        None => std::str::from_utf8(&to_seq[overlap..]).unwrap(),
+                        None => std::str::from_utf8(&to_seq[overlap..])
+                            .with_context(|| format!("Malformed UTF8: {:?}", &to_seq[overlap..]))?,
                     };
 
                     overlap_str_to_f = Some(overlap_str.to_string());
@@ -210,10 +226,14 @@ impl GFAtk {
                     // let overlap_revcomp = revcomp[overlap..overlap + extend_length].to_vec();
                     let overlap_revcomp = revcomp.get(overlap..overlap + extend_length);
 
-                    let overlap_str = match overlap_revcomp {
-                        Some(sl) => String::from_utf8(sl.to_vec()).unwrap(),
-                        None => String::from_utf8(revcomp[overlap..].to_vec()).unwrap(),
-                    };
+                    let overlap_str =
+                        match overlap_revcomp {
+                            Some(sl) => String::from_utf8(sl.to_vec())
+                                .with_context(|| format!("Malformed UTF8: {:?}", sl))?,
+                            None => String::from_utf8(revcomp[overlap..].to_vec()).with_context(
+                                || format!("Malformed UTF8: {:?}", revcomp[overlap..].to_vec()),
+                            )?,
+                        };
 
                     overlap_str_to_r = Some(overlap_str);
                 }
@@ -230,15 +250,15 @@ impl GFAtk {
                 to_orient,
             });
         }
-        from_to
+        Ok(from_to)
     }
 
     pub fn determine_path_overlaps(
         &self,
         chosen_path: &Vec<NodeIndex>,
-        graph_indices: &Vec<(NodeIndex, usize)>,
+        graph_indices: GFAGraphLookups,
         chosen_path_ids: &Vec<usize>,
-    ) -> Vec<(usize, Orientation, usize, &str)> {
+    ) -> Result<Vec<(usize, Orientation, usize, &str)>> {
         let gfa = &self.0;
         // another new vec of (id, overlap, start/end)
         // to sort out for fasta generation
@@ -251,12 +271,12 @@ impl GFAtk {
             let to_orient = edge.to_orient;
 
             // overlap
-            let overlap = parse_cigar(&edge.overlap);
+            let overlap = parse_cigar(&edge.overlap)?;
             // here look at the strandedness between pairs of nodes
             let path_pairs = chosen_path.windows(2);
             for path in path_pairs {
-                let from_path = graph_indices.iter().find(|y| y.0 == path[0]).unwrap().1;
-                let to_path = graph_indices.iter().find(|y| y.0 == path[1]).unwrap().1;
+                let from_path = graph_indices.node_index_to_seg_id(path[0])?;
+                let to_path = graph_indices.node_index_to_seg_id(path[1])?;
 
                 // okay this appears to work.
                 if from == from_path && to == to_path {
@@ -278,7 +298,7 @@ impl GFAtk {
                 }
             }
         }
-        sorted_chosen_path_overlaps
+        Ok(sorted_chosen_path_overlaps)
     }
 
     // logic follows Marcela's python script now (thanks!)
@@ -287,7 +307,7 @@ impl GFAtk {
         &self,
         merged_sorted_chosen_path_overlaps: IndexMap<usize, Vec<(Orientation, usize, &str)>>,
         fasta_header: &str,
-    ) {
+    ) -> Result<()> {
         let gfa = &self.0;
 
         // debugging
@@ -298,8 +318,11 @@ impl GFAtk {
         println!(">{}", fasta_header);
         // create iterator over the paths
         let mut path_iter = merged_sorted_chosen_path_overlaps.iter();
-        // get the first
-        let (id_init, vector_init) = path_iter.next().unwrap();
+        // get the first element of the iterator.
+        let (id_init, vector_init) = path_iter
+            .next()
+            .context("First element of the path not found.")?;
+
         for line in gfa.lines_iter() {
             match line.some_segment() {
                 Some(s) => {
@@ -307,12 +330,24 @@ impl GFAtk {
                         let orientation = vector_init[0].0;
                         match orientation {
                             Orientation::Forward => {
-                                // nothing
-                                print!("{}", std::str::from_utf8(&s.sequence).unwrap());
+                                // do nothing except print
+                                print!(
+                                    "{}",
+                                    std::str::from_utf8(&s.sequence).with_context(|| format!(
+                                        "Malformed UTF8: {:?}",
+                                        &s.sequence
+                                    ))?
+                                );
                             }
                             Orientation::Backward => {
                                 let revcomp_seq = reverse_complement(&s.sequence);
-                                print!("{}", std::str::from_utf8(&revcomp_seq).unwrap());
+                                print!(
+                                    "{}",
+                                    std::str::from_utf8(&revcomp_seq).with_context(|| format!(
+                                        "Malformed UTF8: {:?}",
+                                        revcomp_seq
+                                    ))?
+                                );
                             }
                         }
                     }
@@ -336,58 +371,79 @@ impl GFAtk {
                             let start_overlap = vector
                                 .iter()
                                 .find(|(_or, _ov, side)| side == &"start")
-                                .unwrap();
+                                .context("Start overlap could not be found.")?;
 
                             // start and end orientation should be the same
                             // hence just matching on start here.
                             let seq_minus_overlap = match start_overlap.0 {
                                 Orientation::Forward => {
                                     // do nothing
-                                    let seq_minus_overlap =
-                                        s.sequence.get(start_overlap.1 - 1..).unwrap();
+                                    let seq_minus_overlap = s
+                                        .sequence
+                                        .get(start_overlap.1 - 1..)
+                                        .with_context(|| {
+                                        format!(
+                                            "{} is outside the bounds of the sequence.",
+                                            start_overlap.1 - 1
+                                        )
+                                    })?;
                                     seq_minus_overlap.to_vec()
                                 }
                                 Orientation::Backward => {
                                     let revcomp_seq = reverse_complement(&s.sequence);
-                                    let seq_minus_overlap =
-                                        revcomp_seq.get(start_overlap.1 - 1..).unwrap();
+                                    let seq_minus_overlap = revcomp_seq
+                                        .get(start_overlap.1 - 1..)
+                                        .with_context(|| {
+                                            format!(
+                                                "{} is outside the bounds of the sequence.",
+                                                start_overlap.1 - 1
+                                            )
+                                        })?;
                                     seq_minus_overlap.to_vec()
                                 }
                             };
-                            print!("{}", std::str::from_utf8(&seq_minus_overlap).unwrap());
+                            print!(
+                                "{}",
+                                std::str::from_utf8(&seq_minus_overlap).with_context(|| {
+                                    format!("Malformed UTF8: {:?}", &seq_minus_overlap)
+                                })?
+                            );
                         }
                     }
                     None => (),
                 }
             }
         }
+        Ok(())
     }
 
-    pub fn print_sequences(&self) {
+    pub fn print_sequences(&self) -> Result<()> {
         let gfa = &self.0;
 
         for line in gfa.lines_iter() {
             match line.some_segment() {
                 Some(s) => {
-                    let seq = std::str::from_utf8(&s.sequence).expect("Badly formatted sequence.");
+                    let seq = std::str::from_utf8(&s.sequence)
+                        .with_context(|| format!("Malformed UTF8: {:?}", &s.sequence))?;
                     let id = s.name;
                     println!(">{}\n{}", id, seq);
                 }
                 None => (),
             }
         }
+        Ok(())
     }
 
     // get the average of the coverages from a GFA.
-    fn parse_coverage_opt(opt: &OptFieldVal) -> &f32 {
+    fn parse_coverage_opt(opt: &OptFieldVal) -> Result<&f32> {
         let ll = match opt {
             OptFieldVal::Float(f) => f,
-            _ => panic!("ll: coverage should be Float()"),
+            _ => bail!("ll: coverage should be Float()"),
         };
-        ll
+        Ok(ll)
     }
 
-    fn get_coverage(&self) -> f32 {
+    fn get_coverage(&self) -> Result<f32> {
         let gfa = &self.0;
 
         let ll_tag: [u8; 2] = [108, 108];
@@ -397,27 +453,27 @@ impl GFAtk {
             let opts = &seg.optional;
             for opt in opts {
                 if opt.tag == ll_tag {
-                    ll_tag_vec.push(Self::parse_coverage_opt(&opt.value));
+                    ll_tag_vec.push(Self::parse_coverage_opt(&opt.value)?);
                 }
             }
         }
         let len = ll_tag_vec.len() as f32;
         let sum: f32 = ll_tag_vec.iter().fold(0.0, |a, b| a + **b);
 
-        sum / len
+        Ok(sum / len)
     }
 
     // we actually return only a float here
     // but could change this later...
 
-    pub fn sequence_stats(&self, further: bool) -> (f32, f32) {
+    pub fn sequence_stats(&self, further: bool) -> Result<(f32, f32)> {
         let gfa = &self.0;
 
-        let cov = Self::get_coverage(&self);
+        let cov = Self::get_coverage(&self)?;
 
         let mut total_overlap_length = 0;
         for link in &gfa.links {
-            total_overlap_length += parse_cigar(&link.overlap);
+            total_overlap_length += parse_cigar(&link.overlap)?;
         }
 
         let mut total_sequence_length = 0;
@@ -444,7 +500,7 @@ impl GFAtk {
             println!("\tAverage coverage of total segments:\t{}", cov);
         }
 
-        (avg_gc, cov)
+        Ok((avg_gc, cov))
     }
 }
 

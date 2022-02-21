@@ -1,3 +1,4 @@
+use anyhow::Result;
 use clap::{App, AppSettings, Arg};
 use gfatk::extract;
 use gfatk::extract_mito;
@@ -7,7 +8,7 @@ use gfatk::linear;
 use gfatk::overlap;
 use gfatk::stats;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> Result<()> {
     let matches = App::new("gfatk")
         .global_setting(AppSettings::PropagateVersion)
         .global_setting(AppSettings::UseLongFormatForHelpSubcommand)

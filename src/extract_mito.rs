@@ -7,8 +7,9 @@ use crate::gfa::graph::segments_subgraph;
 use crate::gfa::writer::gfa_string;
 use crate::load::load_gfa;
 use crate::stats;
+use anyhow::Result;
 
-pub fn extract_mito(matches: &clap::ArgMatches) -> Result<(), Box<dyn std::error::Error>> {
+pub fn extract_mito(matches: &clap::ArgMatches) -> Result<()> {
     let segments = stats::stats(matches, true)?.unwrap();
     // required so unwrap safely
     let gfa_file = matches.value_of("gfa").unwrap();

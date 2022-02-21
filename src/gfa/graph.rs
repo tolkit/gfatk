@@ -1,5 +1,9 @@
 use crate::gfa::gfa::GAFTSVRecord;
+use crate::utils::GFAGraphLookups;
+use anyhow::{bail, Context, Result};
 use gfa::gfa::Orientation;
+use gfa::gfa::GFA;
+use gfa::optfields::OptFields;
 use itertools::Itertools;
 use petgraph::{
     dot::{Config, Dot},
@@ -10,18 +14,18 @@ use petgraph::{
     Undirected,
 };
 use std::collections::HashSet;
-use std::error::Error;
 
 pub struct GFAungraph(pub Graph<usize, (), Undirected>);
 
 impl GFAungraph {
+    // TEST THIS
     pub fn recursive_search(
         &self,
         sequence_id: usize,
         iterations: i32,
         mut collect_sequence_names: Vec<NodeIndex>,
-        graph_indices: Vec<(NodeIndex, usize)>,
-    ) -> Vec<usize> {
+        graph_indices: GFAGraphLookups,
+    ) -> Result<Vec<usize>> {
         let gfa_graph = &self.0;
         eprintln!(
             "[+]\tRecursively searching around node {} at depth {}",
@@ -30,10 +34,10 @@ impl GFAungraph {
 
         let mut iteration = 0;
         loop {
+            // collect all the neighbours of all the current node indices
             for index in collect_sequence_names.clone() {
                 for c in gfa_graph.neighbors(index) {
-                    let res = graph_indices.iter().find(|x| x.0 == c).unwrap().0;
-                    collect_sequence_names.push(res);
+                    collect_sequence_names.push(c);
                 }
             }
             // add sorting and deduping here too
@@ -46,16 +50,18 @@ impl GFAungraph {
                 break;
             }
         }
+
         collect_sequence_names.sort();
         collect_sequence_names.dedup();
 
         let mut sequences_to_keep = Vec::new();
         // turn node indexes into sequence ID's
         for index in collect_sequence_names {
-            let t = graph_indices.iter().find(|x| x.0 == index).unwrap().1;
+            let t = graph_indices.node_index_to_seg_id(index)?;
             sequences_to_keep.push(t);
         }
-        sequences_to_keep
+
+        Ok(sequences_to_keep)
     }
 }
 
@@ -79,8 +85,8 @@ impl GFAdigraph {
     // thanks https://github.com/Qiskit/retworkx/blob/79900cf8da0c0665ac5ce1ccb0f57373434b14b8/src/connectivity/mod.rs
     pub fn weakly_connected_components(
         &self,
-        graph_indices: Vec<(NodeIndex, usize)>,
-    ) -> Vec<Vec<usize>> {
+        graph_indices: GFAGraphLookups,
+    ) -> Result<Vec<Vec<usize>>> {
         let graph = &self.0;
         let mut seen: HashSet<NodeIndex> = HashSet::with_capacity(graph.node_count());
         let mut out_vec: Vec<Vec<usize>> = Vec::new();
@@ -119,44 +125,46 @@ impl GFAdigraph {
                 // convert node indices to segment ID's
                 let x = set_to_vec
                     .iter()
-                    .map(|e| graph_indices.iter().find(|y| y.0 == *e).unwrap().1)
-                    .collect::<Vec<usize>>();
+                    .map(|e| {
+                        let seg_id = match graph_indices.node_index_to_seg_id(*e) {
+                            Ok(s) => s,
+                            Err(err) => bail!(
+                                "NodeIndex {:?} could not be converted to segment ID.\n{}",
+                                e,
+                                err
+                            ),
+                        };
+                        Ok(seg_id)
+                    })
+                    .collect::<Result<Vec<usize>>>();
 
-                out_vec.push(x);
+                out_vec.push(x?);
 
                 seen.extend(bfs_seen);
             }
         }
-        out_vec
+        Ok(out_vec)
     }
 
     // mutably insert the coverages
     pub fn add_coverages(
         &mut self,
-        coverages: &Option<Result<Vec<GAFTSVRecord>, Box<dyn Error>>>,
-        graph_indices: &Vec<(NodeIndex, usize)>,
-    ) {
+        coverages: &Option<Result<Vec<GAFTSVRecord>>>,
+        graph_indices: &GFAGraphLookups,
+    ) -> Result<()> {
         let gfa_graph = &mut self.0;
         // iterate over the edges of the graph
         let mut coverage_vec = Vec::new();
         for edge in gfa_graph.edge_references() {
             // get node ID's
-            let from_id = graph_indices
-                .iter()
-                .find(|x| x.0 == edge.source())
-                .unwrap()
-                .1;
-            let to_id = graph_indices
-                .iter()
-                .find(|x| x.0 == edge.target())
-                .unwrap()
-                .1;
+            let from_id = graph_indices.node_index_to_seg_id(edge.source())?;
+            let to_id = graph_indices.node_index_to_seg_id(edge.target())?;
             // get the weight of this edge
             let from_orient = edge.weight().0;
             let to_orient = edge.weight().1;
 
             let coverage = match coverages {
-                Some(ref c) => {
+                Some(c) => {
                     // is it okay just to unwrap here?
                     let coverages = c.as_ref().unwrap();
                     let mut res: Option<u32> = None;
@@ -180,8 +188,12 @@ impl GFAdigraph {
         // had to do this, as cannot immutably borrow, and mutably borrow in the same loop...
         for (edge_id, from_orient, to_orient, coverage) in coverage_vec {
             // get rid of this unwrap.
-            *gfa_graph.edge_weight_mut(edge_id).unwrap() = (from_orient, to_orient, coverage);
+            *gfa_graph
+                .edge_weight_mut(edge_id)
+                .with_context(|| format!("Not able to change edge ID: {:?}", edge_id))? =
+                (from_orient, to_orient, coverage);
         }
+        Ok(())
     }
 
     // before we search for all the paths, we need to
@@ -235,11 +247,17 @@ impl GFAdigraph {
     // then search though all these paths to find the
     // longest which doesn't violate sequence orientation
 
+    // need to emit segment ID's that did not make it into the
+    // longest path here.
+
+    // return the path, the path ID's, and id's not in the path
+    // -> (Vec<NodeIndex>, Vec<usize>, Vec<usize>)
+
     pub fn all_paths_all_node_pairs(
         &self,
-        graph_indices: &Vec<(NodeIndex, usize)>,
-        coverages: Option<Result<Vec<GAFTSVRecord>, Box<dyn Error>>>,
-    ) -> (Vec<NodeIndex>, Vec<usize>) {
+        graph_indices: &GFAGraphLookups,
+        coverages: Option<Result<Vec<GAFTSVRecord>>>,
+    ) -> Result<(Vec<NodeIndex>, Vec<usize>)> {
         let graph = &self.0;
         let nodes = graph.node_identifiers();
         let node_pairs = nodes.permutations(2).collect::<Vec<_>>();
@@ -372,7 +390,13 @@ impl GFAdigraph {
                         let from = pair[0];
                         let to = pair[1];
                         let connecting = &mut graph.edges_connecting(from, to);
-                        let coverage = connecting.next().unwrap().weight().2;
+                        let coverage = connecting
+                            .next()
+                            .with_context(|| {
+                                format!("No connecting edges from {:?} to {:?}", from, to)
+                            })?
+                            .weight()
+                            .2;
                         match coverage {
                             Some(c) => path_coverage += c,
                             None => (),
@@ -399,19 +423,15 @@ impl GFAdigraph {
             let from = pair[0];
             let to = pair[1];
             let connecting = &mut graph.edges_connecting(from, to);
-            let weight = connecting.next().unwrap();
+            let weight = connecting
+                .next()
+                .with_context(|| format!("No connecting edges from {:?} to {:?}", from, to))?;
             let from_orient = weight.weight().0;
             let to_orient = weight.weight().1;
-            let from = graph_indices
-                .iter()
-                .find(|y| y.0 == weight.source())
-                .unwrap()
-                .1;
-            let to = graph_indices
-                .iter()
-                .find(|y| y.0 == weight.target())
-                .unwrap()
-                .1;
+
+            // get segment ID from Node Indices
+            let from = graph_indices.node_index_to_seg_id(weight.source())?;
+            let to = graph_indices.node_index_to_seg_id(weight.target())?;
 
             if index == 0 {
                 chosen_path_string
@@ -432,10 +452,28 @@ impl GFAdigraph {
         // chosen path -> id's
         let chosen_path_ids = final_path
             .iter()
-            .map(|e| graph_indices.iter().find(|y| y.0 == *e).unwrap().1)
-            .collect::<Vec<_>>();
+            // .1 needed
+            .map(|e| {
+                let x = graph_indices
+                    .0
+                    .iter()
+                    .find(|y| y.node_index == *e)
+                    .with_context(|| {
+                        format!("NodeIndex {:?} could not be converted to segment ID", e)
+                    });
+                x
+            })
+            .collect::<Result<Vec<_>>>();
 
-        (final_path.to_vec(), chosen_path_ids.to_vec())
+        Ok((
+            final_path.to_vec(),
+            // error handling a bit annoying here.
+            chosen_path_ids?
+                .iter()
+                .map(|e| e.seg_id)
+                .collect::<Vec<usize>>()
+                .to_vec(),
+        ))
     }
 
     // simple graph stats
@@ -495,9 +533,6 @@ fn all_paths_helper<T, U, Ix: IndexType>(
         paths
     }
 }
-
-use gfa::gfa::GFA;
-use gfa::optfields::OptFields;
 
 // Returns a subgraph GFA that only contains elements with the
 // provided segment names
