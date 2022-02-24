@@ -257,7 +257,7 @@ impl GFAdigraph {
         &self,
         graph_indices: &GFAGraphLookups,
         coverages: Option<Result<Vec<GAFTSVRecord>>>,
-    ) -> Result<(Vec<NodeIndex>, Vec<usize>)> {
+    ) -> Result<(Vec<NodeIndex>, Vec<usize>, Vec<usize>)> {
         let graph = &self.0;
         let nodes = graph.node_identifiers();
         let node_pairs = nodes.permutations(2).collect::<Vec<_>>();
@@ -380,7 +380,7 @@ impl GFAdigraph {
                 // iterate over all the paths of this length
                 // keep track of lengths
                 let mut track_coverage = Vec::new();
-                let mut final_path = vec![];
+                let mut final_path = Vec::new();
                 let mut final_coverage = 0;
 
                 for path in &valid_paths {
@@ -465,6 +465,23 @@ impl GFAdigraph {
             })
             .collect::<Result<Vec<_>>>();
 
+        // make a vector of nodes not in the final path
+        // these will be passed later and printed to a fasta.
+        let final_path_set: HashSet<_> = final_path.iter().collect();
+        let nodes: Vec<_> = graph.node_identifiers().collect();
+        let difference: Vec<_> = nodes
+            .into_iter()
+            .filter(|item| !final_path_set.contains(item))
+            .collect();
+
+        let difference_ids: Result<Vec<usize>> = difference
+            .iter()
+            .map(|e| {
+                let seg_id = graph_indices.node_index_to_seg_id(*e);
+                seg_id
+            })
+            .collect();
+
         Ok((
             final_path.to_vec(),
             // error handling a bit annoying here.
@@ -473,6 +490,7 @@ impl GFAdigraph {
                 .map(|e| e.seg_id)
                 .collect::<Vec<usize>>()
                 .to_vec(),
+            difference_ids?,
         ))
     }
 

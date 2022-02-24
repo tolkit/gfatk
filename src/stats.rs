@@ -22,13 +22,15 @@ impl Stats {
     //
     pub fn higest_gc_cov_segments(&mut self) -> Vec<usize> {
         let stat_vec = &mut self.0;
-        stat_vec.sort_by(|a, b| (b.cov, b.gc).partial_cmp(&(a.cov, a.gc)).unwrap());
+        // reverse the cov..
+        stat_vec.sort_by(|a, b| (a.cov, b.gc).partial_cmp(&(b.cov, a.gc)).unwrap());
         // stat_vec.sort_by(|a, b| b.gc.partial_cmp(&a.gc).unwrap());
         stat_vec[0].segments.clone()
     }
 }
 
 // I've handled 'further' here really badly...
+// I want node indices & segment names printed too (maybe optionally.)
 pub fn stats(matches: &clap::ArgMatches, further: bool) -> Result<Option<Vec<usize>>> {
     // required so unwrap safely
     let gfa_file = matches.value_of("gfa").unwrap();

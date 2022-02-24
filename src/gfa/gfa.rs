@@ -307,6 +307,7 @@ impl GFAtk {
         &self,
         merged_sorted_chosen_path_overlaps: IndexMap<usize, Vec<(Orientation, usize, &str)>>,
         fasta_header: &str,
+        segments_not_in_path: Vec<usize>,
     ) -> Result<()> {
         let gfa = &self.0;
 
@@ -411,6 +412,33 @@ impl GFAtk {
                         }
                     }
                     None => (),
+                }
+            }
+        }
+
+        // just a blank new line.
+        // as the last statements were just print!.
+        println!("");
+
+        // print the rest of the segments
+        if !segments_not_in_path.is_empty() {
+            for segment in segments_not_in_path {
+                for line in gfa.lines_iter() {
+                    match line.some_segment() {
+                        Some(seg) => {
+                            if seg.name == segment {
+                                println!(
+                                    ">{}\n{}",
+                                    segment,
+                                    std::str::from_utf8(&seg.sequence).with_context(|| format!(
+                                        "Malformed UTF8: {:?}",
+                                        &seg.sequence
+                                    ))?
+                                )
+                            }
+                        }
+                        None => {}
+                    }
                 }
             }
         }

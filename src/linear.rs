@@ -24,7 +24,7 @@ pub fn force_linear(matches: &clap::ArgMatches) -> Result<()> {
     // add in the coverages from the file, if there is one.
     gfa_graph.add_coverages(&coverages, &graph_indices)?;
 
-    let (chosen_path, chosen_path_ids) =
+    let (chosen_path, chosen_path_ids, segments_not_in_path) =
         gfa_graph.all_paths_all_node_pairs(&graph_indices, coverages)?;
 
     let sorted_chosen_path_overlaps =
@@ -40,7 +40,7 @@ pub fn force_linear(matches: &clap::ArgMatches) -> Result<()> {
             .push((orientation, overlap, side));
     }
 
-    gfa.print_path_to_fasta(merged_sorted_chosen_path_overlaps, fasta_header)?;
+    gfa.print_path_to_fasta(merged_sorted_chosen_path_overlaps, fasta_header, segments_not_in_path)?;
 
     Ok(())
 }
