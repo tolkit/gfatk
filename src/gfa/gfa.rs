@@ -1,5 +1,7 @@
 // common functions for gfa structures
 
+use std::collections::HashMap;
+
 use crate::gfa::graph::{segments_subgraph, GFAdigraph, GFAungraph};
 use crate::gfa::writer;
 use crate::utils;
@@ -529,6 +531,66 @@ impl GFAtk {
         }
 
         Ok((avg_gc, cov))
+    }
+
+    // add a hashmap of relative coverage for each node:
+    // HashMap<NodeIndex, u32>
+
+    pub fn gen_cov_hash(
+        &self,
+        graph_lookup: &GFAGraphLookups,
+    ) -> Result<HashMap<NodeIndex, usize>> {
+        let gfa = &self.0;
+
+        let ll_tag: [u8; 2] = [108, 108];
+        let mut node_cov_map = HashMap::new();
+
+        // the initial map contains node index and coverage
+        for seg in &gfa.segments {
+            // get the coverage
+            let opts = &seg.optional;
+            let node_index = graph_lookup.seg_id_to_node_index(seg.name)?;
+
+            for opt in opts {
+                if opt.tag == ll_tag {
+                    let cov = Self::parse_coverage_opt(&opt.value)?;
+                    node_cov_map.insert(node_index, *cov);
+                }
+            }
+        }
+
+        // we want to convert the node index and coverage
+        // to node index and *relative* coverage
+        let mut lowest_cov_iter = node_cov_map.iter().map(|(_k, v)| v).enumerate();
+        let init = lowest_cov_iter
+            .next()
+            .ok_or("Need at least one input")
+            .unwrap();
+        // we process the rest
+        let result = lowest_cov_iter.try_fold(init, |acc, x| {
+            // return None if x is NaN
+            let cmp = x.1.partial_cmp(&acc.1)?;
+            // if x is less than the acc
+            let min = if let std::cmp::Ordering::Less = cmp {
+                x
+            } else {
+                acc
+            };
+            Some(min)
+        });
+
+        // allocate to a new map as we want u32's
+        let mut rel_cov_map = HashMap::new();
+
+        for (k, v) in &node_cov_map {
+            rel_cov_map.insert(*k, (v / result.unwrap().1).round() as usize);
+        }
+
+        for (k, v) in &rel_cov_map {
+            eprintln!("{:?}: {}", k, v);
+        }
+
+        Ok(rel_cov_map)
     }
 }
 

@@ -13,6 +13,7 @@ use petgraph::{
     Direction::Outgoing,
     Undirected,
 };
+use std::collections::HashMap;
 use std::collections::HashSet;
 
 pub struct GFAungraph(pub Graph<usize, (), Undirected>);
@@ -257,16 +258,17 @@ impl GFAdigraph {
         &self,
         graph_indices: &GFAGraphLookups,
         coverages: Option<Result<Vec<GAFTSVRecord>>>,
+        rel_coverage_map: Option<&HashMap<NodeIndex, usize>>,
     ) -> Result<(Vec<NodeIndex>, Vec<usize>, Vec<usize>)> {
         let graph = &self.0;
         let nodes = graph.node_identifiers();
         let node_pairs = nodes.permutations(2).collect::<Vec<_>>();
         // eprintln!("{:?}", node_pairs);
 
-        let all_paths: Vec<_> = node_pairs
+        let all_paths: Result<Vec<_>> = node_pairs
             .into_iter()
             .map(|pair| {
-                let path = all_paths(&graph, pair[0], pair[1]);
+                let path = all_paths(&graph, pair[0], pair[1], rel_coverage_map);
                 path
             })
             .collect();
@@ -275,7 +277,7 @@ impl GFAdigraph {
 
         let mut valid_paths = Vec::new();
         // iterate over the paths
-        for paths in all_paths {
+        for paths in all_paths? {
             // iterate over each path
             for path in paths {
                 // iterate over adjacent nodes
@@ -370,21 +372,27 @@ impl GFAdigraph {
 
         // check if we have coverages
         // if we do then we shall incorporate this information
+        // maybe add an expected number of segments?
 
         let final_path = match coverages.is_none() {
             // if no coverage, take (one of) the longest path(s).
             true => valid_paths.to_vec()[0].clone(),
             false => {
                 // now iterate over all the paths again
-                let mut index = 0;
+                // let mut index = 0;
                 // iterate over all the paths of this length
                 // keep track of lengths
-                let mut track_coverage = Vec::new();
-                let mut final_path = Vec::new();
-                let mut final_coverage = 0;
+
+                // let mut final_path = Vec::new();
+                // let mut final_coverage = 0;
+                // push path and coverage into map
+                // don't care about memory allocations for the moment.
+                let mut map = HashMap::new();
 
                 for path in &valid_paths {
+                    eprintln!("{:?}", path);
                     let mut path_coverage = 0;
+
                     let node_pairs = path.windows(2);
                     for pair in node_pairs {
                         let from = pair[0];
@@ -397,23 +405,26 @@ impl GFAdigraph {
                             })?
                             .weight()
                             .2;
+                        eprint!("| {:?} -> {:?}: {} ", from, to, coverage.unwrap());
                         match coverage {
                             Some(c) => path_coverage += c,
                             None => (),
                         }
                     }
-                    track_coverage.push(path_coverage);
-                    let prev = track_coverage.get(index - 1).unwrap_or(&0);
-                    let cur = track_coverage[index];
-                    if &cur > prev {
-                        final_path = path.to_vec();
-                        final_coverage = path_coverage;
-                    }
 
-                    index += 1;
+                    map.insert(path, path_coverage);
+
+                    // index += 1;
+                    eprintln!("");
                 }
-                eprintln!("[+]\tHighest cumulative coverage path = {}", final_coverage);
-                final_path
+
+                let highest_coverage_path =
+                    map.iter().max_by(|a, b| a.1.cmp(&b.1)).map(|(k, v)| (k, v));
+                eprintln!(
+                    "[+]\tHighest cumulative coverage path = {}",
+                    highest_coverage_path.unwrap().1
+                );
+                highest_coverage_path.unwrap().0.to_vec()
             }
         };
 
@@ -453,16 +464,7 @@ impl GFAdigraph {
         let chosen_path_ids = final_path
             .iter()
             // .1 needed
-            .map(|e| {
-                let x = graph_indices
-                    .0
-                    .iter()
-                    .find(|y| y.node_index == *e)
-                    .with_context(|| {
-                        format!("NodeIndex {:?} could not be converted to segment ID", e)
-                    });
-                x
-            })
+            .map(|e| graph_indices.node_index_to_seg_id(*e))
             .collect::<Result<Vec<_>>>();
 
         // make a vector of nodes not in the final path
@@ -485,11 +487,7 @@ impl GFAdigraph {
         Ok((
             final_path.to_vec(),
             // error handling a bit annoying here.
-            chosen_path_ids?
-                .iter()
-                .map(|e| e.seg_id)
-                .collect::<Vec<usize>>()
-                .to_vec(),
+            chosen_path_ids?,
             difference_ids?,
         ))
     }
@@ -510,31 +508,46 @@ impl GFAdigraph {
 
 // thanks
 // https://github.com/Ninjani/rosalind/blob/e22ecf2c9f0935d970b137684029957c0850d63f/t_ba11b/src/lib.rs
+
 pub fn all_paths<T, U, Ix: IndexType>(
     graph: &Graph<T, U, Directed, Ix>,
     start_node: NodeIndex<Ix>,
     end_node: NodeIndex<Ix>,
-) -> Vec<Vec<NodeIndex<Ix>>> {
-    let mut visited = HashSet::new();
-    visited.insert(start_node);
-    all_paths_helper(graph, start_node, end_node, &mut visited)
+    rel_coverage_map: Option<&HashMap<NodeIndex<Ix>, usize>>,
+) -> Result<Vec<Vec<NodeIndex<Ix>>>> {
+    match rel_coverage_map {
+        Some(cov_map) => {
+            // for the set of visited nodes
+            let mut visited = HashMap::new();
+            visited.insert(start_node, 1usize);
+
+            recursive_path_finder_incl_coverage(graph, start_node, end_node, &mut visited, cov_map)
+        }
+        None => {
+            let mut visited = HashSet::new();
+            visited.insert(start_node);
+
+            recursive_path_finder_no_coverage(graph, start_node, end_node, &mut visited)
+        }
+    }
 }
 
-fn all_paths_helper<T, U, Ix: IndexType>(
+fn recursive_path_finder_no_coverage<T, U, Ix: IndexType>(
     graph: &Graph<T, U, Directed, Ix>,
     start_node: NodeIndex<Ix>,
     end_node: NodeIndex<Ix>,
     visited: &mut HashSet<NodeIndex<Ix>>,
-) -> Vec<Vec<NodeIndex<Ix>>> {
+) -> Result<Vec<Vec<NodeIndex<Ix>>>> {
     if start_node == end_node {
-        vec![vec![end_node]]
+        Ok(vec![vec![end_node]])
     } else {
         let mut paths = Vec::new();
         for edge in graph.edges_directed(start_node, Outgoing) {
             let next_node = edge.target();
             if !visited.contains(&next_node) {
                 visited.insert(next_node);
-                let descendant_paths = all_paths_helper(graph, next_node, end_node, visited);
+                let descendant_paths =
+                    recursive_path_finder_no_coverage(graph, next_node, end_node, visited)?;
                 visited.remove(&next_node);
                 paths.extend(
                     descendant_paths
@@ -548,7 +561,51 @@ fn all_paths_helper<T, U, Ix: IndexType>(
                 )
             }
         }
-        paths
+        Ok(paths)
+    }
+}
+
+fn recursive_path_finder_incl_coverage<T, U, Ix: IndexType>(
+    graph: &Graph<T, U, Directed, Ix>,
+    start_node: NodeIndex<Ix>,
+    end_node: NodeIndex<Ix>,
+    visited: &mut HashMap<NodeIndex<Ix>, usize>,
+    rel_coverage_map: &HashMap<NodeIndex<Ix>, usize>,
+) -> Result<Vec<Vec<NodeIndex<Ix>>>> {
+    // if the start node is the same as the end
+    // the path is just to the end node
+    if start_node == end_node {
+        Ok(vec![vec![end_node]])
+    } else {
+        let mut paths = Vec::new();
+        for edge in graph.edges_directed(start_node, Outgoing) {
+            let next_node = edge.target();
+
+            let test = *rel_coverage_map.get(&next_node).unwrap();
+
+            if !visited.contains_key(&next_node) || !(*visited.get(&next_node).unwrap() == test) {
+                *visited.entry(next_node).or_insert(0) += 1;
+                let descendant_paths = recursive_path_finder_incl_coverage(
+                    graph,
+                    next_node,
+                    end_node,
+                    visited,
+                    rel_coverage_map,
+                )?;
+                visited.remove(&next_node);
+                paths.extend(
+                    descendant_paths
+                        .into_iter()
+                        .map(|path| {
+                            let mut new_path = vec![start_node];
+                            new_path.extend(path);
+                            new_path
+                        })
+                        .collect::<Vec<_>>(),
+                )
+            }
+        }
+        Ok(paths)
     }
 }
 
