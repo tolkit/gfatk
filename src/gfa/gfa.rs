@@ -564,8 +564,7 @@ impl GFAtk {
         let mut lowest_cov_iter = node_cov_map.iter().map(|(_k, v)| v).enumerate();
         let init = lowest_cov_iter
             .next()
-            .ok_or("Need at least one input")
-            .unwrap();
+            .context("No coverage information found in this GFA.")?;
         // we process the rest
         let result = lowest_cov_iter.try_fold(init, |acc, x| {
             // return None if x is NaN
@@ -584,10 +583,6 @@ impl GFAtk {
 
         for (k, v) in &node_cov_map {
             rel_cov_map.insert(*k, (v / result.unwrap().1).round() as usize);
-        }
-
-        for (k, v) in &rel_cov_map {
-            eprintln!("{:?}: {}", k, v);
         }
 
         Ok(rel_cov_map)

@@ -376,7 +376,11 @@ impl GFAdigraph {
 
         let final_path = match coverages.is_none() {
             // if no coverage, take (one of) the longest path(s).
-            true => valid_paths.to_vec()[0].clone(),
+            true => valid_paths
+                .to_vec()
+                .get(0)
+                .context("There were no valid paths found.")?
+                .clone(),
             false => {
                 // now iterate over all the paths again
                 // let mut index = 0;
@@ -390,7 +394,6 @@ impl GFAdigraph {
                 let mut map = HashMap::new();
 
                 for path in &valid_paths {
-                    eprintln!("{:?}", path);
                     let mut path_coverage = 0;
 
                     let node_pairs = path.windows(2);
@@ -405,7 +408,7 @@ impl GFAdigraph {
                             })?
                             .weight()
                             .2;
-                        eprint!("| {:?} -> {:?}: {} ", from, to, coverage.unwrap());
+
                         match coverage {
                             Some(c) => path_coverage += c,
                             None => (),
@@ -413,9 +416,6 @@ impl GFAdigraph {
                     }
 
                     map.insert(path, path_coverage);
-
-                    // index += 1;
-                    eprintln!("");
                 }
 
                 let highest_coverage_path =
@@ -532,39 +532,6 @@ pub fn all_paths<T, U, Ix: IndexType>(
     }
 }
 
-fn recursive_path_finder_no_coverage<T, U, Ix: IndexType>(
-    graph: &Graph<T, U, Directed, Ix>,
-    start_node: NodeIndex<Ix>,
-    end_node: NodeIndex<Ix>,
-    visited: &mut HashSet<NodeIndex<Ix>>,
-) -> Result<Vec<Vec<NodeIndex<Ix>>>> {
-    if start_node == end_node {
-        Ok(vec![vec![end_node]])
-    } else {
-        let mut paths = Vec::new();
-        for edge in graph.edges_directed(start_node, Outgoing) {
-            let next_node = edge.target();
-            if !visited.contains(&next_node) {
-                visited.insert(next_node);
-                let descendant_paths =
-                    recursive_path_finder_no_coverage(graph, next_node, end_node, visited)?;
-                visited.remove(&next_node);
-                paths.extend(
-                    descendant_paths
-                        .into_iter()
-                        .map(|path| {
-                            let mut new_path = vec![start_node];
-                            new_path.extend(path);
-                            new_path
-                        })
-                        .collect::<Vec<_>>(),
-                )
-            }
-        }
-        Ok(paths)
-    }
-}
-
 fn recursive_path_finder_incl_coverage<T, U, Ix: IndexType>(
     graph: &Graph<T, U, Directed, Ix>,
     start_node: NodeIndex<Ix>,
@@ -592,6 +559,39 @@ fn recursive_path_finder_incl_coverage<T, U, Ix: IndexType>(
                     visited,
                     rel_coverage_map,
                 )?;
+                visited.remove(&next_node);
+                paths.extend(
+                    descendant_paths
+                        .into_iter()
+                        .map(|path| {
+                            let mut new_path = vec![start_node];
+                            new_path.extend(path);
+                            new_path
+                        })
+                        .collect::<Vec<_>>(),
+                )
+            }
+        }
+        Ok(paths)
+    }
+}
+
+fn recursive_path_finder_no_coverage<T, U, Ix: IndexType>(
+    graph: &Graph<T, U, Directed, Ix>,
+    start_node: NodeIndex<Ix>,
+    end_node: NodeIndex<Ix>,
+    visited: &mut HashSet<NodeIndex<Ix>>,
+) -> Result<Vec<Vec<NodeIndex<Ix>>>> {
+    if start_node == end_node {
+        Ok(vec![vec![end_node]])
+    } else {
+        let mut paths = Vec::new();
+        for edge in graph.edges_directed(start_node, Outgoing) {
+            let next_node = edge.target();
+            if !visited.contains(&next_node) {
+                visited.insert(next_node);
+                let descendant_paths =
+                    recursive_path_finder_no_coverage(graph, next_node, end_node, visited)?;
                 visited.remove(&next_node);
                 paths.extend(
                     descendant_paths
