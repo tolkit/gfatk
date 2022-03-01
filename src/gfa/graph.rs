@@ -520,14 +520,23 @@ pub fn all_paths<T, U, Ix: IndexType>(
             // for the set of visited nodes
             let mut visited = HashMap::new();
             visited.insert(start_node, 1usize);
-
-            recursive_path_finder_incl_coverage(graph, start_node, end_node, &mut visited, cov_map)
+            stacker::grow(8192 * 8192, || {
+                recursive_path_finder_incl_coverage(
+                    graph,
+                    start_node,
+                    end_node,
+                    &mut visited,
+                    cov_map,
+                )
+            })
         }
         None => {
             let mut visited = HashSet::new();
             visited.insert(start_node);
 
-            recursive_path_finder_no_coverage(graph, start_node, end_node, &mut visited)
+            stacker::grow(8192 * 8192, || {
+                recursive_path_finder_no_coverage(graph, start_node, end_node, &mut visited)
+            })
         }
     }
 }

@@ -17,3 +17,4 @@ serde = { version = "1", features = ["derive"] }
 itertools = "0.10.2"
 anyhow = "1.0"
 thiserror = "1.0"
+stacker = "0.1"

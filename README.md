@@ -1,158 +1,49 @@
 # gfatk
 
-Exploratory functions to manipulate Graphical Fragment Assembly Format (GFA), and Graph Alignment Format (GAF) files.
+<p align="center">
+    <img width="300" height="132" src="https://www.darwintreeoflife.org/wp-content/themes/dtol/dist/assets/gfx/dtol-logo-round.png">
+</p>
 
-All code should be considered a prototype, with minimal testing.
+A command line utility to explore, extract, and linearise plant mitochondrial assemblies. The Graphical Fragment Assembly files (GFAs) used to refine the code in this repository are almost exclusively generated from the assembly program <a href="https://github.com/maickrau/MBG">MBG</a>. Little testing has been done beyond the output of MBG.
 
-## Usage
+## Pipeline
 
-### gfatk stats
+The pipeline is still being ironed out, but it progresses like this:
 
-Some stats about the GFA, splitting the GFA into subgraphs if there are any. Number of nodes, edges, sequence length (incl & excl overlaps), and GC content of sequence reported. Requires only an input GFA.
+- Assemble plant mitome/plastome using MBG
+- Extract mitochondrial subgraph from the MBG output GFA
+- Map raw reads to this graph using <a href="https://github.com/maickrau/GraphAligner">GraphAligner</a>
+- Format output of GraphAligner into a TSV
+- Linearise the GFA by traversing the graph to find the longest path
 
-```
-gfatk-stats 
-Some stats about the input GFA.
+In terms of `gfatk` commands, it looks like this:
 
-USAGE:
-    gfatk stats --gfa <gfa>
+```bash
+# install rust and `cargo install --path .` etc.
+# MBG output = output.gfa
 
-FLAGS:
-    -h, --help       Prints help information
-    -V, --version    Prints version information
+# optionally check what your GFA structure is
+gfatk stats -g output.gfa
 
-OPTIONS:
-    -g, --gfa <gfa>    Input GFA file.
-```
+# extract the mitochondrial subgraph
+# this is done using coverage & GC content info
+gfatk extract-mito -g output.gfa > mito.gfa
 
-### gfatk linear
+# map raw reads to this graph
+GraphAligner -g mito.gfa -f raw_reads.fa.gz -a aln.gaf -x vg
 
-Turn a GFA into a linear sequence by traversing the graph, using each segment only once.
+# format the aln.gaf output
+gfatk gaf -g aln.gaf > aln.txt
 
-```
-gfatk-linear 
-Force a linear representation of the graph.
-Each node is included once only.
-
-USAGE:
-    gfatk linear [OPTIONS] --fasta-header <fasta-header> --gfa <gfa>
-
-FLAGS:
-    -h, --help       Prints help information
-    -V, --version    Prints version information
-
-OPTIONS:
-    -c, --coverage-file <coverage-file>    Name of the text file indicating the oriented coverage of links in a GFA.
-    -f, --fasta-header <fasta-header>      Name of the fasta header in the output file. [default: gfatk-linear]
-    -g, --gfa <gfa>                        Input GFA file.
+# now we linearise
+gfatk linear -g mito.gfa -c aln.txt > linearised.fasta
+# alternatively pass the `-i` flag which will include
+# coverage information from the GFA itself
+gfatk linear -ig mito.gfa -c aln.txt > linearised.fasta
+# if the graph is even slightly complex, this last command
+# will fail with a stack overflow.
 ```
 
-Can take the output from `gfatk gaf`, but using different starting points in the graph gives different coverages. Not currently sure how to solve this, apart from iterating through every longest path.
+## Caveats
 
-### gfatk overlap
-
-Extract overlapping regions in a GFA between two segments, and extend the sequence either side of the overlap.
-
-```
-gfatk-overlap 
-Extract overlaps from a GFA.
-
-USAGE:
-    gfatk overlap [OPTIONS] --gfa <gfa>
-
-FLAGS:
-    -h, --help       Prints help information
-    -V, --version    Prints version information
-
-OPTIONS:
-    -g, --gfa <gfa>      Input GFA file.
-    -s, --size <size>    Region around overlap to extract. [default: 1000]
-```
-
-E.g. 
-
-`gfatk overlap -g test.gfa > test.fa`
-
-### gfatk extract
-
-Extract a connected subgraph given a node. Supply a gfa, a sequence ID connected to the subgraph you want to extract, and optionally a number of iterations to search for neighbours for.
-
-I realise now this is almost identical to `gfatools view -l [node] -r [some number] gfa.gfa`.
-
-```
-gfatk-extract 
-Extract subgraph from a GFA, given a segment name.
-
-USAGE:
-    gfatk extract [OPTIONS] --gfa <gfa> --sequence-id <sequence-id>
-
-FLAGS:
-    -h, --help       Prints help information
-    -V, --version    Prints version information
-
-OPTIONS:
-    -g, --gfa <gfa>                    Input GFA file.
-    -i, --iterations <iterations>      Number of iterations to recursively search for connecting nodes. [default: 3]
-    -s, --sequence-id <sequence-id>    Extract subgraph of which this sequence is part of.
-```
-
-### gfatk gaf
-
-Count the coverage of each junction/overlap from a GAF file.
-
-Outputs a TSV of:
-
-```
-from_orient	from	to_orient	to	coverage
-+       232     -       228     122
--       229     -       231     97
-+       231     +       228     148
--       227     -       228     184
-+       232     -       229     116
-+       229     +       227     189
--       233     +       231     83
--       232     +       233     106
-+       230     -       227     583
--       230     +       231     108
--       230     +       232     178
-+       228     -       232     133
--       228     -       231     115
-+       230     -       2       3
--       228     -       233     168
--       233     +       232     165
--       231     +       230     112
-+       229     -       232     145
-+       231     +       229     104
-+       233     +       229     143
-+       2       -       230     21
--       232     +       230     132
--       227     -       229     181
-+       228     +       227     250
--       229     -       233     160
-+       233     +       228     154
--       231     +       233     121
-+       227     -       230     535
-```
-
-Without the headers though. The idea is to passs these as the edge weights in the GFA graph.
-
-```
-gfatk-gaf 
-gaf
-
-USAGE:
-    gfatk gaf --gaf <gaf>
-
-FLAGS:
-    -h, --help       Prints help information
-    -V, --version    Prints version information
-
-OPTIONS:
-    -g, --gaf <gaf>    Input GAF file.
-```
-
-## TODO
-
-- Mitochondrial genomes have higher GC content on average than chloroplast genomes. This, coupled with the fact they are larger should be able to filter out the mito graph.
-- Incorporate coverage information to extract the linear path through a graph for any given input graph, not easy cases (e.g. *Quercus*)
-- graphalgs might be my friend here: https://github.com/PrototypeRailGun/graphalgs/blob/27c6f8adf1fbeeb702f69c4c87d53b203767f85b/src/metrics.rs
+Still in active development, so I expect there will be bugs & API changes.
