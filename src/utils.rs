@@ -3,6 +3,20 @@ use gfa::optfields::{OptField, OptFieldVal::*};
 use petgraph::graph::NodeIndex;
 use std::collections::HashMap;
 
+pub fn get_edge_coverage(options: &Vec<OptField>) -> Result<i64> {
+    for op in options {
+        match op.tag {
+            // ec
+            [101, 99] => match op.value {
+                Int(i) => return Ok(i),
+                _ => bail!("Could not find integer ec:i:<i64> tag."),
+            },
+            _ => bail!("Could not find ec (edge coverage) tag."),
+        };
+    }
+    bail!("Edge coverage not found.")
+}
+
 pub fn get_option_string(options: Vec<OptField>) -> Result<String> {
     let mut tag_val = String::new();
     for op in options {
@@ -163,5 +177,25 @@ impl GFAGraphLookups {
             .node_index;
 
         Ok(*node_index)
+    }
+}
+
+use std::fmt;
+
+impl fmt::Display for GFAGraphLookups {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut output = String::new();
+        output += "\n\tSegment ID's:\n\t";
+
+        let mut seg_ids: String = self
+            .0
+            .iter()
+            .map(|pair| pair.seg_id.to_string() + ", ")
+            .collect();
+        seg_ids.drain(seg_ids.len() - 2..);
+
+        output += &seg_ids;
+
+        write!(f, "{}\n", output)
     }
 }

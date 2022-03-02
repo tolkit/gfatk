@@ -47,3 +47,7 @@ gfatk linear -ig mito.gfa -c aln.txt > linearised.fasta
 ## Caveats
 
 Still in active development, so I expect there will be bugs & API changes.
+
+## Thanks
+
+Many thanks to the developers of MBG and GraphAligner, and <a href="https://github.com/marcelauliano">Marcela Uliano-Silva</a>, who is driving the development of mitochondrial assemblies across the tree of life. Sergey Nurk, Alex Twyford, Lucia Campos.

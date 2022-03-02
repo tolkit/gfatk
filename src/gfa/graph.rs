@@ -70,7 +70,7 @@ impl GFAungraph {
 // coverage weight, used in gfatk linear.
 // GFA's should always specify Links in a specific direction..?
 // so digraphs should be where all the functionality lies.
-pub struct GFAdigraph(pub Graph<usize, (Orientation, Orientation, Option<u32>)>);
+pub struct GFAdigraph(pub Graph<usize, (Orientation, Orientation, Option<i64>)>);
 
 impl GFAdigraph {
     pub fn debug_with_dot(&self) {
@@ -147,7 +147,7 @@ impl GFAdigraph {
         Ok(out_vec)
     }
 
-    // mutably insert the coverages
+    #[deprecated(note = "add_coverages was used but now coverages are used from the GFA itself.")]
     pub fn add_coverages(
         &mut self,
         coverages: &Option<Result<Vec<GAFTSVRecord>>>,
@@ -167,8 +167,11 @@ impl GFAdigraph {
             let coverage = match coverages {
                 Some(c) => {
                     // is it okay just to unwrap here?
-                    let coverages = c.as_ref().unwrap();
-                    let mut res: Option<u32> = None;
+                    let coverages = c
+                        .as_ref()
+                        .ok()
+                        .context("Error adding coverage to the graph.")?;
+                    let mut res: Option<i64> = None;
                     for cv in coverages {
                         // if everything matches...
                         if from_id == cv.from
@@ -176,7 +179,7 @@ impl GFAdigraph {
                             && from_orient.plus_minus_as_byte() == cv.from_orient as u8
                             && to_orient.plus_minus_as_byte() == cv.to_orient as u8
                         {
-                            res = Some(cv.coverage);
+                            res = Some(cv.coverage as i64);
                         }
                     }
                     res
@@ -257,7 +260,6 @@ impl GFAdigraph {
     pub fn all_paths_all_node_pairs(
         &self,
         graph_indices: &GFAGraphLookups,
-        coverages: Option<Result<Vec<GAFTSVRecord>>>,
         rel_coverage_map: Option<&HashMap<NodeIndex, usize>>,
     ) -> Result<(Vec<NodeIndex>, Vec<usize>, Vec<usize>)> {
         let graph = &self.0;
@@ -304,7 +306,7 @@ impl GFAdigraph {
                     let a_b_edges: Vec<(
                         NodeIndex,
                         NodeIndex,
-                        (Orientation, Orientation, Option<u32>),
+                        (Orientation, Orientation, Option<i64>),
                     )> = graph
                         .edges_connecting(from_p1, to_p1)
                         .map(|e| {
@@ -317,7 +319,7 @@ impl GFAdigraph {
                     let c_b_edges: Vec<(
                         NodeIndex,
                         NodeIndex,
-                        (Orientation, Orientation, Option<u32>),
+                        (Orientation, Orientation, Option<i64>),
                     )> = graph
                         .edges_connecting(to_p2, from_p2)
                         .map(|e| {
@@ -374,58 +376,50 @@ impl GFAdigraph {
         // if we do then we shall incorporate this information
         // maybe add an expected number of segments?
 
-        let final_path = match coverages.is_none() {
-            // if no coverage, take (one of) the longest path(s).
-            true => valid_paths
-                .to_vec()
-                .get(0)
-                .context("There were no valid paths found.")?
-                .clone(),
-            false => {
-                // now iterate over all the paths again
-                // let mut index = 0;
-                // iterate over all the paths of this length
-                // keep track of lengths
+        let final_path = {
+            // now iterate over all the paths again
+            // let mut index = 0;
+            // iterate over all the paths of this length
+            // keep track of lengths
 
-                // let mut final_path = Vec::new();
-                // let mut final_coverage = 0;
-                // push path and coverage into map
-                // don't care about memory allocations for the moment.
-                let mut map = HashMap::new();
+            // let mut final_path = Vec::new();
+            // let mut final_coverage = 0;
+            // push path and coverage into map
+            // don't care about memory allocations for the moment.
+            let mut map = HashMap::new();
 
-                for path in &valid_paths {
-                    let mut path_coverage = 0;
+            for path in &valid_paths {
+                let mut path_coverage = 0;
 
-                    let node_pairs = path.windows(2);
-                    for pair in node_pairs {
-                        let from = pair[0];
-                        let to = pair[1];
-                        let connecting = &mut graph.edges_connecting(from, to);
-                        let coverage = connecting
-                            .next()
-                            .with_context(|| {
-                                format!("No connecting edges from {:?} to {:?}", from, to)
-                            })?
-                            .weight()
-                            .2;
+                let node_pairs = path.windows(2);
+                for pair in node_pairs {
+                    let from = pair[0];
+                    let to = pair[1];
+                    let connecting = &mut graph.edges_connecting(from, to);
+                    let coverage = connecting
+                        .next()
+                        .with_context(|| {
+                            format!("No connecting edges from {:?} to {:?}", from, to)
+                        })?
+                        .weight()
+                        .2;
 
-                        match coverage {
-                            Some(c) => path_coverage += c,
-                            None => (),
-                        }
+                    match coverage {
+                        Some(c) => path_coverage += c,
+                        None => (),
                     }
-
-                    map.insert(path, path_coverage);
                 }
 
-                let highest_coverage_path =
-                    map.iter().max_by(|a, b| a.1.cmp(&b.1)).map(|(k, v)| (k, v));
-                eprintln!(
-                    "[+]\tHighest cumulative coverage path = {}",
-                    highest_coverage_path.unwrap().1
-                );
-                highest_coverage_path.unwrap().0.to_vec()
+                map.insert(path, path_coverage);
             }
+
+            let highest_coverage_path =
+                map.iter().max_by(|a, b| a.1.cmp(&b.1)).map(|(k, v)| (k, v));
+            eprintln!(
+                "[+]\tHighest cumulative coverage path = {}",
+                highest_coverage_path.unwrap().1
+            );
+            highest_coverage_path.unwrap().0.to_vec()
         };
 
         let mut chosen_path_string = Vec::new();

@@ -5,7 +5,9 @@ use std::collections::HashMap;
 use crate::gfa::graph::{segments_subgraph, GFAdigraph, GFAungraph};
 use crate::gfa::writer;
 use crate::utils;
-use crate::utils::{parse_cigar, reverse_complement, GFAGraphLookups, GFAGraphPair};
+use crate::utils::{
+    get_edge_coverage, parse_cigar, reverse_complement, GFAGraphLookups, GFAGraphPair,
+};
 use anyhow::{bail, Context, Result};
 use csv::ReaderBuilder;
 use gfa::gfa::{Orientation, GFA};
@@ -84,7 +86,7 @@ impl GFAtk {
     pub fn into_digraph(&self) -> Result<(GFAGraphLookups, GFAdigraph)> {
         let gfa = &self.0;
         // eprintln!("[+]\tReading GFA into a directed graph.");
-        let mut gfa_graph: Graph<usize, (Orientation, Orientation, Option<u32>)> = Graph::new();
+        let mut gfa_graph: Graph<usize, (Orientation, Orientation, Option<i64>)> = Graph::new();
 
         let mut graph_indices = GFAGraphLookups::new();
         // read the segments into graph nodes
@@ -104,12 +106,14 @@ impl GFAtk {
             let from_orient = edge.from_orient;
             let to_orient = edge.to_orient;
 
+            let ec = get_edge_coverage(&edge.optional)?;
+
             // get the node index for a given edge
             let from_index = graph_indices.seg_id_to_node_index(from)?;
             let to_index = graph_indices.seg_id_to_node_index(to)?;
 
             // add the edges
-            gfa_graph.add_edge(from_index, to_index, (from_orient, to_orient, None));
+            gfa_graph.add_edge(from_index, to_index, (from_orient, to_orient, Some(ec)));
         }
 
         Ok((graph_indices, GFAdigraph(gfa_graph)))
@@ -496,7 +500,7 @@ impl GFAtk {
     // we actually return only a float here
     // but could change this later...
 
-    pub fn sequence_stats(&self, further: bool) -> Result<(f32, f32)> {
+    pub fn sequence_stats(&self, further: bool) -> Result<(f32, f32, usize)> {
         let gfa = &self.0;
 
         let cov = Self::get_coverage(&self)?;
@@ -530,7 +534,7 @@ impl GFAtk {
             println!("\tAverage coverage of total segments:\t{}", cov);
         }
 
-        Ok((avg_gc, cov))
+        Ok((avg_gc, cov, total_sequence_length))
     }
 
     // add a hashmap of relative coverage for each node:
