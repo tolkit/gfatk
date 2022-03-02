@@ -1,7 +1,6 @@
 pub mod extract;
 pub mod extract_mito;
 pub mod fasta;
-pub mod gaf;
 pub mod gfa;
 pub mod linear;
 pub mod load;

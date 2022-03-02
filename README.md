@@ -24,7 +24,8 @@ In terms of `gfatk` commands, it looks like this:
 gfatk stats -g output.gfa
 
 # extract the mitochondrial subgraph
-# this is done using coverage & GC content info
+# this is done using coverage, GC content info
+# and expected minimum genome size (100,000bp)
 gfatk extract-mito -g output.gfa > mito.gfa
 
 # now we linearise
@@ -47,3 +48,4 @@ Many thanks to the developers of MBG and GraphAligner, and partners in the Tree 
 - Sergey Nurk
 - Alex Twyford
 - Lucia Campos
+- Chenxi Zhou

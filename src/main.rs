@@ -1,23 +1,22 @@
 use anyhow::Result;
-use clap::{App, AppSettings, Arg};
+use clap::{crate_version, Arg, Command};
 use gfatk::extract;
 use gfatk::extract_mito;
 use gfatk::fasta;
-use gfatk::gaf;
 use gfatk::linear;
 use gfatk::overlap;
 use gfatk::stats;
 
 fn main() -> Result<()> {
-    let matches = App::new("gfatk")
-        .global_setting(AppSettings::PropagateVersion)
-        .global_setting(AppSettings::UseLongFormatForHelpSubcommand)
+    let matches = Command::new("gfatk")
+        .version(crate_version!())
+        .propagate_version(true)
+        .arg_required_else_help(true)
         .author("Max Brown <mb39@sanger.ac.uk>")
         .about("Some functions to process GFA files.")
         .subcommand(
-            App::new("overlap")
+            Command::new("overlap")
                 .about("Extract overlaps from a GFA.")
-                // output file name
                 .arg(
                     Arg::new("gfa")
                         .short('g')
@@ -35,7 +34,7 @@ fn main() -> Result<()> {
                 ),
         )
         .subcommand(
-            App::new("extract")
+            Command::new("extract")
                 .about("Extract subgraph from a GFA, given a segment name.")
                 // output file name
                 .arg(
@@ -63,24 +62,8 @@ fn main() -> Result<()> {
                 ),
         )
         .subcommand(
-            App::new("gaf")
-                .about("Extract coverages from GAF file.")
-                // output file name
-                .arg(
-                    Arg::new("gaf")
-                        .short('g')
-                        .long("gaf")
-                        .takes_value(true)
-                        .required(true)
-                        .help("Input GAF file."),
-                ),
-        )
-        .subcommand(
-            App::new("linear")
-                .about(
-                    "Force a linear representation of the graph.\nEach node is included once only.",
-                )
-                // output file name
+            Command::new("linear")
+                .about("Force a linear representation of the graph.")
                 .arg(
                     Arg::new("gfa")
                         .short('g')
@@ -113,7 +96,7 @@ fn main() -> Result<()> {
                 ),
         )
         .subcommand(
-            App::new("fasta")
+            Command::new("fasta")
                 .about(
                     "Extract a fasta file.\nAlmost as simple as: awk \'/^S/{print \">\"$2\"\\n\"$3}\'.",
                 )
@@ -128,7 +111,7 @@ fn main() -> Result<()> {
                 ),
         )
         .subcommand(
-            App::new("stats")
+            Command::new("stats")
                 .about(
                     "Some stats about the input GFA.",
                 )
@@ -143,7 +126,7 @@ fn main() -> Result<()> {
                 ),
         )
         .subcommand(
-            App::new("extract-mito")
+            Command::new("extract-mito")
                 .about(
                     "Extract the mitochondria from a GFA.",
                 )
@@ -165,9 +148,6 @@ fn main() -> Result<()> {
         }
         Some(("extract", matches)) => {
             extract::extract(matches)?;
-        }
-        Some(("gaf", matches)) => {
-            gaf::gaf_to_graph(matches)?;
         }
         Some(("linear", matches)) => {
             linear::force_linear(matches)?;
