@@ -12,9 +12,7 @@ The pipeline is still being ironed out, but it progresses like this:
 
 - Assemble plant mitome/plastome using MBG
 - Extract mitochondrial subgraph from the MBG output GFA
-- Map raw reads to this graph using <a href="https://github.com/maickrau/GraphAligner">GraphAligner</a>
-- Format output of GraphAligner into a TSV
-- Linearise the GFA by traversing the graph to find the longest path
+- Linearise the GFA by traversing the graph to find the longest path (simple or not)
 
 In terms of `gfatk` commands, it looks like this:
 
@@ -29,14 +27,8 @@ gfatk stats -g output.gfa
 # this is done using coverage & GC content info
 gfatk extract-mito -g output.gfa > mito.gfa
 
-# map raw reads to this graph
-GraphAligner -g mito.gfa -f raw_reads.fa.gz -a aln.gaf -x vg
-
-# format the aln.gaf output
-gfatk gaf -g aln.gaf > aln.txt
-
 # now we linearise
-gfatk linear -g mito.gfa -c aln.txt > linearised.fasta
+gfatk linear -g mito.gfa > linearised.fasta
 # alternatively pass the `-i` flag which will include
 # coverage information from the GFA itself
 gfatk linear -ig mito.gfa -c aln.txt > linearised.fasta
@@ -50,4 +42,8 @@ Still in active development, so I expect there will be bugs & API changes.
 
 ## Thanks
 
-Many thanks to the developers of MBG and GraphAligner, and <a href="https://github.com/marcelauliano">Marcela Uliano-Silva</a>, who is driving the development of mitochondrial assemblies across the tree of life. Sergey Nurk, Alex Twyford, Lucia Campos.
+Many thanks to the developers of MBG and GraphAligner, and partners in the Tree of Life program and beyond:
+- Marcela Uliano-Silva
+- Sergey Nurk
+- Alex Twyford
+- Lucia Campos
