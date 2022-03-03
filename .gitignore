@@ -4,5 +4,5 @@ test*
 /check_oak_fasta
 .vscode
 /join_segments_tests
-*.gfa
+./*.gfa
 *.txt

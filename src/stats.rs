@@ -1,7 +1,7 @@
 use crate::gfa::gfa::GFAtk;
 use crate::gfa::graph::segments_subgraph;
 use crate::load::load_gfa;
-use anyhow::Result;
+use anyhow::{Context, Result};
 
 // so we can extract the segments with highest GC content.
 #[derive(Clone)]
@@ -46,7 +46,7 @@ impl Stats {
 // I want node indices & segment names printed too (maybe optionally.)
 pub fn stats(matches: &clap::ArgMatches, further: bool) -> Result<Option<Vec<usize>>> {
     // required so unwrap safely
-    let gfa_file = matches.value_of("gfa").unwrap();
+    let gfa_file = matches.value_of("gfa").context("No gfa file specified")?;
 
     let gfa: GFAtk = GFAtk(load_gfa(gfa_file)?);
 

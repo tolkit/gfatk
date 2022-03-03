@@ -50,7 +50,7 @@ pub fn get_option_string(options: Vec<OptField>) -> Result<String> {
     // should always end in \t ^
     let tag_val_op_un = tag_val
         .strip_suffix("\t")
-        .context("Could not strip a tab from the suffix.")?;
+        .context("Could not strip a tab from the suffix of the tag.")?;
     Ok(tag_val_op_un.to_string())
 }
 
@@ -58,7 +58,10 @@ pub fn get_option_string(options: Vec<OptField>) -> Result<String> {
 pub fn parse_cigar(cigar: &[u8]) -> Result<usize> {
     // check it ends with an M
     if !cigar.ends_with(&[77]) {
-        panic!("CIGAR did not end with M.");
+        bail!(
+            "CIGAR string did not end with M: {}",
+            std::str::from_utf8(cigar).with_context(|| format!("Malformed UTF8: {:?}", cigar))?
+        );
     }
     let stripped = cigar.strip_suffix(&[77]);
     match stripped {

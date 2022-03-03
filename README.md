@@ -32,7 +32,7 @@ gfatk extract-mito -g output.gfa > mito.gfa
 gfatk linear -g mito.gfa > linearised.fasta
 # alternatively pass the `-i` flag which will include
 # coverage information from the GFA itself
-gfatk linear -ig mito.gfa -c aln.txt > linearised.fasta
+gfatk linear -ig mito.gfa > linearised.fasta
 # if the graph is even slightly complex, this last command
 # will fail with a stack overflow.
 ```

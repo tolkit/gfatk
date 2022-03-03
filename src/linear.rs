@@ -1,14 +1,16 @@
 use crate::gfa::gfa::GFAtk;
 use crate::load::load_gfa;
-use anyhow::Result;
+use anyhow::{Context, Result};
 use indexmap::IndexMap;
 
 // what happens if the graph is not circular?
 
 pub fn force_linear(matches: &clap::ArgMatches) -> Result<()> {
     // read in path and parse gfa
-    let gfa_file = matches.value_of("gfa").unwrap();
-    let fasta_header = matches.value_of("fasta-header").unwrap();
+    let gfa_file = matches.value_of("gfa").context("No gfa file specified")?;
+    let fasta_header = matches
+        .value_of("fasta-header")
+        .context("No fasta header specified")?;
     let include_node_coverage = matches.is_present("include-node-coverage");
 
     let gfa: GFAtk = GFAtk(load_gfa(gfa_file)?);
