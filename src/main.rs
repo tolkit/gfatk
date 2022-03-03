@@ -1,5 +1,6 @@
 use anyhow::Result;
 use clap::{crate_version, Arg, Command};
+use gfatk::dot;
 use gfatk::extract;
 use gfatk::extract_mito;
 use gfatk::fasta;
@@ -36,7 +37,6 @@ fn main() -> Result<()> {
         .subcommand(
             Command::new("extract")
                 .about("Extract subgraph from a GFA, given a segment name.")
-                // output file name
                 .arg(
                     Arg::new("gfa")
                         .short('g')
@@ -82,13 +82,6 @@ fn main() -> Result<()> {
                         .help("Name of the fasta header in the output file."),
                 )
                 .arg(
-                    Arg::new("coverage-file")
-                        .short('c')
-                        .long("coverage-file")
-                        .takes_value(true)
-                        .help("Name of the text file indicating the oriented coverage of links in a GFA."),
-                )
-                .arg(
                     Arg::new("include-node-coverage")
                         .short('i')
                         .long("include-node-coverage")
@@ -100,7 +93,6 @@ fn main() -> Result<()> {
                 .about(
                     "Extract a fasta file.\nAlmost as simple as: awk \'/^S/{print \">\"$2\"\\n\"$3}\'.",
                 )
-                // output file name
                 .arg(
                     Arg::new("gfa")
                         .short('g')
@@ -115,7 +107,6 @@ fn main() -> Result<()> {
                 .about(
                     "Some stats about the input GFA.",
                 )
-                // output file name
                 .arg(
                     Arg::new("gfa")
                         .short('g')
@@ -130,7 +121,18 @@ fn main() -> Result<()> {
                 .about(
                     "Extract the mitochondria from a GFA.",
                 )
-                // output file name
+                .arg(
+                    Arg::new("gfa")
+                        .short('g')
+                        .long("gfa")
+                        .takes_value(true)
+                        .required(true)
+                        .help("Input GFA file."),
+                ),
+        )
+        .subcommand(
+            Command::new("dot")
+                .about("Return the dot representation of a GFA.")
                 .arg(
                     Arg::new("gfa")
                         .short('g')
@@ -160,6 +162,9 @@ fn main() -> Result<()> {
         }
         Some(("extract-mito", matches)) => {
             extract_mito::extract_mito(matches)?;
+        }
+        Some(("dot", matches)) => {
+            dot::dot(matches)?;
         }
         _ => {
             println!("Subcommand invalid, run with '--help' for subcommand options. Exiting.");

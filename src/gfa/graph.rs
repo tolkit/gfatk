@@ -6,9 +6,8 @@ use gfa::gfa::GFA;
 use gfa::optfields::OptFields;
 use itertools::Itertools;
 use petgraph::{
-    dot::{Config, Dot},
     graph::{Graph, IndexType, NodeIndex},
-    visit::{EdgeRef, IntoNodeIdentifiers},
+    visit::{EdgeRef, IntoNodeIdentifiers, IntoNodeReferences, NodeIndexable, NodeRef},
     Directed,
     Direction::Outgoing,
     Undirected,
@@ -73,12 +72,51 @@ impl GFAungraph {
 pub struct GFAdigraph(pub Graph<usize, (Orientation, Orientation, Option<i64>)>);
 
 impl GFAdigraph {
-    pub fn debug_with_dot(&self) {
+
+    // somewhat modified, simplified version of this:
+    // https://docs.rs/petgraph/latest/src/petgraph/dot.rs.html#1-349
+    pub fn dot(&self) -> Result<()> {
         let gfa_graph = &self.0;
-        eprintln!(
-            "{:?}",
-            Dot::with_config(&gfa_graph, &[Config::GraphContentOnly])
-        );
+        static INDENT: &str = "    ";
+
+        println!("digraph GFA {{");
+        // print nodes
+        for node in gfa_graph.node_references() {
+            let e = gfa_graph.to_index(node.id());
+            let w = node.weight();
+            println!("{}{} [ label = \"{}\" ]", INDENT, e, w);
+        }
+        // print edges
+        for edge in gfa_graph.edge_references() {
+            let from = gfa_graph.to_index(edge.source());
+            let to = gfa_graph.to_index(edge.target());
+            let from_o = edge.weight().0;
+            let to_o = edge.weight().1;
+
+            let arrowhead_shape = match to_o {
+                Orientation::Forward => "ornormal",
+                Orientation::Backward => "olnormal",
+            };
+
+            let ec = edge
+                .weight()
+                .2
+                .context(format!("No edge weight for edge {:?}", edge))?;
+
+            println!("{}{} -> {} [ label = \"  {}  \" taillabel = \"  {}  \" headlabel = \"  {}  \" arrowhead = \"{}\" ]", 
+                INDENT, 
+                from, 
+                to, 
+                ec, 
+                from_o, 
+                to_o, 
+                arrowhead_shape
+            );
+        }
+
+        println!("}}");
+
+        Ok(())
     }
     // we want weakly connected components, as there may only be an edge in one
     // orientation (perhaps unlikely... but still)

@@ -1,3 +1,4 @@
+pub mod dot;
 pub mod extract;
 pub mod extract_mito;
 pub mod fasta;
