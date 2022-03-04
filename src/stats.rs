@@ -1,7 +1,8 @@
-use crate::gfa::gfa::GFAtk;
 use crate::gfa::graph::segments_subgraph;
 use crate::load::load_gfa;
-use anyhow::{Context, Result};
+use crate::utils;
+use crate::{gfa::gfa::GFAtk, load::load_gfa_stdin};
+use anyhow::{bail, Result};
 
 // so we can extract the segments with highest GC content.
 #[derive(Clone)]
@@ -44,11 +45,31 @@ impl Stats {
 
 // I've handled 'further' here really badly...
 // I want node indices & segment names printed too (maybe optionally.)
-pub fn stats(matches: &clap::ArgMatches, further: bool) -> Result<Option<Vec<usize>>> {
+pub fn stats(matches: &clap::ArgMatches, further: bool) -> Result<Option<(GFAtk, Vec<usize>)>> {
     // required so unwrap safely
-    let gfa_file = matches.value_of("gfa").context("No gfa file specified")?;
+    let gfa_file = matches.value_of("GFA");
 
-    let gfa: GFAtk = GFAtk(load_gfa(gfa_file)?);
+    let error_string = match further {
+        true => "extract-mito",
+        false => "stats",
+    };
+
+    let gfa = match gfa_file {
+        Some(f) => {
+            if !f.ends_with(".gfa") {
+                bail!("Input file is not a GFA.")
+            }
+
+            GFAtk(load_gfa(f)?)
+        }
+        None => match utils::is_stdin() {
+            true => GFAtk(load_gfa_stdin(std::io::stdin().lock())?),
+            false => bail!(
+                "No input from STDIN. Run `gfatk {} -h` for help.",
+                error_string
+            ),
+        },
+    };
 
     // load gfa into graph structure
     let (graph_indices, gfa_graph) = gfa.into_digraph()?;
@@ -85,7 +106,7 @@ pub fn stats(matches: &clap::ArgMatches, further: bool) -> Result<Option<Vec<usi
 
     // if we want to do more stat things
     if further {
-        return Ok(Some(store_stats.extract_mito()));
+        return Ok(Some((gfa, store_stats.extract_mito())));
     } else {
         println!("Total number of subgraphs: {}", no_subgraphs);
     }

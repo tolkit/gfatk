@@ -469,6 +469,7 @@ impl GFAtk {
     }
 
     // get the average of the coverages from a GFA.
+    // this function + below
     fn parse_coverage_opt(opt: &OptFieldVal) -> Result<&f32> {
         let ll = match opt {
             OptFieldVal::Float(f) => f,
@@ -495,6 +496,29 @@ impl GFAtk {
         let sum: f32 = ll_tag_vec.iter().fold(0.0, |a, b| a + **b);
 
         Ok(sum / len)
+    }
+
+    pub fn node_seq_len_and_cov(&self, node: usize) -> Result<(usize, f32)> {
+        let gfa = &self.0;
+
+        let ll_tag: [u8; 2] = [108, 108];
+        let mut seq_len = None;
+        let mut cov = None;
+
+        for segment in &gfa.segments {
+            if segment.name == node {
+                seq_len = Some(segment.sequence.len());
+                let opt = &segment.optional;
+                for c in opt {
+                    if c.tag == ll_tag {
+                        cov = Some(*Self::parse_coverage_opt(&c.value)?);
+                        break;
+                    }
+                }
+            }
+        }
+
+        Ok((seq_len.unwrap(), cov.unwrap()))
     }
 
     // we actually return only a float here

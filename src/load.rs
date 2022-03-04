@@ -7,9 +7,9 @@ use bstr::io::*;
 use gfa::{
     gfa::{SegmentId, GFA},
     optfields::OptFields,
-    parser::GFAParser,
+    parser::{GFAParser, ParseError},
 };
-use std::io::{BufReader, Read};
+use std::io::{BufReader, Read, StdinLock};
 
 pub fn byte_lines_iter<'a, R: Read + 'a>(reader: R) -> Box<dyn Iterator<Item = Vec<u8>> + 'a> {
     Box::new(BufReader::new(reader).byte_lines().map(|l| l.unwrap()))
@@ -28,5 +28,35 @@ where
             path.as_ref().as_os_str()
         )
     })?;
+    Ok(gfa)
+}
+
+// take input from stdin, instead of a file.
+// we'll lock on to it, saves a bit of code repitition
+
+pub fn load_gfa_stdin<N, T>(stdin: StdinLock) -> Result<GFA<N, T>, ParseError>
+where
+    N: SegmentId,
+    T: OptFields,
+{
+    let parser = GFAParser::new();
+    let lines = BufReader::new(stdin).byte_lines();
+
+    let mut gfa = GFA::new();
+
+    for line in lines {
+        let line = line?;
+        // if this not added then
+        if line.is_empty() {
+            continue;
+        }
+        match parser.parse_gfa_line(line.as_ref()) {
+            Ok(parsed) => gfa.insert_line(parsed),
+            // I don't have access to the .tolerance field...
+            // Err(err) if err.can_safely_continue(&parser.tolerance) => (),
+            Err(err) => return Err(err),
+        };
+    }
+
     Ok(gfa)
 }

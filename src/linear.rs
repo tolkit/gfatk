@@ -1,19 +1,29 @@
 use crate::gfa::gfa::GFAtk;
-use crate::load::load_gfa;
-use anyhow::{Context, Result};
+use crate::load::{load_gfa, load_gfa_stdin};
+use crate::utils;
+use anyhow::{bail, Context, Result};
 use indexmap::IndexMap;
-
-// what happens if the graph is not circular?
 
 pub fn force_linear(matches: &clap::ArgMatches) -> Result<()> {
     // read in path and parse gfa
-    let gfa_file = matches.value_of("gfa").context("No gfa file specified")?;
+    let gfa_file = matches.value_of("GFA");
     let fasta_header = matches
         .value_of("fasta-header")
         .context("No fasta header specified")?;
     let include_node_coverage = matches.is_present("include-node-coverage");
 
-    let gfa: GFAtk = GFAtk(load_gfa(gfa_file)?);
+    let gfa: GFAtk = match gfa_file {
+        Some(f) => {
+            if !f.ends_with(".gfa") {
+                bail!("Input file is not a GFA.")
+            }
+            GFAtk(load_gfa(f)?)
+        }
+        None => match utils::is_stdin() {
+            true => GFAtk(load_gfa_stdin(std::io::stdin().lock())?),
+            false => bail!("No input from STDIN. Run `gfatk extract -h` for help."),
+        },
+    };
 
     // load gfa into graph structure
     let (graph_indices, gfa_graph) = gfa.into_digraph()?;

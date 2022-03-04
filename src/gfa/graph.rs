@@ -1,5 +1,5 @@
-use crate::gfa::gfa::GAFTSVRecord;
-use crate::utils::GFAGraphLookups;
+use crate::gfa::gfa::{GAFTSVRecord, GFAtk};
+use crate::utils::{format_usize_to_kb, GFAGraphLookups};
 use anyhow::{bail, Context, Result};
 use gfa::gfa::Orientation;
 use gfa::gfa::GFA;
@@ -72,10 +72,9 @@ impl GFAungraph {
 pub struct GFAdigraph(pub Graph<usize, (Orientation, Orientation, Option<i64>)>);
 
 impl GFAdigraph {
-
     // somewhat modified, simplified version of this:
     // https://docs.rs/petgraph/latest/src/petgraph/dot.rs.html#1-349
-    pub fn dot(&self) -> Result<()> {
+    pub fn dot(&self, gfa: GFAtk) -> Result<()> {
         let gfa_graph = &self.0;
         static INDENT: &str = "    ";
 
@@ -84,7 +83,12 @@ impl GFAdigraph {
         for node in gfa_graph.node_references() {
             let e = gfa_graph.to_index(node.id());
             let w = node.weight();
-            println!("{}{} [ label = \"{}\" ]", INDENT, e, w);
+            let meta = gfa.node_seq_len_and_cov(*w)?;
+            println!(
+                // see https://stackoverflow.com/questions/20516143/graphviz-dot-different-fontsizes-in-same-label
+                "{}{} [ label = <<FONT POINT-SIZE=\'20\'>{}</FONT><br/><FONT POINT-SIZE=\'10\'>L: {}</FONT><br/><FONT POINT-SIZE=\'10\'>C: {}</FONT>> ];",
+                INDENT, e, w, format_usize_to_kb(meta.0), meta.1
+            );
         }
         // print edges
         for edge in gfa_graph.edge_references() {
@@ -104,12 +108,12 @@ impl GFAdigraph {
                 .context(format!("No edge weight for edge {:?}", edge))?;
 
             println!("{}{} -> {} [ label = \"  {}  \" taillabel = \"  {}  \" headlabel = \"  {}  \" arrowhead = \"{}\" ]", 
-                INDENT, 
-                from, 
-                to, 
-                ec, 
-                from_o, 
-                to_o, 
+                INDENT,
+                from,
+                to,
+                ec,
+                from_o,
+                to_o,
                 arrowhead_shape
             );
         }
@@ -551,24 +555,13 @@ pub fn all_paths<T, U, Ix: IndexType>(
         Some(cov_map) => {
             // for the set of visited nodes
             let mut visited = HashMap::new();
-            visited.insert(start_node, 1usize);
-            stacker::grow(8192 * 8192, || {
-                recursive_path_finder_incl_coverage(
-                    graph,
-                    start_node,
-                    end_node,
-                    &mut visited,
-                    cov_map,
-                )
-            })
+            visited.insert(start_node, 1);
+            recursive_path_finder_incl_coverage(graph, start_node, end_node, &mut visited, cov_map)
         }
         None => {
             let mut visited = HashSet::new();
             visited.insert(start_node);
-
-            stacker::grow(8192 * 8192, || {
-                recursive_path_finder_no_coverage(graph, start_node, end_node, &mut visited)
-            })
+            recursive_path_finder_no_coverage(graph, start_node, end_node, &mut visited)
         }
     }
 }

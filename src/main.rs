@@ -14,17 +14,13 @@ fn main() -> Result<()> {
         .propagate_version(true)
         .arg_required_else_help(true)
         .author("Max Brown <mb39@sanger.ac.uk>")
-        .about("Some functions to process GFA files.")
+        .about("Explore and linearise (mitochondrial) GFA files.")
         .subcommand(
             Command::new("overlap")
                 .about("Extract overlaps from a GFA.")
                 .arg(
-                    Arg::new("gfa")
-                        .short('g')
-                        .long("gfa")
-                        .takes_value(true)
-                        .required(true)
-                        .help("Input GFA file."),
+                    Arg::new("GFA")
+                        .help("Input GFA file.")
                 )
                 .arg(
                     Arg::new("size")
@@ -38,12 +34,8 @@ fn main() -> Result<()> {
             Command::new("extract")
                 .about("Extract subgraph from a GFA, given a segment name.")
                 .arg(
-                    Arg::new("gfa")
-                        .short('g')
-                        .long("gfa")
-                        .takes_value(true)
-                        .required(true)
-                        .help("Input GFA file."),
+                    Arg::new("GFA")
+                        .help("Input GFA file.")
                 )
                 .arg(
                     Arg::new("sequence-id")
@@ -65,12 +57,8 @@ fn main() -> Result<()> {
             Command::new("linear")
                 .about("Force a linear representation of the graph.")
                 .arg(
-                    Arg::new("gfa")
-                        .short('g')
-                        .long("gfa")
-                        .takes_value(true)
-                        .required(true)
-                        .help("Input GFA file."),
+                    Arg::new("GFA")
+                        .help("Input GFA file.")
                 )
                 .arg(
                     Arg::new("fasta-header")
@@ -108,12 +96,8 @@ fn main() -> Result<()> {
                     "Some stats about the input GFA.",
                 )
                 .arg(
-                    Arg::new("gfa")
-                        .short('g')
-                        .long("gfa")
-                        .takes_value(true)
-                        .required(true)
-                        .help("Input GFA file."),
+                    Arg::new("GFA")
+                        .help("Input GFA file.")
                 ),
         )
         .subcommand(
@@ -122,24 +106,16 @@ fn main() -> Result<()> {
                     "Extract the mitochondria from a GFA.",
                 )
                 .arg(
-                    Arg::new("gfa")
-                        .short('g')
-                        .long("gfa")
-                        .takes_value(true)
-                        .required(true)
-                        .help("Input GFA file."),
+                    Arg::new("GFA")
+                        .help("Input GFA file.")
                 ),
         )
         .subcommand(
             Command::new("dot")
                 .about("Return the dot representation of a GFA.")
                 .arg(
-                    Arg::new("gfa")
-                        .short('g')
-                        .long("gfa")
-                        .takes_value(true)
-                        .required(true)
-                        .help("Input GFA file."),
+                    Arg::new("GFA")
+                        .help("Input GFA file.")
                 ),
         )
         .get_matches();

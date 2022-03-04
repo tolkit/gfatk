@@ -1,6 +1,6 @@
 use crate::gfa::gfa::GFAtk;
 use crate::load::load_gfa;
-use anyhow::{Result, Context};
+use anyhow::{Context, Result};
 
 pub fn overlap(matches: &clap::ArgMatches) -> Result<()> {
     // required so unwrap safely

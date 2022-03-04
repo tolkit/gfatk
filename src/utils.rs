@@ -1,7 +1,19 @@
 use anyhow::{bail, Context, Result};
+use atty::Stream;
 use gfa::optfields::{OptField, OptFieldVal::*};
 use petgraph::graph::NodeIndex;
 use std::collections::HashMap;
+
+// format a sequence length to Kb
+pub fn format_usize_to_kb(num: usize) -> String {
+    let div = num as f32 / 1000f32;
+    format!("{:.2}Kb", div)
+}
+
+// check if there is anything coming from stdin
+pub fn is_stdin() -> bool {
+    !atty::is(Stream::Stdin)
+}
 
 pub fn get_edge_coverage(options: &Vec<OptField>) -> Result<i64> {
     for op in options {
