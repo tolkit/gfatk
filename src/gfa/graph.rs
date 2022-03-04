@@ -189,52 +189,6 @@ impl GFAdigraph {
         Ok(out_vec)
     }
 
-    // before we search for all the paths, we need to
-    // do a check to see if the links indicate both
-    // forward and reverse links
-    // do this in petgraph by adding nodes and edges.
-    pub fn check_both_strands(&mut self) {
-        let gfa_graph = &mut self.0;
-
-        let mut edge_vec = Vec::new();
-        let mut checks = Vec::new();
-
-        for edge in gfa_graph.edge_references() {
-            let from_orient = edge.weight().0;
-            let to_orient = edge.weight().1;
-
-            let check = gfa_graph.contains_edge(edge.target(), edge.source());
-            checks.push(check);
-
-            edge_vec.push((edge.source(), edge.target(), from_orient, to_orient));
-        }
-
-        let return_early = checks.iter().all(|e| *e == true);
-        if return_early {
-            // don't add loads of extra edges!
-            eprintln!("[+]\tGFA contains forward and reverse links.");
-            return;
-        }
-
-        eprintln!(
-            "[+]\tGFA does not contain forward and reverse links. Adding them to internal graph."
-        );
-
-        for (source, target, from_orient, to_orient) in edge_vec {
-            // if orientations differ, just swap indexes
-            if from_orient != to_orient {
-                gfa_graph.add_edge(target, source, (from_orient, to_orient, None));
-            } else if from_orient == to_orient {
-                // reverse the orientation
-                let opp_orient = match from_orient.is_reverse() {
-                    true => Orientation::Forward,
-                    false => Orientation::Backward,
-                };
-                gfa_graph.add_edge(target, source, (opp_orient, opp_orient, None));
-            }
-        }
-    }
-
     // core algorithm for gfatk linear
     // iterate over all pairs of nodes to find the paths
     // then search though all these paths to find the
