@@ -1,7 +1,5 @@
 // common functions for gfa structures
 
-use std::collections::HashMap;
-
 use crate::gfa::graph::{segments_subgraph, GFAdigraph, GFAungraph};
 use crate::gfa::writer;
 use crate::utils;
@@ -9,34 +7,11 @@ use crate::utils::{
     get_edge_coverage, parse_cigar, reverse_complement, GFAGraphLookups, GFAGraphPair,
 };
 use anyhow::{bail, Context, Result};
-use csv::ReaderBuilder;
 use gfa::gfa::{Orientation, GFA};
 use gfa::optfields::{OptFieldVal, OptionalFields};
 use indexmap::IndexMap;
 use petgraph::graph::{Graph, NodeIndex, UnGraph};
-use serde::Deserialize;
-
-#[derive(Debug, Deserialize)]
-pub struct GAFTSVRecord {
-    pub from_orient: char,
-    pub from: usize,
-    pub to_orient: char,
-    pub to: usize,
-    pub coverage: u32,
-}
-
-pub fn read_gaf_to_records(file: &str) -> Result<Vec<GAFTSVRecord>> {
-    let mut rdr = ReaderBuilder::new()
-        .delimiter(b'\t')
-        .from_path(file)
-        .with_context(|| format!("File: {} not found.", file))?;
-    let mut res = Vec::new();
-    for result in rdr.deserialize() {
-        let record: GAFTSVRecord = result.context("Could not parse record.")?;
-        res.push(record);
-    }
-    Ok(res)
-}
+use std::collections::HashMap;
 
 // the GFA type used throughout
 pub struct GFAtk(pub GFA<usize, OptionalFields>);

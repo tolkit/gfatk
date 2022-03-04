@@ -1,4 +1,4 @@
-use crate::gfa::gfa::{GAFTSVRecord, GFAtk};
+use crate::gfa::gfa::GFAtk;
 use crate::utils::{format_usize_to_kb, GFAGraphLookups};
 use anyhow::{bail, Context, Result};
 use gfa::gfa::Orientation;
@@ -187,59 +187,6 @@ impl GFAdigraph {
             }
         }
         Ok(out_vec)
-    }
-
-    #[deprecated(note = "add_coverages was used but now coverages are used from the GFA itself.")]
-    pub fn add_coverages(
-        &mut self,
-        coverages: &Option<Result<Vec<GAFTSVRecord>>>,
-        graph_indices: &GFAGraphLookups,
-    ) -> Result<()> {
-        let gfa_graph = &mut self.0;
-        // iterate over the edges of the graph
-        let mut coverage_vec = Vec::new();
-        for edge in gfa_graph.edge_references() {
-            // get node ID's
-            let from_id = graph_indices.node_index_to_seg_id(edge.source())?;
-            let to_id = graph_indices.node_index_to_seg_id(edge.target())?;
-            // get the weight of this edge
-            let from_orient = edge.weight().0;
-            let to_orient = edge.weight().1;
-
-            let coverage = match coverages {
-                Some(c) => {
-                    // is it okay just to unwrap here?
-                    let coverages = c
-                        .as_ref()
-                        .ok()
-                        .context("Error adding coverage to the graph.")?;
-                    let mut res: Option<i64> = None;
-                    for cv in coverages {
-                        // if everything matches...
-                        if from_id == cv.from
-                            && to_id == cv.to
-                            && from_orient.plus_minus_as_byte() == cv.from_orient as u8
-                            && to_orient.plus_minus_as_byte() == cv.to_orient as u8
-                        {
-                            res = Some(cv.coverage as i64);
-                        }
-                    }
-                    res
-                }
-                None => None,
-            };
-
-            coverage_vec.push((edge.id(), from_orient, to_orient, coverage));
-        }
-        // had to do this, as cannot immutably borrow, and mutably borrow in the same loop...
-        for (edge_id, from_orient, to_orient, coverage) in coverage_vec {
-            // get rid of this unwrap.
-            *gfa_graph
-                .edge_weight_mut(edge_id)
-                .with_context(|| format!("Not able to change edge ID: {:?}", edge_id))? =
-                (from_orient, to_orient, coverage);
-        }
-        Ok(())
     }
 
     // before we search for all the paths, we need to

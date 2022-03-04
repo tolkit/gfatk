@@ -1,3 +1,6 @@
+// Max Brown
+// Wellcome Sanger Institute 2022
+
 use anyhow::Result;
 use clap::{crate_version, Arg, Command};
 use gfatk::dot;
