@@ -598,6 +598,19 @@
 <span id="596">596</span>
 <span id="597">597</span>
 <span id="598">598</span>
+<span id="599">599</span>
+<span id="600">600</span>
+<span id="601">601</span>
+<span id="602">602</span>
+<span id="603">603</span>
+<span id="604">604</span>
+<span id="605">605</span>
+<span id="606">606</span>
+<span id="607">607</span>
+<span id="608">608</span>
+<span id="609">609</span>
+<span id="610">610</span>
+<span id="611">611</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::gfa::gfa::GFAtk</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils</span>::{<span class="ident">format_usize_to_kb</span>, <span class="ident">GFAGraphLookups</span>};
 <span class="kw">use</span> <span class="ident">anyhow</span>::{<span class="ident">bail</span>, <span class="ident">Context</span>, <span class="prelude-ty">Result</span>};
@@ -619,7 +632,9 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">GFAungraph</span>(<span class="kw">pub</span> <span class="ident">Graph</span><span class="op">&lt;</span><span class="ident">usize</span>, (), <span class="ident">Undirected</span><span class="op">&gt;</span>);
 
 <span class="kw">impl</span> <span class="ident">GFAungraph</span> {
-    <span class="comment">// TEST THIS</span>
+    <span class="doccomment">/// The algorithm called in `gfatk extract`.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// The number of iterations of searching for neighbouring nodes can be modified.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">recursive_search</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">sequence_id</span>: <span class="ident">usize</span>,
@@ -675,8 +690,13 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">GFAdigraph</span>(<span class="kw">pub</span> <span class="ident">Graph</span><span class="op">&lt;</span><span class="ident">usize</span>, (<span class="ident">Orientation</span>, <span class="ident">Orientation</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span>)<span class="op">&gt;</span>);
 
 <span class="kw">impl</span> <span class="ident">GFAdigraph</span> {
-    <span class="comment">// somewhat modified, simplified version of this:</span>
-    <span class="comment">// https://docs.rs/petgraph/latest/src/petgraph/dot.rs.html#1-349</span>
+    <span class="doccomment">/// The main function called from `gfatk dot`.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// It is a somewhat modified, simplified version of this:</span>
+    <span class="doccomment">/// &lt;https://docs.rs/petgraph/latest/src/petgraph/dot.rs.html#1-349&gt;</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Generating a DOT language output of a GFA file.</span>
+
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">dot</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">gfa</span>: <span class="ident">GFAtk</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">gfa_graph</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
         <span class="kw">static</span> <span class="ident">INDENT</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;    &quot;</span>;
@@ -728,7 +748,9 @@
     <span class="comment">// we want weakly connected components, as there may only be an edge in one</span>
     <span class="comment">// orientation (perhaps unlikely... but still)</span>
 
-    <span class="comment">// thanks https://github.com/Qiskit/retworkx/blob/79900cf8da0c0665ac5ce1ccb0f57373434b14b8/src/connectivity/mod.rs</span>
+    <span class="doccomment">/// Split the GFA digraph into subgraphs which are the weakly connected components of the graph.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Taken from &lt;https://github.com/Qiskit/retworkx/blob/79900cf8da0c0665ac5ce1ccb0f57373434b14b8/src/connectivity/mod.rs&gt;</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">weakly_connected_components</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">graph_indices</span>: <span class="ident">GFAGraphLookups</span>,
@@ -803,6 +825,9 @@
     <span class="comment">// return the path, the path ID&#39;s, and id&#39;s not in the path</span>
     <span class="comment">// -&gt; (Vec&lt;NodeIndex&gt;, Vec&lt;usize&gt;, Vec&lt;usize&gt;)</span>
 
+    <span class="doccomment">/// The main function called from `gfatk linear`.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// This function will generate the longest path through the GFA, by filtering the output of `all_paths`, and choosing the path with the highest cumulative edge coverage.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">all_paths_all_node_pairs</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">graph_indices</span>: <span class="kw-2">&amp;</span><span class="ident">GFAGraphLookups</span>,
@@ -1032,13 +1057,14 @@
         ))
     }
 
-    <span class="comment">// simple graph stats</span>
+    <span class="doccomment">/// Simple wrapper of `Graph.node_count()` in petgraph.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">node_count</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
         <span class="kw">let</span> <span class="ident">gfa_graph</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
 
         <span class="ident">gfa_graph</span>.<span class="ident">node_count</span>()
     }
 
+    <span class="doccomment">/// Simple wrapper of `Graph.edge_count()` in petgraph.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">edge_count</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
         <span class="kw">let</span> <span class="ident">gfa_graph</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
 

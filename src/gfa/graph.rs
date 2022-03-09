@@ -19,7 +19,9 @@ use std::collections::HashSet;
 pub struct GFAungraph(pub Graph<usize, (), Undirected>);
 
 impl GFAungraph {
-    // TEST THIS
+    /// The algorithm called in `gfatk extract`.
+    ///
+    /// The number of iterations of searching for neighbouring nodes can be modified.
     pub fn recursive_search(
         &self,
         sequence_id: usize,
@@ -75,8 +77,13 @@ impl GFAungraph {
 pub struct GFAdigraph(pub Graph<usize, (Orientation, Orientation, Option<i64>)>);
 
 impl GFAdigraph {
-    // somewhat modified, simplified version of this:
-    // https://docs.rs/petgraph/latest/src/petgraph/dot.rs.html#1-349
+    /// The main function called from `gfatk dot`.
+    ///
+    /// It is a somewhat modified, simplified version of this:
+    /// <https://docs.rs/petgraph/latest/src/petgraph/dot.rs.html#1-349>
+    ///
+    /// Generating a DOT language output of a GFA file.
+
     pub fn dot(&self, gfa: GFAtk) -> Result<()> {
         let gfa_graph = &self.0;
         static INDENT: &str = "    ";
@@ -128,7 +135,9 @@ impl GFAdigraph {
     // we want weakly connected components, as there may only be an edge in one
     // orientation (perhaps unlikely... but still)
 
-    // thanks https://github.com/Qiskit/retworkx/blob/79900cf8da0c0665ac5ce1ccb0f57373434b14b8/src/connectivity/mod.rs
+    /// Split the GFA digraph into subgraphs which are the weakly connected components of the graph.
+    ///
+    /// Taken from <https://github.com/Qiskit/retworkx/blob/79900cf8da0c0665ac5ce1ccb0f57373434b14b8/src/connectivity/mod.rs>
     pub fn weakly_connected_components(
         &self,
         graph_indices: GFAGraphLookups,
@@ -203,6 +212,9 @@ impl GFAdigraph {
     // return the path, the path ID's, and id's not in the path
     // -> (Vec<NodeIndex>, Vec<usize>, Vec<usize>)
 
+    /// The main function called from `gfatk linear`.
+    ///
+    /// This function will generate the longest path through the GFA, by filtering the output of `all_paths`, and choosing the path with the highest cumulative edge coverage.
     pub fn all_paths_all_node_pairs(
         &self,
         graph_indices: &GFAGraphLookups,
@@ -432,13 +444,14 @@ impl GFAdigraph {
         ))
     }
 
-    // simple graph stats
+    /// Simple wrapper of `Graph.node_count()` in petgraph.
     pub fn node_count(&self) -> usize {
         let gfa_graph = &self.0;
 
         gfa_graph.node_count()
     }
 
+    /// Simple wrapper of `Graph.edge_count()` in petgraph.
     pub fn edge_count(&self) -> usize {
         let gfa_graph = &self.0;
 
