@@ -3,6 +3,7 @@ use crate::load::{load_gfa, load_gfa_stdin};
 use crate::utils;
 use anyhow::{bail, Context, Result};
 
+/// Supply a sequence/segment ID from the GFA, and extract the GFA with all nodes connected to the input node.
 pub fn extract(matches: &clap::ArgMatches) -> Result<()> {
     // read in path and parse gfa
     let gfa_file = matches.value_of("GFA");

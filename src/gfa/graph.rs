@@ -15,6 +15,7 @@ use petgraph::{
 use std::collections::HashMap;
 use std::collections::HashSet;
 
+/// A wrapper of petgraph's undirected `Graph` struct, applied to a GFA. No weights.
 pub struct GFAungraph(pub Graph<usize, (), Undirected>);
 
 impl GFAungraph {
@@ -69,6 +70,8 @@ impl GFAungraph {
 // coverage weight, used in gfatk linear.
 // GFA's should always specify Links in a specific direction..?
 // so digraphs should be where all the functionality lies.
+
+/// A wrapper of petgraph's directed `Graph` struct, applied to a GFA. The edge weights included are the `Orientation`'s of the adjacent segments, and the coverage of this edge.
 pub struct GFAdigraph(pub Graph<usize, (Orientation, Orientation, Option<i64>)>);
 
 impl GFAdigraph {
@@ -443,9 +446,11 @@ impl GFAdigraph {
     }
 }
 
-// thanks
-// https://github.com/Ninjani/rosalind/blob/e22ecf2c9f0935d970b137684029957c0850d63f/t_ba11b/src/lib.rs
-
+/// A function generic over certain types of `Directed` petgraph `Graph`s.
+///
+/// Given a graph, a start node, an end node, and optionally a map of the coverage of each node, compute all simple paths between these nodes.
+///
+/// Modified from: <https://github.com/Ninjani/rosalind/blob/e22ecf2c9f0935d970b137684029957c0850d63f/t_ba11b/src/lib.rs>
 pub fn all_paths<T, U, Ix: IndexType>(
     graph: &Graph<T, U, Directed, Ix>,
     start_node: NodeIndex<Ix>,
@@ -544,10 +549,9 @@ fn recursive_path_finder_no_coverage<T, U, Ix: IndexType>(
     }
 }
 
-// Returns a subgraph GFA that only contains elements with the
-// provided segment names
-// https://github.com/chfi/rs-gfa-utils/blob/master/src/subgraph.rs
-
+/// Returns a subgraph GFA that only contains elements with the provided segment names.
+///
+/// Taken from <https://github.com/chfi/rs-gfa-utils/blob/master/src/subgraph.rs>
 pub fn segments_subgraph<T: OptFields + Clone>(
     gfa: &GFA<usize, T>,
     segment_names: Vec<usize>,

@@ -1,5 +1,3 @@
-// common functions for gfa structures
-
 use crate::gfa::graph::{segments_subgraph, GFAdigraph, GFAungraph};
 use crate::gfa::writer;
 use crate::utils;
@@ -13,12 +11,11 @@ use indexmap::IndexMap;
 use petgraph::graph::{Graph, NodeIndex, UnGraph};
 use std::collections::HashMap;
 
-// the GFA type used throughout
+/// A wrapper around GFA from the gfa crate
 pub struct GFAtk(pub GFA<usize, OptionalFields>);
 
 impl GFAtk {
-    // return a tuple of graph indices
-    // and the graph itself
+    /// Returns a tuple of GFAGraphLookups (a struct of indices/node names) and an undirected GFA graph structure.
     pub fn into_ungraph(&self) -> Result<(GFAGraphLookups, GFAungraph)> {
         // alias to get GFA out
         let gfa = &self.0;
@@ -53,11 +50,9 @@ impl GFAtk {
         Ok((graph_indices, GFAungraph(gfa_graph)))
     }
 
-    // the Option<u32> here is for the coverages of the edges
-    // which we optionally annotate later
-    // maybe all these functions should be ported to ungraphs with weights?
-    // not sure what the digraph does for GFA?
-
+    /// Returns a tuple of GFAGraphLookups (a struct of indices/node names) and an directed GFA graph structure.
+    ///
+    /// Most functionality of this binary is on directed graph structures
     pub fn into_digraph(&self) -> Result<(GFAGraphLookups, GFAdigraph)> {
         let gfa = &self.0;
         // eprintln!("[+]\tReading GFA into a directed graph.");
@@ -94,7 +89,7 @@ impl GFAtk {
         Ok((graph_indices, GFAdigraph(gfa_graph)))
     }
 
-    // print the GFA with only the sequences to keep
+    /// A method to print a GFA to STDOUT, given a vector of sequence ID's to keep.
     pub fn print_extract(&self, sequences_to_keep: Vec<usize>) {
         let gfa = &self.0;
         let subgraph_gfa = GFAtk(segments_subgraph(&gfa, sequences_to_keep));
@@ -102,7 +97,7 @@ impl GFAtk {
         print!("{}", writer::gfa_string(&subgraph_gfa.0));
     }
 
-    // detect all the overlaps between joins in a GFA.
+    /// Returns the overlaps between all the segments in a GFA.
     pub fn make_overlaps(&self, extend_length: usize) -> Result<Overlaps> {
         let gfa = &self.0;
         // tuple of (from: overlap - length (incl. overlap), to: overlap + length)
@@ -234,6 +229,9 @@ impl GFAtk {
         Ok(from_to)
     }
 
+    /// Computes the overlaps between segments as a vector of:
+    /// `(usize, Orientation, usize, &str)`
+    /// Which is a tuple of from/to, the orientation of the overlap, the extent of the overlap, and whether the overlap is at the start or end of a segment.
     pub fn determine_path_overlaps(
         &self,
         chosen_path: &Vec<NodeIndex>,
@@ -282,8 +280,9 @@ impl GFAtk {
         Ok(sorted_chosen_path_overlaps)
     }
 
-    // logic follows Marcela's python script now (thanks!)
-    // first segment added, then segment[n+1][overlap..] added
+    /// A method to print to STDOUT a fasta, given a path through the GFA.
+    ///
+    /// The first segment is added first, then all subsequent segments (-overlap with previous segment).
     pub fn print_path_to_fasta(
         &self,
         merged_sorted_chosen_path_overlaps: IndexMap<usize, Vec<(Orientation, usize, &str)>>,
@@ -426,6 +425,9 @@ impl GFAtk {
         Ok(())
     }
 
+    /// The internal function called when `gfatk fasta` is called.
+    ///
+    /// Prints all segments of the GFA as-is.
     pub fn print_sequences(&self) -> Result<()> {
         let gfa = &self.0;
 
@@ -443,8 +445,9 @@ impl GFAtk {
         Ok(())
     }
 
-    // get the average of the coverages from a GFA.
-    // this function + below
+    /// Two internal functions below to parse coverage of a GFA segment.
+    ///
+    /// Used in `gfatk stats`.
     fn parse_coverage_opt(opt: &OptFieldVal) -> Result<&f32> {
         let ll = match opt {
             OptFieldVal::Float(f) => f,
@@ -473,6 +476,9 @@ impl GFAtk {
         Ok(sum / len)
     }
 
+    /// Return the coverage and sequence length for a segment, given a segment name.
+    ///
+    /// Note segment names are always `usize`.
     pub fn node_seq_len_and_cov(&self, node: usize) -> Result<(usize, f32)> {
         let gfa = &self.0;
 
@@ -496,9 +502,9 @@ impl GFAtk {
         Ok((seq_len.unwrap(), cov.unwrap()))
     }
 
-    // we actually return only a float here
-    // but could change this later...
-
+    /// The internal function called in `gfatk stats`.
+    ///
+    /// Returns average GC%, average coverage, and total sequence length for a GFA (sub)graph.
     pub fn sequence_stats(&self, further: bool) -> Result<(f32, f32, usize)> {
         let gfa = &self.0;
 
@@ -536,9 +542,9 @@ impl GFAtk {
         Ok((avg_gc, cov, total_sequence_length))
     }
 
-    // add a hashmap of relative coverage for each node:
-    // HashMap<NodeIndex, u32>
-
+    /// Returns a `HashMap` of relative coverage of each node (segment) in the GFA.
+    ///
+    /// Relative here indicates that each segment coverage is divided by the lowest coverage node, and rounded.
     pub fn gen_cov_hash(
         &self,
         graph_lookup: &GFAGraphLookups,
@@ -592,26 +598,39 @@ impl GFAtk {
     }
 }
 
+/// Overlap from one segment to another.
 pub struct Overlap {
+    /// From segment forward.
     pub overlap_str_from_f: Option<String>,
+    /// From segment reverse.
     pub overlap_str_from_r: Option<String>,
+    /// To segment forward.
     pub overlap_str_to_f: Option<String>,
+    /// To segment reverse.
     pub overlap_str_to_r: Option<String>,
+    /// ID of from segment.
     pub from_segment: usize,
+    /// ID of to segment.
     pub to_segment: usize,
+    /// Orientation of from segment.
     pub from_orient: Orientation,
+    /// Orientation of to segment.
     pub to_orient: Orientation,
 }
 
+/// A vector of `Overlap` structs.
 pub struct Overlaps(Vec<Overlap>);
 
 impl Overlaps {
+    /// Create a new instance of `Overlaps`.
     fn new() -> Self {
         Self(Vec::new())
     }
+    /// Append to `Overlaps`, adding another `Overlap`.
     fn push(&mut self, add: Overlap) {
         self.0.push(add)
     }
+    /// Print overlaps to STDOUT.
     pub fn print(self, extend_length: usize) {
         // long winded...
         for o in self.0 {

@@ -3,18 +3,20 @@ use atty::Stream;
 use gfa::optfields::{OptField, OptFieldVal::*};
 use petgraph::graph::NodeIndex;
 use std::collections::HashMap;
+use std::fmt;
 
-// format a sequence length to Kb
+/// Format a sequence length (`usize`) to kilobases.
 pub fn format_usize_to_kb(num: usize) -> String {
     let div = num as f32 / 1000f32;
     format!("{:.2}Kb", div)
 }
 
-// check if there is anything coming from stdin
+/// Check if there is anything coming from STDIN.
 pub fn is_stdin() -> bool {
     !atty::is(Stream::Stdin)
 }
 
+/// Get the coverage associated with an edge (`ec` tag in the GFA).
 pub fn get_edge_coverage(options: &Vec<OptField>) -> Result<i64> {
     for op in options {
         match op.tag {
@@ -29,6 +31,7 @@ pub fn get_edge_coverage(options: &Vec<OptField>) -> Result<i64> {
     bail!("Edge coverage not found.")
 }
 
+/// Format a GFA option field into a string.
 pub fn get_option_string(options: Vec<OptField>) -> Result<String> {
     let mut tag_val = String::new();
     for op in options {
@@ -66,7 +69,7 @@ pub fn get_option_string(options: Vec<OptField>) -> Result<String> {
     Ok(tag_val_op_un.to_string())
 }
 
-// not a very safe function, but works
+/// Parse a CIGAR string slice into an overlap length.
 pub fn parse_cigar(cigar: &[u8]) -> Result<usize> {
     // check it ends with an M
     if !cigar.ends_with(&[77]) {
@@ -88,6 +91,7 @@ pub fn parse_cigar(cigar: &[u8]) -> Result<usize> {
     }
 }
 
+/// Reverse complement a string slice.
 pub fn reverse_complement(dna: &[u8]) -> Vec<u8> {
     let dna_vec = dna.to_vec();
     let mut revcomp = Vec::new();
@@ -127,6 +131,7 @@ fn nucleotide_counts(dna: &[u8]) -> HashMap<&u8, i32> {
     map
 }
 
+/// Calculate the GC content of a string slice.
 pub fn gc_content(dna: &[u8]) -> f32 {
     // G/C/A/T counts
     let counts = nucleotide_counts(dna);
@@ -143,25 +148,30 @@ pub fn gc_content(dna: &[u8]) -> f32 {
 // (NodeIndex, usize)
 // which stores the node index and it's corresponding segment ID
 // I just realise this should 100000% be a hashmap... change that later.
+
+/// A pair consisting of a node index and a segment ID.
 #[derive(Clone, Copy)]
 pub struct GFAGraphPair {
+    /// The node index (petgraph's `NodeIndex`).
     pub node_index: NodeIndex,
+    /// The segment ID.
     pub seg_id: usize,
 }
+/// A vector of `GFAGraphPair`'s.
 #[derive(Clone)]
 pub struct GFAGraphLookups(pub Vec<GFAGraphPair>);
 
 impl GFAGraphLookups {
-    // simple new
+    /// Create a new GFAGraphLookups
     pub fn new() -> Self {
         Self(Vec::new())
     }
-    // simple push
+    /// Push a new `GFAGraphPair` to the end.
     pub fn push(&mut self, other: GFAGraphPair) {
         self.0.push(other);
     }
 
-    // return seg_id from node index
+    /// Return segment ID from a node index.
     pub fn node_index_to_seg_id(&self, node_index: NodeIndex) -> Result<usize> {
         let seg_id = &self
             .0
@@ -177,7 +187,7 @@ impl GFAGraphLookups {
 
         Ok(*seg_id)
     }
-    // and the reverse operation
+    /// Return a node index from a segment ID.
     pub fn seg_id_to_node_index(&self, seg_id: usize) -> Result<NodeIndex> {
         let node_index = &self
             .0
@@ -194,8 +204,6 @@ impl GFAGraphLookups {
         Ok(*node_index)
     }
 }
-
-use std::fmt;
 
 impl fmt::Display for GFAGraphLookups {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

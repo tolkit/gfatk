@@ -4,6 +4,11 @@ use crate::utils;
 use anyhow::{bail, Context, Result};
 use indexmap::IndexMap;
 
+/// Force a linear representation of the GFA.
+///
+/// This function finds *all* legal paths through a GFA, and returns the longest path, with the highest cumulative edge coverage.
+///
+/// If the `-i` option is included, node coverages are taken into account, and paths are created with nodes appearing in the final path the number of times they relatively occur according to coverage information.
 pub fn force_linear(matches: &clap::ArgMatches) -> Result<()> {
     // read in path and parse gfa
     let gfa_file = matches.value_of("GFA");

@@ -4,25 +4,36 @@ use crate::utils;
 use crate::{gfa::gfa::GFAtk, load::load_gfa_stdin};
 use anyhow::{bail, Result};
 
-// so we can extract the segments with highest GC content.
+/// The statistics associated with a subgraph in a GFA.
 #[derive(Clone)]
 pub struct Stat {
+    /// Arbitrary index of the subgraph(s).
     pub index: usize,
+    /// The average GC% across a subgraph.
     pub gc: f32,
+    /// The average coverage across a subgraph.
     pub cov: f32,
+    /// Names of the segments.
     pub segments: Vec<usize>,
+    /// Total sequence length of all the segments.
     pub total_sequence_length: usize,
 }
 
+/// A vector of `Stat`.
 pub struct Stats(pub Vec<Stat>);
 
 impl Stats {
+    /// Add a new `Stat` to `Stats`.
     pub fn push(&mut self, stat: Stat) {
         let stats = &mut self.0;
         stats.push(stat);
     }
     // we extract the mito by ordering our stats
     // by gc content & coverage.
+
+    /// The function called from `gfatk extract-mito`.
+    ///
+    /// Extracts the putative mitochondrial subgraph from a GFA.
     pub fn extract_mito(&mut self) -> Vec<usize> {
         let stat_vec = &mut self.0;
         // reverse the cov..
@@ -34,6 +45,7 @@ impl Stats {
             // now check that the length is sufficiently high
             let z: Vec<&Stat> = stat_vec
                 .iter()
+                // hardcoded for now, but does not have to be.
                 .filter(|e| e.total_sequence_length > 100_000)
                 .collect();
             z[0].segments.clone()
@@ -45,6 +57,10 @@ impl Stats {
 
 // I've handled 'further' here really badly...
 // I want node indices & segment names printed too (maybe optionally.)
+
+/// Internal function called in `gfatk stats`.
+///
+/// Used in both `gfatk stats` and `gfatk extract-mito`.
 pub fn stats(matches: &clap::ArgMatches, further: bool) -> Result<Option<(GFAtk, Vec<usize>)>> {
     // required so unwrap safely
     let gfa_file = matches.value_of("GFA");

@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["GFAtk","A wrapper around GFA from the gfa crate"],["Overlap","Overlap from one segment to another."],["Overlaps","A vector of `Overlap` structs."]]});

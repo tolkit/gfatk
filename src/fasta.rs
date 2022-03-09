@@ -6,6 +6,7 @@ use crate::load::{load_gfa, load_gfa_stdin};
 use crate::utils;
 use anyhow::{bail, Result};
 
+/// Print a fasta representation of the sequences in a GFA.
 pub fn fasta(matches: &clap::ArgMatches) -> Result<()> {
     // read in path and parse gfa
     let gfa_file = matches.value_of("GFA");

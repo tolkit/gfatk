@@ -68,7 +68,7 @@ Still in active development, so I expect there will be bugs & API changes.
 
 ## Thanks
 
-Many thanks to the developers of MBG and GraphAligner, and partners in the Tree of Life program and beyond:
+Many thanks to the developers of MBG, and partners in the Tree of Life program and beyond:
 - Marcela Uliano-Silva
 - Sergey Nurk
 - Alex Twyford

@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["gfatk"] = [{"text":"impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.59.0/core/fmt/trait.Display.html\" title=\"trait core::fmt::Display\">Display</a> for <a class=\"struct\" href=\"gfatk/utils/struct.GFAGraphLookups.html\" title=\"struct gfatk::utils::GFAGraphLookups\">GFAGraphLookups</a>","synthetic":false,"types":["gfatk::utils::GFAGraphLookups"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

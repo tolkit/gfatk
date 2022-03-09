@@ -11,10 +11,12 @@ use gfa::{
 };
 use std::io::{BufReader, Read, StdinLock};
 
+/// Iterate over the byte lines of a file.
 pub fn byte_lines_iter<'a, R: Read + 'a>(reader: R) -> Box<dyn Iterator<Item = Vec<u8>> + 'a> {
     Box::new(BufReader::new(reader).byte_lines().map(|l| l.unwrap()))
 }
 
+/// Given a path, load the GFA into a `GFA` struct.
 pub fn load_gfa<N, T, P>(path: P) -> Result<GFA<N, T>>
 where
     N: SegmentId,
@@ -34,6 +36,7 @@ where
 // take input from stdin, instead of a file.
 // we'll lock on to it, saves a bit of code repitition
 
+/// If the file is coming from STDIN, this function reads a GFA in.
 pub fn load_gfa_stdin<N, T>(stdin: StdinLock) -> Result<GFA<N, T>, ParseError>
 where
     N: SegmentId,

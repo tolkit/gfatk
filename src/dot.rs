@@ -6,6 +6,12 @@ use crate::load::{load_gfa, load_gfa_stdin};
 use crate::utils;
 use anyhow::{bail, Result};
 
+/// Make a DOT (<https://graphviz.org/doc/info/lang.html>) language representation of a GFA.
+///
+/// For example:
+/// ```bash
+/// gfatk dot in.gfa | dot -Tsvg out.svg
+/// ```
 pub fn dot(matches: &clap::ArgMatches) -> Result<()> {
     let gfa_file = matches.value_of("GFA");
 
