@@ -91,3 +91,32 @@ gfatk dot ./filipendula_ulmaria_Jan.21.22-10_mito.gfa | dot -Tsvg > ./filipendul
 ```
 
 Including node coverage information (`-i`) will result in a stack overflow, as there are too many possible paths (variance in node coverage is too high!).
+
+### *Arabidopsis thaliana* mitochondrial genome
+
+`gfatk` resolves the model plant *Arabidopsis* mitochondria, corroborating <a href="https://www.biorxiv.org/content/10.1101/2022.02.22.481460v1.full">this paper</a>.
+
+We can visualise the GFA of the *Arabidopsis* mitochondrion:
+
+```bash
+gfatk dot mito_NC_037304.1.MZ323108.1.fasta.BOTH.HiFiMapped.bam.filtered.1k.gfa | dot -Tsvg > mito_NC_037304.1.MZ323108.1.fasta.BOTH.HiFiMapped.bam.filtered.1k.svg
+```
+
+<p align="center">
+  <img src="./mito_NC_037304.1.MZ323108.1.fasta.BOTH.HiFiMapped.bam.filtered.1k.svg" />
+</p>
+
+And linearise it:
+
+```bash
+gfatk linear -i mito_NC_037304.1.MZ323108.1.fasta.BOTH.HiFiMapped.bam.filtered.1k.gfa > /dev/null
+```
+
+And the output:
+
+```
+[+]     Highest cumulative coverage path = 2625
+[+]     Chosen path through graph: + 6 -> - 9 -> - 7 -> - 5 -> + 6 -> - 8 -> - 7 -> - 4
+```
+
+Segments 6 & 7 appear twice in this path.
