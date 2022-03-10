@@ -28,7 +28,7 @@ pub fn dot(matches: &clap::ArgMatches) -> Result<()> {
         },
     };
 
-    let (_graph_indices, gfa_graph) = gfa.into_digraph()?;
+    let (_, gfa_graph) = gfa.into_digraph()?;
 
     gfa_graph.dot(gfa)?;
 

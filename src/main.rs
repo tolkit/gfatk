@@ -85,12 +85,8 @@ fn main() -> Result<()> {
                     "Extract a fasta file.\nAlmost as simple as: awk \'/^S/{print \">\"$2\"\\n\"$3}\'.",
                 )
                 .arg(
-                    Arg::new("gfa")
-                        .short('g')
-                        .long("gfa")
-                        .takes_value(true)
-                        .required(true)
-                        .help("Input GFA file."),
+                    Arg::new("GFA")
+                        .help("Input GFA file.")
                 ),
         )
         .subcommand(
