@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # don't want dependencies
-cargo doc --no-deps
+cargo doc --no-deps --document-private-items
 # remove old docs
 rm -rf ./docs
 # magic..?

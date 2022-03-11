@@ -103,6 +103,7 @@ pub fn reverse_complement(dna: &[u8]) -> Vec<u8> {
     revcomp
 }
 
+/// Used in `reverse_complement` to switch to a complementary base.
 fn switch_base(c: u8) -> u8 {
     match c {
         b'A' => b'T',
@@ -122,6 +123,7 @@ fn switch_base(c: u8) -> u8 {
 // pinched from past Max
 // https://github.com/tolkit/fasta_windows/blob/master/src/seq_statsu8.rs
 
+/// Collect nucleotide counts into a `HashMap`.
 fn nucleotide_counts(dna: &[u8]) -> HashMap<&u8, i32> {
     let mut map = HashMap::new();
     for nucleotide in dna {

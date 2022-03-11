@@ -548,6 +548,12 @@ pub fn all_paths<T, U, Ix: IndexType>(
     }
 }
 
+/// Function called by `all_paths` where a `HashMap` is supplied instead of a
+/// `HashSet` in order to keep track of how many times a segment/node has been
+/// passed in a path.
+///
+/// Causes a stack overflow if the variance in node coverages
+/// is too high.
 fn recursive_path_finder_incl_coverage<T, U, Ix: IndexType>(
     graph: &Graph<T, U, Directed, Ix>,
     start_node: NodeIndex<Ix>,
@@ -592,6 +598,8 @@ fn recursive_path_finder_incl_coverage<T, U, Ix: IndexType>(
     }
 }
 
+/// A safer and more reliable alternative to `recursive_path_finder_incl_coverage` where
+/// a `HashSet` determines whether a segment/node has already been seen or not.
 fn recursive_path_finder_no_coverage<T, U, Ix: IndexType>(
     graph: &Graph<T, U, Directed, Ix>,
     start_node: NodeIndex<Ix>,

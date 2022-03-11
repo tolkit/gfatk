@@ -22,7 +22,30 @@
 <span id="20">20</span>
 <span id="21">21</span>
 <span id="22">22</span>
-</pre><pre class="rust"><code><span class="doccomment">/// Make a DOT language representation of a GFA.</span>
+<span id="23">23</span>
+<span id="24">24</span>
+<span id="25">25</span>
+<span id="26">26</span>
+<span id="27">27</span>
+<span id="28">28</span>
+<span id="29">29</span>
+<span id="30">30</span>
+<span id="31">31</span>
+<span id="32">32</span>
+<span id="33">33</span>
+<span id="34">34</span>
+</pre><pre class="rust"><code><span class="doccomment">//! `gfatk` is a tool for Graphical Fragment Assembly (GFA) manipulation.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! GFA&#39;s are at their heart, simple, directed graphs. As such, all internal</span>
+<span class="doccomment">//! representations of GFA&#39;s are [`petgraph::Graph`&#39;s](https://docs.rs/petgraph/latest/petgraph/graph/struct.Graph.html).</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! `gfatk` is designed mainly for reasonably small GFA files, and was designed for</span>
+<span class="doccomment">//! de-tangling and linearising plant mitochondrial genomes on the command line.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Almost all of the core functionality of `gfatk` resides in the [`gfatk::gfa`](./gfa/index.html)</span>
+<span class="doccomment">//! module. The other modules are entry points for the command line application.</span>
+
+<span class="doccomment">/// Make a DOT language representation of a GFA.</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">dot</span>;
 <span class="doccomment">/// Extract a subgraph from a GFA.</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">extract</span>;
@@ -34,15 +57,17 @@
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">gfa</span>;
 <span class="doccomment">/// Coerce a GFA into a fasta, finding the longest path through the graph.</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">linear</span>;
-<span class="doccomment">/// Helper functions to load a GFA from a file, or read from STDIN. Modified from &lt;https://github.com/chfi/rs-gfa-utils/blob/2065b001d107ee9f5d7abe04d65ab82193fc5904/src/commands.rs&gt;</span>
+<span class="doccomment">/// Helper functions to load a GFA from a file, or read from STDIN.</span>
+<span class="doccomment">/// Modified from &lt;https://github.com/chfi/rs-gfa-utils/blob/2065b001d107ee9f5d7abe04d65ab82193fc5904/src/commands.rs&gt;</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">load</span>;
 <span class="doccomment">/// Generate overlapping sequences between segments in a GFA.</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">overlap</span>;
 <span class="doccomment">/// Generate statistics about the input GFA file.</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">stats</span>;
+<span class="doccomment">/// Utility to trim a GFA of isolated nodes.</span>
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">trim</span>;
 <span class="doccomment">/// Utility functions used throughout.</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">utils</span>;
-<span class="doccomment">/// Utility to trim a GFA of isolated nodes.</span>
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">trim</span>;</code></pre></div>
+</code></pre></div>
 </section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="gfatk" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.59.0 (9d1b2106e 2022-02-23)" ></div>
 </body></html>
