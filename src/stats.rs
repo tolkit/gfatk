@@ -61,6 +61,11 @@ impl Stats {
 /// Internal function called in `gfatk stats`.
 ///
 /// Used in both `gfatk stats` and `gfatk extract-mito`.
+///
+/// For example:
+/// ```bash
+/// gfatk stats in.gfa
+/// ```
 pub fn stats(matches: &clap::ArgMatches, further: bool) -> Result<Option<(GFAtk, Vec<usize>)>> {
     // required so unwrap safely
     let gfa_file = matches.value_of("GFA");

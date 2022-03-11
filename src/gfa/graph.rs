@@ -83,7 +83,6 @@ impl GFAdigraph {
     /// <https://docs.rs/petgraph/latest/src/petgraph/dot.rs.html#1-349>
     ///
     /// Generating a DOT language output of a GFA file.
-
     pub fn dot(&self, gfa: GFAtk) -> Result<()> {
         let gfa_graph = &self.0;
         static INDENT: &str = "    ";
@@ -117,7 +116,7 @@ impl GFAdigraph {
                 .2
                 .context(format!("No edge weight for edge {:?}", edge))?;
 
-            println!("{}{} -> {} [ label = \"  {}  \" taillabel = \"  {}  \" headlabel = \"  {}  \" arrowhead = \"{}\" ]", 
+            println!("{}{} -> {} [ label = \"  {}  \" taillabel = \"  {}  \" headlabel = \"  {}  \" arrowhead = \"{}\" ];", 
                 INDENT,
                 from,
                 to,
@@ -371,13 +370,20 @@ impl GFAdigraph {
                 map.insert(path, path_coverage);
             }
 
-            let highest_coverage_path =
+            let highest_coverage_path_op =
                 map.iter().max_by(|a, b| a.1.cmp(&b.1)).map(|(k, v)| (k, v));
+
+            // explicit error out here
+            let highest_coverage_path = match highest_coverage_path_op {
+                Some(p) => p,
+                None => bail!("There was no highest coverage path."),
+            };
+
             eprintln!(
                 "[+]\tHighest cumulative coverage path = {}",
-                highest_coverage_path.unwrap().1
+                highest_coverage_path.1
             );
-            highest_coverage_path.unwrap().0.to_vec()
+            highest_coverage_path.0.to_vec()
         };
 
         let mut chosen_path_string = Vec::new();
@@ -456,6 +462,63 @@ impl GFAdigraph {
         let gfa_graph = &self.0;
 
         gfa_graph.edge_count()
+    }
+
+    /// Trim a graph to include only nodes connected to two or more other nodes.
+    ///
+    /// This algorithm will loop for as long as the longest branch in the GFA yields a segment connected to only a single node.
+    pub fn trim(&self, graph_indices: GFAGraphLookups) -> Vec<usize> {
+        let gfa_graph = &self.0;
+
+        let mut all_nodes = HashSet::new();
+        // get all node indices into a hashset
+        for (node_index, _) in gfa_graph.node_references() {
+            all_nodes.insert(node_index);
+        }
+
+        // initiate new hashset for the nodes we remove
+        let mut removed_nodes = HashSet::new();
+        // keep track of the number of removed nodes in a vector
+        let mut track_removed_nodes = Vec::new();
+        // index for the above vector, keeping track of iterations
+        let mut index = 0;
+        loop {
+            // iterate over the nodes
+            for (node_index, _) in gfa_graph.node_references() {
+                // how many neighbours for this particular node?
+                let neighbours = gfa_graph.neighbors(node_index).collect::<HashSet<_>>();
+
+                // if there are fewer than two neighbours
+                // OR the difference between neighbours & removed nodes == 1
+                if neighbours.len() < 2
+                    || neighbours
+                        .difference(&removed_nodes)
+                        .collect::<HashSet<_>>()
+                        .len()
+                        == 1
+                {
+                    removed_nodes.insert(node_index);
+                }
+            }
+            // push the length
+            track_removed_nodes.push(removed_nodes.len());
+            if track_removed_nodes.get(index).unwrap()
+                == track_removed_nodes.get(index - 1).unwrap_or(&0)
+            {
+                break;
+            }
+            index += 1;
+        }
+        // print for user info
+        for el in &removed_nodes {
+            let seg_id = graph_indices.node_index_to_seg_id(*el).unwrap();
+            eprintln!("[+]\tRemoved segment {} from GFA.", seg_id);
+        }
+
+        all_nodes
+            .difference(&removed_nodes)
+            .map(|e| graph_indices.node_index_to_seg_id(*e).unwrap())
+            .collect::<Vec<_>>()
     }
 }
 

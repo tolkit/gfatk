@@ -18,3 +18,5 @@ pub mod overlap;
 pub mod stats;
 /// Utility functions used throughout.
 pub mod utils;
+/// Utility to trim a GFA of isolated nodes.
+pub mod trim;

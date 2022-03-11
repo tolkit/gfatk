@@ -9,6 +9,14 @@ use indexmap::IndexMap;
 /// This function finds *all* legal paths through a GFA, and returns the longest path, with the highest cumulative edge coverage.
 ///
 /// If the `-i` option is included, node coverages are taken into account, and paths are created with nodes appearing in the final path the number of times they relatively occur according to coverage information.
+///
+/// For example:
+/// ```bash
+/// # simple
+/// gfatk linear in.gfa > out.fasta
+/// # account for node coverage
+/// gfatk -i linear in.gfa > out.fasta
+/// ```
 pub fn force_linear(matches: &clap::ArgMatches) -> Result<()> {
     // read in path and parse gfa
     let gfa_file = matches.value_of("GFA");
@@ -32,6 +40,18 @@ pub fn force_linear(matches: &clap::ArgMatches) -> Result<()> {
 
     // load gfa into graph structure
     let (graph_indices, gfa_graph) = gfa.into_digraph()?;
+
+    // check how many subgraphs there are
+    let no_subgraphs = gfa_graph
+        .weakly_connected_components(graph_indices.clone())?
+        .len();
+
+    if no_subgraphs > 1 {
+        eprintln!(
+            "[-]\tThe input GFA has multiple subgraphs ({}).",
+            no_subgraphs
+        )
+    }
 
     // don't evaluate the coverage if we don't care about it
     let rel_coverage_map = match include_node_coverage {

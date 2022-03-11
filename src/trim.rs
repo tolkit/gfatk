@@ -1,18 +1,17 @@
-// extract sequences from a GFA
-// easy peasy
-
 use crate::gfa::gfa::GFAtk;
+use crate::gfa::graph::segments_subgraph;
+use crate::gfa::writer::gfa_string;
 use crate::load::{load_gfa, load_gfa_stdin};
 use crate::utils;
 use anyhow::{bail, Result};
 
-/// Print a fasta representation of the sequences in a GFA.
+/// Trim a GFA file of segments which are connected only to one other segment.
 ///
 /// For example:
 /// ```bash
-/// gfatk fasta in.gfa > out.fasta
+/// gfatk trim in.gfa > out.gfa
 /// ```
-pub fn fasta(matches: &clap::ArgMatches) -> Result<()> {
+pub fn trim(matches: &clap::ArgMatches) -> Result<()> {
     // read in path and parse gfa
     let gfa_file = matches.value_of("GFA");
 
@@ -29,7 +28,13 @@ pub fn fasta(matches: &clap::ArgMatches) -> Result<()> {
         },
     };
 
-    gfa.print_sequences()?;
+    let (graph_indices, gfa_graph) = gfa.into_digraph()?;
+
+    let trimmed = gfa_graph.trim(graph_indices);
+
+    let subgraph = segments_subgraph(&gfa.0, trimmed);
+
+    println!("{}", gfa_string(&subgraph));
 
     Ok(())
 }

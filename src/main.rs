@@ -10,6 +10,7 @@ use gfatk::fasta;
 use gfatk::linear;
 use gfatk::overlap;
 use gfatk::stats;
+use gfatk::trim;
 
 fn main() -> Result<()> {
     let matches = Command::new("gfatk")
@@ -117,6 +118,14 @@ fn main() -> Result<()> {
                         .help("Input GFA file.")
                 ),
         )
+        .subcommand(
+            Command::new("trim")
+                .about("Trim a GFA to remove nodes of degree < 4 (i.e. only has one neighbour).")
+                .arg(
+                    Arg::new("GFA")
+                        .help("Input GFA file.")
+                ),
+        )
         .get_matches();
 
     match matches.subcommand() {
@@ -140,6 +149,9 @@ fn main() -> Result<()> {
         }
         Some(("dot", matches)) => {
             dot::dot(matches)?;
+        }
+        Some(("trim", matches)) => {
+            trim::trim(matches)?;
         }
         _ => {
             println!("Subcommand invalid, run with '--help' for subcommand options. Exiting.");
