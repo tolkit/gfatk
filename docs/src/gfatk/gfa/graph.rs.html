@@ -611,6 +611,69 @@
 <span id="609">609</span>
 <span id="610">610</span>
 <span id="611">611</span>
+<span id="612">612</span>
+<span id="613">613</span>
+<span id="614">614</span>
+<span id="615">615</span>
+<span id="616">616</span>
+<span id="617">617</span>
+<span id="618">618</span>
+<span id="619">619</span>
+<span id="620">620</span>
+<span id="621">621</span>
+<span id="622">622</span>
+<span id="623">623</span>
+<span id="624">624</span>
+<span id="625">625</span>
+<span id="626">626</span>
+<span id="627">627</span>
+<span id="628">628</span>
+<span id="629">629</span>
+<span id="630">630</span>
+<span id="631">631</span>
+<span id="632">632</span>
+<span id="633">633</span>
+<span id="634">634</span>
+<span id="635">635</span>
+<span id="636">636</span>
+<span id="637">637</span>
+<span id="638">638</span>
+<span id="639">639</span>
+<span id="640">640</span>
+<span id="641">641</span>
+<span id="642">642</span>
+<span id="643">643</span>
+<span id="644">644</span>
+<span id="645">645</span>
+<span id="646">646</span>
+<span id="647">647</span>
+<span id="648">648</span>
+<span id="649">649</span>
+<span id="650">650</span>
+<span id="651">651</span>
+<span id="652">652</span>
+<span id="653">653</span>
+<span id="654">654</span>
+<span id="655">655</span>
+<span id="656">656</span>
+<span id="657">657</span>
+<span id="658">658</span>
+<span id="659">659</span>
+<span id="660">660</span>
+<span id="661">661</span>
+<span id="662">662</span>
+<span id="663">663</span>
+<span id="664">664</span>
+<span id="665">665</span>
+<span id="666">666</span>
+<span id="667">667</span>
+<span id="668">668</span>
+<span id="669">669</span>
+<span id="670">670</span>
+<span id="671">671</span>
+<span id="672">672</span>
+<span id="673">673</span>
+<span id="674">674</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::gfa::gfa::GFAtk</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils</span>::{<span class="ident">format_usize_to_kb</span>, <span class="ident">GFAGraphLookups</span>};
 <span class="kw">use</span> <span class="ident">anyhow</span>::{<span class="ident">bail</span>, <span class="ident">Context</span>, <span class="prelude-ty">Result</span>};
@@ -696,7 +759,6 @@
     <span class="doccomment">/// &lt;https://docs.rs/petgraph/latest/src/petgraph/dot.rs.html#1-349&gt;</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Generating a DOT language output of a GFA file.</span>
-
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">dot</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">gfa</span>: <span class="ident">GFAtk</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">gfa_graph</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
         <span class="kw">static</span> <span class="ident">INDENT</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;    &quot;</span>;
@@ -730,7 +792,7 @@
                 .<span class="number">2</span>
                 .<span class="ident">context</span>(<span class="macro">format!</span>(<span class="string">&quot;No edge weight for edge {:?}&quot;</span>, <span class="ident">edge</span>))<span class="question-mark">?</span>;
 
-            <span class="macro">println!</span>(<span class="string">&quot;{}{} -&gt; {} [ label = \&quot;  {}  \&quot; taillabel = \&quot;  {}  \&quot; headlabel = \&quot;  {}  \&quot; arrowhead = \&quot;{}\&quot; ]&quot;</span>, 
+            <span class="macro">println!</span>(<span class="string">&quot;{}{} -&gt; {} [ label = \&quot;  {}  \&quot; taillabel = \&quot;  {}  \&quot; headlabel = \&quot;  {}  \&quot; arrowhead = \&quot;{}\&quot; ];&quot;</span>, 
                 <span class="ident">INDENT</span>,
                 <span class="ident">from</span>,
                 <span class="ident">to</span>,
@@ -984,13 +1046,20 @@
                 <span class="ident">map</span>.<span class="ident">insert</span>(<span class="ident">path</span>, <span class="ident">path_coverage</span>);
             }
 
-            <span class="kw">let</span> <span class="ident">highest_coverage_path</span> <span class="op">=</span>
+            <span class="kw">let</span> <span class="ident">highest_coverage_path_op</span> <span class="op">=</span>
                 <span class="ident">map</span>.<span class="ident">iter</span>().<span class="ident">max_by</span>(<span class="op">|</span><span class="ident">a</span>, <span class="ident">b</span><span class="op">|</span> <span class="ident">a</span>.<span class="number">1</span>.<span class="ident">cmp</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>.<span class="number">1</span>)).<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">k</span>, <span class="ident">v</span>)<span class="op">|</span> (<span class="ident">k</span>, <span class="ident">v</span>));
+
+            <span class="comment">// explicit error out here</span>
+            <span class="kw">let</span> <span class="ident">highest_coverage_path</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">highest_coverage_path_op</span> {
+                <span class="prelude-val">Some</span>(<span class="ident">p</span>) =&gt; <span class="ident">p</span>,
+                <span class="prelude-val">None</span> =&gt; <span class="macro">bail!</span>(<span class="string">&quot;There was no highest coverage path.&quot;</span>),
+            };
+
             <span class="macro">eprintln!</span>(
                 <span class="string">&quot;[+]\tHighest cumulative coverage path = {}&quot;</span>,
-                <span class="ident">highest_coverage_path</span>.<span class="ident">unwrap</span>().<span class="number">1</span>
+                <span class="ident">highest_coverage_path</span>.<span class="number">1</span>
             );
-            <span class="ident">highest_coverage_path</span>.<span class="ident">unwrap</span>().<span class="number">0</span>.<span class="ident">to_vec</span>()
+            <span class="ident">highest_coverage_path</span>.<span class="number">0</span>.<span class="ident">to_vec</span>()
         };
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">chosen_path_string</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
@@ -1069,6 +1138,63 @@
         <span class="kw">let</span> <span class="ident">gfa_graph</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
 
         <span class="ident">gfa_graph</span>.<span class="ident">edge_count</span>()
+    }
+
+    <span class="doccomment">/// Trim a graph to include only nodes connected to two or more other nodes.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// This algorithm will loop for as long as the longest branch in the GFA yields a segment connected to only a single node.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">trim</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">graph_indices</span>: <span class="ident">GFAGraphLookups</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">gfa_graph</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
+
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">all_nodes</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
+        <span class="comment">// get all node indices into a hashset</span>
+        <span class="kw">for</span> (<span class="ident">node_index</span>, <span class="kw">_</span>) <span class="kw">in</span> <span class="ident">gfa_graph</span>.<span class="ident">node_references</span>() {
+            <span class="ident">all_nodes</span>.<span class="ident">insert</span>(<span class="ident">node_index</span>);
+        }
+
+        <span class="comment">// initiate new hashset for the nodes we remove</span>
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">removed_nodes</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
+        <span class="comment">// keep track of the number of removed nodes in a vector</span>
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">track_removed_nodes</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
+        <span class="comment">// index for the above vector, keeping track of iterations</span>
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">index</span> <span class="op">=</span> <span class="number">0</span>;
+        <span class="kw">loop</span> {
+            <span class="comment">// iterate over the nodes</span>
+            <span class="kw">for</span> (<span class="ident">node_index</span>, <span class="kw">_</span>) <span class="kw">in</span> <span class="ident">gfa_graph</span>.<span class="ident">node_references</span>() {
+                <span class="comment">// how many neighbours for this particular node?</span>
+                <span class="kw">let</span> <span class="ident">neighbours</span> <span class="op">=</span> <span class="ident">gfa_graph</span>.<span class="ident">neighbors</span>(<span class="ident">node_index</span>).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
+
+                <span class="comment">// if there are fewer than two neighbours</span>
+                <span class="comment">// OR the difference between neighbours &amp; removed nodes == 1</span>
+                <span class="kw">if</span> <span class="ident">neighbours</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="number">2</span>
+                    <span class="op">|</span><span class="op">|</span> <span class="ident">neighbours</span>
+                        .<span class="ident">difference</span>(<span class="kw-2">&amp;</span><span class="ident">removed_nodes</span>)
+                        .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()
+                        .<span class="ident">len</span>()
+                        <span class="op">==</span> <span class="number">1</span>
+                {
+                    <span class="ident">removed_nodes</span>.<span class="ident">insert</span>(<span class="ident">node_index</span>);
+                }
+            }
+            <span class="comment">// push the length</span>
+            <span class="ident">track_removed_nodes</span>.<span class="ident">push</span>(<span class="ident">removed_nodes</span>.<span class="ident">len</span>());
+            <span class="kw">if</span> <span class="ident">track_removed_nodes</span>.<span class="ident">get</span>(<span class="ident">index</span>).<span class="ident">unwrap</span>()
+                <span class="op">==</span> <span class="ident">track_removed_nodes</span>.<span class="ident">get</span>(<span class="ident">index</span> <span class="op">-</span> <span class="number">1</span>).<span class="ident">unwrap_or</span>(<span class="kw-2">&amp;</span><span class="number">0</span>)
+            {
+                <span class="kw">break</span>;
+            }
+            <span class="ident">index</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+        }
+        <span class="comment">// print for user info</span>
+        <span class="kw">for</span> <span class="ident">el</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">removed_nodes</span> {
+            <span class="kw">let</span> <span class="ident">seg_id</span> <span class="op">=</span> <span class="ident">graph_indices</span>.<span class="ident">node_index_to_seg_id</span>(<span class="kw-2">*</span><span class="ident">el</span>).<span class="ident">unwrap</span>();
+            <span class="macro">eprintln!</span>(<span class="string">&quot;[+]\tRemoved segment {} from GFA.&quot;</span>, <span class="ident">seg_id</span>);
+        }
+
+        <span class="ident">all_nodes</span>
+            .<span class="ident">difference</span>(<span class="kw-2">&amp;</span><span class="ident">removed_nodes</span>)
+            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">graph_indices</span>.<span class="ident">node_index_to_seg_id</span>(<span class="kw-2">*</span><span class="ident">e</span>).<span class="ident">unwrap</span>())
+            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()
     }
 }
 

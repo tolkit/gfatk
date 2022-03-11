@@ -66,7 +66,7 @@
         },
     };
 
-    <span class="kw">let</span> (<span class="ident">_graph_indices</span>, <span class="ident">gfa_graph</span>) <span class="op">=</span> <span class="ident">gfa</span>.<span class="ident">into_digraph</span>()<span class="question-mark">?</span>;
+    <span class="kw">let</span> (<span class="kw">_</span>, <span class="ident">gfa_graph</span>) <span class="op">=</span> <span class="ident">gfa</span>.<span class="ident">into_digraph</span>()<span class="question-mark">?</span>;
 
     <span class="ident">gfa_graph</span>.<span class="ident">dot</span>(<span class="ident">gfa</span>)<span class="question-mark">?</span>;
 

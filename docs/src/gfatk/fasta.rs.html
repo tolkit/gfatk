@@ -30,6 +30,11 @@
 <span id="28">28</span>
 <span id="29">29</span>
 <span id="30">30</span>
+<span id="31">31</span>
+<span id="32">32</span>
+<span id="33">33</span>
+<span id="34">34</span>
+<span id="35">35</span>
 </pre><pre class="rust"><code><span class="comment">// extract sequences from a GFA</span>
 <span class="comment">// easy peasy</span>
 
@@ -39,6 +44,11 @@
 <span class="kw">use</span> <span class="ident">anyhow</span>::{<span class="ident">bail</span>, <span class="prelude-ty">Result</span>};
 
 <span class="doccomment">/// Print a fasta representation of the sequences in a GFA.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// For example:</span>
+<span class="doccomment">/// ```bash</span>
+<span class="doccomment">/// gfatk fasta in.gfa &gt; out.fasta</span>
+<span class="doccomment">/// ```</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fasta</span>(<span class="ident">matches</span>: <span class="kw-2">&amp;</span><span class="ident">clap::ArgMatches</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="comment">// read in path and parse gfa</span>
     <span class="kw">let</span> <span class="ident">gfa_file</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">value_of</span>(<span class="string">&quot;GFA&quot;</span>);

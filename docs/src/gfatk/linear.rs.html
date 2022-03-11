@@ -65,6 +65,26 @@
 <span id="63">63</span>
 <span id="64">64</span>
 <span id="65">65</span>
+<span id="66">66</span>
+<span id="67">67</span>
+<span id="68">68</span>
+<span id="69">69</span>
+<span id="70">70</span>
+<span id="71">71</span>
+<span id="72">72</span>
+<span id="73">73</span>
+<span id="74">74</span>
+<span id="75">75</span>
+<span id="76">76</span>
+<span id="77">77</span>
+<span id="78">78</span>
+<span id="79">79</span>
+<span id="80">80</span>
+<span id="81">81</span>
+<span id="82">82</span>
+<span id="83">83</span>
+<span id="84">84</span>
+<span id="85">85</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::gfa::gfa::GFAtk</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::load</span>::{<span class="ident">load_gfa</span>, <span class="ident">load_gfa_stdin</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils</span>;
@@ -76,6 +96,14 @@
 <span class="doccomment">/// This function finds *all* legal paths through a GFA, and returns the longest path, with the highest cumulative edge coverage.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// If the `-i` option is included, node coverages are taken into account, and paths are created with nodes appearing in the final path the number of times they relatively occur according to coverage information.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// For example:</span>
+<span class="doccomment">/// ```bash</span>
+<span class="doccomment">/// # simple</span>
+<span class="doccomment">/// gfatk linear in.gfa &gt; out.fasta</span>
+<span class="doccomment">/// # account for node coverage</span>
+<span class="doccomment">/// gfatk -i linear in.gfa &gt; out.fasta</span>
+<span class="doccomment">/// ```</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">force_linear</span>(<span class="ident">matches</span>: <span class="kw-2">&amp;</span><span class="ident">clap::ArgMatches</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="comment">// read in path and parse gfa</span>
     <span class="kw">let</span> <span class="ident">gfa_file</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">value_of</span>(<span class="string">&quot;GFA&quot;</span>);
@@ -99,6 +127,18 @@
 
     <span class="comment">// load gfa into graph structure</span>
     <span class="kw">let</span> (<span class="ident">graph_indices</span>, <span class="ident">gfa_graph</span>) <span class="op">=</span> <span class="ident">gfa</span>.<span class="ident">into_digraph</span>()<span class="question-mark">?</span>;
+
+    <span class="comment">// check how many subgraphs there are</span>
+    <span class="kw">let</span> <span class="ident">no_subgraphs</span> <span class="op">=</span> <span class="ident">gfa_graph</span>
+        .<span class="ident">weakly_connected_components</span>(<span class="ident">graph_indices</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>
+        .<span class="ident">len</span>();
+
+    <span class="kw">if</span> <span class="ident">no_subgraphs</span> <span class="op">&gt;</span> <span class="number">1</span> {
+        <span class="macro">eprintln!</span>(
+            <span class="string">&quot;[-]\tThe input GFA has multiple subgraphs ({}).&quot;</span>,
+            <span class="ident">no_subgraphs</span>
+        )
+    }
 
     <span class="comment">// don&#39;t evaluate the coverage if we don&#39;t care about it</span>
     <span class="kw">let</span> <span class="ident">rel_coverage_map</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">include_node_coverage</span> {

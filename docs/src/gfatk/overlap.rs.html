@@ -18,11 +18,19 @@
 <span id="16">16</span>
 <span id="17">17</span>
 <span id="18">18</span>
+<span id="19">19</span>
+<span id="20">20</span>
+<span id="21">21</span>
+<span id="22">22</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::gfa::gfa::GFAtk</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::load::load_gfa</span>;
 <span class="kw">use</span> <span class="ident">anyhow</span>::{<span class="ident">Context</span>, <span class="prelude-ty">Result</span>};
 
 <span class="doccomment">/// Generate overlaps between segments, with an optional parameter of how large to make these overlaps.</span>
+<span class="doccomment">/// For example:</span>
+<span class="doccomment">/// ```bash</span>
+<span class="doccomment">/// gfatk overlap in.gfa &gt; out.fasta</span>
+<span class="doccomment">/// ```</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">overlap</span>(<span class="ident">matches</span>: <span class="kw-2">&amp;</span><span class="ident">clap::ArgMatches</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="comment">// required so unwrap safely</span>
     <span class="kw">let</span> <span class="ident">gfa_file</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">value_of</span>(<span class="string">&quot;gfa&quot;</span>).<span class="ident">context</span>(<span class="string">&quot;No gfa file specified&quot;</span>)<span class="question-mark">?</span>;
