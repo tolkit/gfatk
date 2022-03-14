@@ -108,6 +108,13 @@ fn main() -> Result<()> {
                 .arg(
                     Arg::new("GFA")
                         .help("Input GFA file.")
+                )
+                .arg(
+                    Arg::new("size")
+                        .short('s')
+                        .long("size")
+                        .default_value("100000")
+                        .help("Minimum size of expected mitochondrion."),
                 ),
         )
         .subcommand(

@@ -501,6 +501,8 @@ impl GFAdigraph {
                 }
             }
             // push the length
+            // if the previous length is the same as the current,
+            // there are no more nodes to delete.
             track_removed_nodes.push(removed_nodes.len());
             if track_removed_nodes.get(index).unwrap()
                 == track_removed_nodes.get(index - 1).unwrap_or(&0)

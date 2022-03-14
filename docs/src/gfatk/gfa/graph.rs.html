@@ -682,6 +682,8 @@
 <span id="680">680</span>
 <span id="681">681</span>
 <span id="682">682</span>
+<span id="683">683</span>
+<span id="684">684</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::gfa::gfa::GFAtk</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils</span>::{<span class="ident">format_usize_to_kb</span>, <span class="ident">GFAGraphLookups</span>};
 <span class="kw">use</span> <span class="ident">anyhow</span>::{<span class="ident">bail</span>, <span class="ident">Context</span>, <span class="prelude-ty">Result</span>};
@@ -1185,6 +1187,8 @@
                 }
             }
             <span class="comment">// push the length</span>
+            <span class="comment">// if the previous length is the same as the current,</span>
+            <span class="comment">// there are no more nodes to delete.</span>
             <span class="ident">track_removed_nodes</span>.<span class="ident">push</span>(<span class="ident">removed_nodes</span>.<span class="ident">len</span>());
             <span class="kw">if</span> <span class="ident">track_removed_nodes</span>.<span class="ident">get</span>(<span class="ident">index</span>).<span class="ident">unwrap</span>()
                 <span class="op">==</span> <span class="ident">track_removed_nodes</span>.<span class="ident">get</span>(<span class="ident">index</span> <span class="op">-</span> <span class="number">1</span>).<span class="ident">unwrap_or</span>(<span class="kw-2">&amp;</span><span class="number">0</span>)

@@ -34,7 +34,7 @@ impl Stats {
     /// The function called from `gfatk extract-mito`.
     ///
     /// Extracts the putative mitochondrial subgraph from a GFA.
-    pub fn extract_mito(&mut self) -> Vec<usize> {
+    pub fn extract_mito(&mut self, size: usize) -> Result<Vec<usize>> {
         let stat_vec = &mut self.0;
         // reverse the cov..
         stat_vec.sort_by(|a, b| (a.cov, b.gc).partial_cmp(&(b.cov, a.gc)).unwrap());
@@ -46,11 +46,18 @@ impl Stats {
             let z: Vec<&Stat> = stat_vec
                 .iter()
                 // hardcoded for now, but does not have to be.
-                .filter(|e| e.total_sequence_length > 100_000)
+                .filter(|e| e.total_sequence_length > size)
                 .collect();
-            z[0].segments.clone()
+            let res = match z.get(0) {
+                Some(stat) => stat,
+                None => bail!(
+                    "No subgraphs with minimal sequence length of {}. Maybe reduce <size>?",
+                    size
+                ),
+            };
+            Ok(res.segments.clone())
         } else {
-            stat_vec[0].segments.clone()
+            Ok(stat_vec[0].segments.clone())
         }
     }
 }
@@ -69,6 +76,13 @@ impl Stats {
 pub fn stats(matches: &clap::ArgMatches, further: bool) -> Result<Option<(GFAtk, Vec<usize>)>> {
     // required so unwrap safely
     let gfa_file = matches.value_of("GFA");
+    // only passed through extract_mito
+    let size: Option<usize> = if further {
+        let size: usize = matches.value_of_t("size")?;
+        Some(size)
+    } else {
+        None
+    };
 
     let error_string = match further {
         true => "extract-mito",
@@ -127,7 +141,7 @@ pub fn stats(matches: &clap::ArgMatches, further: bool) -> Result<Option<(GFAtk,
 
     // if we want to do more stat things
     if further {
-        return Ok(Some((gfa, store_stats.extract_mito())));
+        return Ok(Some((gfa, store_stats.extract_mito(size.unwrap())?)));
     } else {
         println!("Total number of subgraphs: {}", no_subgraphs);
     }
