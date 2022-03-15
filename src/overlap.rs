@@ -9,7 +9,7 @@ use anyhow::{Context, Result};
 /// ```
 pub fn overlap(matches: &clap::ArgMatches) -> Result<()> {
     // required so unwrap safely
-    let gfa_file = matches.value_of("gfa").context("No gfa file specified")?;
+    let gfa_file = matches.value_of("GFA").context("No gfa file specified")?;
     let extend_length: usize = matches.value_of_t("size")?;
 
     let gfa: GFAtk = GFAtk(load_gfa(gfa_file)?);

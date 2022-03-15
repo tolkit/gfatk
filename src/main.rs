@@ -69,7 +69,6 @@ fn main() -> Result<()> {
                         .short('f')
                         .long("fasta-header")
                         .takes_value(true)
-                        .required(true)
                         .default_value("gfatk-linear")
                         .help("Name of the fasta header in the output file."),
                 )

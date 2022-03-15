@@ -684,6 +684,14 @@
 <span id="682">682</span>
 <span id="683">683</span>
 <span id="684">684</span>
+<span id="685">685</span>
+<span id="686">686</span>
+<span id="687">687</span>
+<span id="688">688</span>
+<span id="689">689</span>
+<span id="690">690</span>
+<span id="691">691</span>
+<span id="692">692</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::gfa::gfa::GFAtk</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils</span>::{<span class="ident">format_usize_to_kb</span>, <span class="ident">GFAGraphLookups</span>};
 <span class="kw">use</span> <span class="ident">anyhow</span>::{<span class="ident">bail</span>, <span class="ident">Context</span>, <span class="prelude-ty">Result</span>};
@@ -1366,6 +1374,14 @@
         <span class="ident">links</span>,
         <span class="ident">paths</span>,
         <span class="ident">containments</span>,
+    }
+}
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="kw">mod</span> <span class="ident">tests</span> {
+    <span class="attribute">#[<span class="ident">test</span>]</span>
+    <span class="kw">fn</span> <span class="ident">it_works</span>() {
+        <span class="macro">assert_eq!</span>(<span class="number">2</span> <span class="op">+</span> <span class="number">2</span>, <span class="number">4</span>);
     }
 }
 </code></pre></div>

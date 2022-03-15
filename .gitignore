@@ -1,8 +1,9 @@
 /target
-test*
 /data
 /check_oak_fasta
 .vscode
 /join_segments_tests
 ./*.gfa
 *.txt
+ubuntu_bin
+dtol-samples

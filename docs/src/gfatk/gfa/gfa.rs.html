@@ -653,6 +653,17 @@
 <span id="651">651</span>
 <span id="652">652</span>
 <span id="653">653</span>
+<span id="654">654</span>
+<span id="655">655</span>
+<span id="656">656</span>
+<span id="657">657</span>
+<span id="658">658</span>
+<span id="659">659</span>
+<span id="660">660</span>
+<span id="661">661</span>
+<span id="662">662</span>
+<span id="663">663</span>
+<span id="664">664</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::gfa::graph</span>::{<span class="ident">segments_subgraph</span>, <span class="ident">GFAdigraph</span>, <span class="ident">GFAungraph</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::gfa::writer</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils</span>;
@@ -1016,11 +1027,11 @@
                                     <span class="comment">// do nothing</span>
                                     <span class="kw">let</span> <span class="ident">seq_minus_overlap</span> <span class="op">=</span> <span class="ident">s</span>
                                         .<span class="ident">sequence</span>
-                                        .<span class="ident">get</span>(<span class="ident">start_overlap</span>.<span class="number">1</span> <span class="op">-</span> <span class="number">1</span>..)
+                                        .<span class="ident">get</span>(<span class="ident">start_overlap</span>.<span class="number">1</span>..)
                                         .<span class="ident">with_context</span>(<span class="op">|</span><span class="op">|</span> {
                                         <span class="macro">format!</span>(
                                             <span class="string">&quot;{} is outside the bounds of the sequence.&quot;</span>,
-                                            <span class="ident">start_overlap</span>.<span class="number">1</span> <span class="op">-</span> <span class="number">1</span>
+                                            <span class="ident">start_overlap</span>.<span class="number">1</span>
                                         )
                                     })<span class="question-mark">?</span>;
                                     <span class="ident">seq_minus_overlap</span>.<span class="ident">to_vec</span>()
@@ -1028,11 +1039,11 @@
                                 <span class="ident">Orientation::Backward</span> =&gt; {
                                     <span class="kw">let</span> <span class="ident">revcomp_seq</span> <span class="op">=</span> <span class="ident">reverse_complement</span>(<span class="kw-2">&amp;</span><span class="ident">s</span>.<span class="ident">sequence</span>);
                                     <span class="kw">let</span> <span class="ident">seq_minus_overlap</span> <span class="op">=</span> <span class="ident">revcomp_seq</span>
-                                        .<span class="ident">get</span>(<span class="ident">start_overlap</span>.<span class="number">1</span> <span class="op">-</span> <span class="number">1</span>..)
+                                        .<span class="ident">get</span>(<span class="ident">start_overlap</span>.<span class="number">1</span>..)
                                         .<span class="ident">with_context</span>(<span class="op">|</span><span class="op">|</span> {
                                             <span class="macro">format!</span>(
                                                 <span class="string">&quot;{} is outside the bounds of the sequence.&quot;</span>,
-                                                <span class="ident">start_overlap</span>.<span class="number">1</span> <span class="op">-</span> <span class="number">1</span>
+                                                <span class="ident">start_overlap</span>.<span class="number">1</span>
                                             )
                                         })<span class="question-mark">?</span>;
                                     <span class="ident">seq_minus_overlap</span>.<span class="ident">to_vec</span>()
@@ -1154,7 +1165,10 @@
             }
         }
 
-        <span class="prelude-val">Ok</span>((<span class="ident">seq_len</span>.<span class="ident">unwrap</span>(), <span class="ident">cov</span>.<span class="ident">unwrap</span>()))
+        <span class="prelude-val">Ok</span>((
+            <span class="ident">seq_len</span>.<span class="ident">context</span>(<span class="string">&quot;No sequence length for each segment in GFA.&quot;</span>)<span class="question-mark">?</span>,
+            <span class="ident">cov</span>.<span class="ident">context</span>(<span class="string">&quot;No segment coverage for each segment in GFA.&quot;</span>)<span class="question-mark">?</span>,
+        ))
     }
 
     <span class="doccomment">/// The internal function called in `gfatk stats`.</span>
@@ -1304,6 +1318,14 @@
                 <span class="ident">from_seg</span>, <span class="ident">from_orient</span>, <span class="ident">to_seg</span>, <span class="ident">to_orient</span>, <span class="ident">extend_length</span>, <span class="ident">ff</span>, <span class="ident">fr</span>, <span class="ident">tf</span>, <span class="ident">tr</span>
             );
         }
+    }
+}
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="kw">mod</span> <span class="ident">tests</span> {
+    <span class="attribute">#[<span class="ident">test</span>]</span>
+    <span class="kw">fn</span> <span class="ident">it_works</span>() {
+        <span class="macro">assert_eq!</span>(<span class="number">2</span> <span class="op">+</span> <span class="number">2</span>, <span class="number">4</span>);
     }
 }
 </code></pre></div>

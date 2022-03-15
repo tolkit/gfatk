@@ -1,0 +1,22 @@
+# Duplicate 11,12,13
+# To 14,15,16
+H	VN:Z:1.0
+S	11	ACCTT	ll:f:30.0
+S	12	TCAAGG	ll:f:60.0
+S	13	CTTGATT	ll:f:30.0
+L	11	+	12	-	4M	ec:i:1
+L	12	-	13	+	5M	ec:i:1
+L	11	+	13	+	3M	ec:i:1
+L	12	+	11	-	4M	ec:i:1
+L	13	-	12	+	5M	ec:i:1
+L	13	-	11	-	3M	ec:i:1
+# duplication here
+S	14	ACCTT	ll:f:30.0
+S	15	TCAAGG	ll:f:60.0
+S	16	CTTGATT	ll:f:30.0
+L	14	+	15	-	4M	ec:i:1
+L	15	-	16	+	5M	ec:i:1
+L	14	+	16	+	3M	ec:i:1
+L	15	+	14	-	4M	ec:i:1
+L	16	-	15	+	5M	ec:i:1
+L	16	-	14	-	3M	ec:i:1

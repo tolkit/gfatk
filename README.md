@@ -4,11 +4,20 @@
     <img width="300" height="132" src="https://www.darwintreeoflife.org/wp-content/themes/dtol/dist/assets/gfx/dtol-logo-round.png">
 </p>
 
-A command line utility to explore, extract, and linearise plant mitochondrial assemblies. The Graphical Fragment Assembly files (GFAs) used to refine the code in this repository are almost exclusively generated from the assembly program <a href="https://github.com/maickrau/MBG">MBG</a>. Little testing has been done beyond the output of MBG.
+A command line utility to explore, extract, and linearise plant mitochondrial assemblies. The Graphical Fragment Assembly files (GFAs) used to refine the code in this repository are almost exclusively generated from the assembly program <a href="https://github.com/maickrau/MBG">MBG</a>. See the testing section below for caveats.
 
 ## Install
 
-For now, I haven't put any precompiled binaries out as the code has been changing so much. Nearly there but in the meantime, install rust and build yourself.
+Grab from the releases (Mac & Linux only):
+
+```bash
+# for mac
+curl -L "https://github.com/tolkit/gfatk/releases/download/0.1.4/gfatk_mac_0.1.4" > goat && chmod +x goat
+# and linux (ubuntu)
+curl -L "https://github.com/tolkit/gfatk/releases/download/0.1.4/gfatk_ubuntu_0.1.4" > goat && chmod +x goat
+```
+
+Or build from source.
 
 ```bash
 # e.g. get rustup!
@@ -68,9 +77,35 @@ A couple of more detailed examples can be seen in the `examples` directory, wher
 
 https://tolkit.github.io/gfatk/
 
+## Testing
+
+Some unit tests are now provided in the `tests` directory. To run these (you'll need Rust):
+
+```bash
+cargo test --release
+```
+
+For full functionality of the toolkit, two tags are required, node coverage and edge coverage. Other functionality will fail if the CIGAR string is not purely an overlap; i.e. in the format `<integer>M`. Only GFA version 1 supported.
+
+```
+H	VN:Z:1.0
+S	11	ACCTT	ll:f:30.0 <- this tag indicates node/segment coverage (here it's 30.0)
+S	12	TCAAGG	ll:f:60.0
+S	13	CTTGATT	ll:f:30.0
+L	11	+	12	-	4M	ec:i:1 <- this tag indicates edge coverage (here it's 1)
+L	12	-	13	+	5M	ec:i:1
+L	11	+	13	+	3M	ec:i:1
+L	12	+	11	-	4M	ec:i:1
+L	13	-	12	+	5M	ec:i:1
+L	13	-	11	-	3M <- simple overlap on the CIGAR string (overlap == 3)	ec:i:1
+
+```
+
+More tests to come.
+
 ## Thanks
 
-Many thanks to the developers of MBG, and partners in the Tree of Life program and beyond:
+Many thanks to the developers of MBG, and partners in the Tree of Life program, and beyond:
 - Marcela Uliano-Silva
 - Sergey Nurk
 - Alex Twyford

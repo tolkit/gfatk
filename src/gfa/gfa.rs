@@ -361,11 +361,11 @@ impl GFAtk {
                                     // do nothing
                                     let seq_minus_overlap = s
                                         .sequence
-                                        .get(start_overlap.1 - 1..)
+                                        .get(start_overlap.1..)
                                         .with_context(|| {
                                         format!(
                                             "{} is outside the bounds of the sequence.",
-                                            start_overlap.1 - 1
+                                            start_overlap.1
                                         )
                                     })?;
                                     seq_minus_overlap.to_vec()
@@ -373,11 +373,11 @@ impl GFAtk {
                                 Orientation::Backward => {
                                     let revcomp_seq = reverse_complement(&s.sequence);
                                     let seq_minus_overlap = revcomp_seq
-                                        .get(start_overlap.1 - 1..)
+                                        .get(start_overlap.1..)
                                         .with_context(|| {
                                             format!(
                                                 "{} is outside the bounds of the sequence.",
-                                                start_overlap.1 - 1
+                                                start_overlap.1
                                             )
                                         })?;
                                     seq_minus_overlap.to_vec()
@@ -499,7 +499,10 @@ impl GFAtk {
             }
         }
 
-        Ok((seq_len.unwrap(), cov.unwrap()))
+        Ok((
+            seq_len.context("No sequence length for each segment in GFA.")?,
+            cov.context("No segment coverage for each segment in GFA.")?,
+        ))
     }
 
     /// The internal function called in `gfatk stats`.
@@ -649,5 +652,13 @@ impl Overlaps {
                 from_seg, from_orient, to_seg, to_orient, extend_length, ff, fr, tf, tr
             );
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn it_works() {
+        assert_eq!(2 + 2, 4);
     }
 }
