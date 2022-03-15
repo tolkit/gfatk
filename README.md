@@ -12,9 +12,9 @@ Grab from the releases (Mac & Linux only):
 
 ```bash
 # for mac
-curl -L "https://github.com/tolkit/gfatk/releases/download/0.1.4/gfatk_mac_0.1.4" > goat && chmod +x goat
+curl -L "https://github.com/tolkit/gfatk/releases/download/0.1.4/gfatk_mac_0.1.4" > gfatk && chmod +x gfatk
 # and linux (ubuntu)
-curl -L "https://github.com/tolkit/gfatk/releases/download/0.1.4/gfatk_ubuntu_0.1.4" > goat && chmod +x goat
+curl -L "https://github.com/tolkit/gfatk/releases/download/0.1.4/gfatk_ubuntu_0.1.4" > gfatk && chmod +x gfatk
 ```
 
 Or build from source.
