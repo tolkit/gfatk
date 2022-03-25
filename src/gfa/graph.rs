@@ -208,17 +208,21 @@ impl GFAdigraph {
     // need to emit segment ID's that did not make it into the
     // longest path here.
 
-    // return the path, the path ID's, and id's not in the path
+    // return the path, the path ID's, id's not in the path, and the
+    // `String` of a fasta header.
+
     // -> (Vec<NodeIndex>, Vec<usize>, Vec<usize>)
 
     /// The main function called from `gfatk linear`.
     ///
-    /// This function will generate the longest path through the GFA, by filtering the output of `all_paths`, and choosing the path with the highest cumulative edge coverage.
+    /// This function will generate the longest path through the GFA, by
+    /// filtering the output of `all_paths`, and choosing the path with
+    /// the highest cumulative edge coverage.
     pub fn all_paths_all_node_pairs(
         &self,
         graph_indices: &GFAGraphLookups,
         rel_coverage_map: Option<&HashMap<NodeIndex, usize>>,
-    ) -> Result<(Vec<NodeIndex>, Vec<usize>, Vec<usize>)> {
+    ) -> Result<(Vec<NodeIndex>, Vec<usize>, Vec<usize>, String)> {
         let graph = &self.0;
         let nodes = graph.node_identifiers();
         let node_pairs = nodes.permutations(2).collect::<Vec<_>>();
@@ -383,11 +387,11 @@ impl GFAdigraph {
                 "[+]\tHighest cumulative coverage path = {}",
                 highest_coverage_path.1
             );
-            highest_coverage_path.0.to_vec()
+            (highest_coverage_path.0.to_vec(), *highest_coverage_path.1)
         };
 
         let mut chosen_path_string = Vec::new();
-        let final_path_node_pairs = final_path.windows(2);
+        let final_path_node_pairs = final_path.0.windows(2);
         for (index, pair) in final_path_node_pairs.enumerate() {
             let from = pair[0];
             let to = pair[1];
@@ -404,9 +408,9 @@ impl GFAdigraph {
 
             if index == 0 {
                 chosen_path_string
-                    .push(format!("{} {} -> {} {}", from_orient, from, to_orient, to));
+                    .push(format!("{} {} -> {} {}", from, from_orient, to, to_orient));
             } else {
-                chosen_path_string.push(format!(" -> {} {}", to_orient, to));
+                chosen_path_string.push(format!(" -> {} {}", to, to_orient));
             }
         }
 
@@ -420,6 +424,7 @@ impl GFAdigraph {
         // now sort these overlaps so they are the same order
         // chosen path -> id's
         let chosen_path_ids = final_path
+            .0
             .iter()
             // .1 needed
             .map(|e| graph_indices.node_index_to_seg_id(*e))
@@ -427,7 +432,7 @@ impl GFAdigraph {
 
         // make a vector of nodes not in the final path
         // these will be passed later and printed to a fasta.
-        let final_path_set: HashSet<_> = final_path.iter().collect();
+        let final_path_set: HashSet<_> = final_path.0.iter().collect();
         let nodes: Vec<_> = graph.node_identifiers().collect();
         let difference: Vec<_> = nodes
             .into_iter()
@@ -442,11 +447,19 @@ impl GFAdigraph {
             })
             .collect();
 
+        // the fasta header should contain the tool, path information, and coverage
+        let fasta_header = format!(
+            ">gfatk_linear:path={}:coverage={}",
+            chosen_path_string.join(""),
+            final_path.1
+        );
+
         Ok((
-            final_path.to_vec(),
+            final_path.0.to_vec(),
             // error handling a bit annoying here.
             chosen_path_ids?,
             difference_ids?,
+            fasta_header,
         ))
     }
 

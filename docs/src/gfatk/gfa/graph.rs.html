@@ -692,6 +692,19 @@
 <span id="690">690</span>
 <span id="691">691</span>
 <span id="692">692</span>
+<span id="693">693</span>
+<span id="694">694</span>
+<span id="695">695</span>
+<span id="696">696</span>
+<span id="697">697</span>
+<span id="698">698</span>
+<span id="699">699</span>
+<span id="700">700</span>
+<span id="701">701</span>
+<span id="702">702</span>
+<span id="703">703</span>
+<span id="704">704</span>
+<span id="705">705</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::gfa::gfa::GFAtk</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils</span>::{<span class="ident">format_usize_to_kb</span>, <span class="ident">GFAGraphLookups</span>};
 <span class="kw">use</span> <span class="ident">anyhow</span>::{<span class="ident">bail</span>, <span class="ident">Context</span>, <span class="prelude-ty">Result</span>};
@@ -902,17 +915,21 @@
     <span class="comment">// need to emit segment ID&#39;s that did not make it into the</span>
     <span class="comment">// longest path here.</span>
 
-    <span class="comment">// return the path, the path ID&#39;s, and id&#39;s not in the path</span>
+    <span class="comment">// return the path, the path ID&#39;s, id&#39;s not in the path, and the</span>
+    <span class="comment">// `String` of a fasta header.</span>
+
     <span class="comment">// -&gt; (Vec&lt;NodeIndex&gt;, Vec&lt;usize&gt;, Vec&lt;usize&gt;)</span>
 
     <span class="doccomment">/// The main function called from `gfatk linear`.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// This function will generate the longest path through the GFA, by filtering the output of `all_paths`, and choosing the path with the highest cumulative edge coverage.</span>
+    <span class="doccomment">/// This function will generate the longest path through the GFA, by</span>
+    <span class="doccomment">/// filtering the output of `all_paths`, and choosing the path with</span>
+    <span class="doccomment">/// the highest cumulative edge coverage.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">all_paths_all_node_pairs</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">graph_indices</span>: <span class="kw-2">&amp;</span><span class="ident">GFAGraphLookups</span>,
         <span class="ident">rel_coverage_map</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">NodeIndex</span>, <span class="ident">usize</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">NodeIndex</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>)<span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">NodeIndex</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>, <span class="ident">String</span>)<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">graph</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
         <span class="kw">let</span> <span class="ident">nodes</span> <span class="op">=</span> <span class="ident">graph</span>.<span class="ident">node_identifiers</span>();
         <span class="kw">let</span> <span class="ident">node_pairs</span> <span class="op">=</span> <span class="ident">nodes</span>.<span class="ident">permutations</span>(<span class="number">2</span>).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
@@ -1077,11 +1094,11 @@
                 <span class="string">&quot;[+]\tHighest cumulative coverage path = {}&quot;</span>,
                 <span class="ident">highest_coverage_path</span>.<span class="number">1</span>
             );
-            <span class="ident">highest_coverage_path</span>.<span class="number">0</span>.<span class="ident">to_vec</span>()
+            (<span class="ident">highest_coverage_path</span>.<span class="number">0</span>.<span class="ident">to_vec</span>(), <span class="kw-2">*</span><span class="ident">highest_coverage_path</span>.<span class="number">1</span>)
         };
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">chosen_path_string</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-        <span class="kw">let</span> <span class="ident">final_path_node_pairs</span> <span class="op">=</span> <span class="ident">final_path</span>.<span class="ident">windows</span>(<span class="number">2</span>);
+        <span class="kw">let</span> <span class="ident">final_path_node_pairs</span> <span class="op">=</span> <span class="ident">final_path</span>.<span class="number">0</span>.<span class="ident">windows</span>(<span class="number">2</span>);
         <span class="kw">for</span> (<span class="ident">index</span>, <span class="ident">pair</span>) <span class="kw">in</span> <span class="ident">final_path_node_pairs</span>.<span class="ident">enumerate</span>() {
             <span class="kw">let</span> <span class="ident">from</span> <span class="op">=</span> <span class="ident">pair</span>[<span class="number">0</span>];
             <span class="kw">let</span> <span class="ident">to</span> <span class="op">=</span> <span class="ident">pair</span>[<span class="number">1</span>];
@@ -1098,9 +1115,9 @@
 
             <span class="kw">if</span> <span class="ident">index</span> <span class="op">==</span> <span class="number">0</span> {
                 <span class="ident">chosen_path_string</span>
-                    .<span class="ident">push</span>(<span class="macro">format!</span>(<span class="string">&quot;{} {} -&gt; {} {}&quot;</span>, <span class="ident">from_orient</span>, <span class="ident">from</span>, <span class="ident">to_orient</span>, <span class="ident">to</span>));
+                    .<span class="ident">push</span>(<span class="macro">format!</span>(<span class="string">&quot;{} {} -&gt; {} {}&quot;</span>, <span class="ident">from</span>, <span class="ident">from_orient</span>, <span class="ident">to</span>, <span class="ident">to_orient</span>));
             } <span class="kw">else</span> {
-                <span class="ident">chosen_path_string</span>.<span class="ident">push</span>(<span class="macro">format!</span>(<span class="string">&quot; -&gt; {} {}&quot;</span>, <span class="ident">to_orient</span>, <span class="ident">to</span>));
+                <span class="ident">chosen_path_string</span>.<span class="ident">push</span>(<span class="macro">format!</span>(<span class="string">&quot; -&gt; {} {}&quot;</span>, <span class="ident">to</span>, <span class="ident">to_orient</span>));
             }
         }
 
@@ -1114,6 +1131,7 @@
         <span class="comment">// now sort these overlaps so they are the same order</span>
         <span class="comment">// chosen path -&gt; id&#39;s</span>
         <span class="kw">let</span> <span class="ident">chosen_path_ids</span> <span class="op">=</span> <span class="ident">final_path</span>
+            .<span class="number">0</span>
             .<span class="ident">iter</span>()
             <span class="comment">// .1 needed</span>
             .<span class="ident">map</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">graph_indices</span>.<span class="ident">node_index_to_seg_id</span>(<span class="kw-2">*</span><span class="ident">e</span>))
@@ -1121,7 +1139,7 @@
 
         <span class="comment">// make a vector of nodes not in the final path</span>
         <span class="comment">// these will be passed later and printed to a fasta.</span>
-        <span class="kw">let</span> <span class="ident">final_path_set</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">final_path</span>.<span class="ident">iter</span>().<span class="ident">collect</span>();
+        <span class="kw">let</span> <span class="ident">final_path_set</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">final_path</span>.<span class="number">0</span>.<span class="ident">iter</span>().<span class="ident">collect</span>();
         <span class="kw">let</span> <span class="ident">nodes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">graph</span>.<span class="ident">node_identifiers</span>().<span class="ident">collect</span>();
         <span class="kw">let</span> <span class="ident">difference</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">nodes</span>
             .<span class="ident">into_iter</span>()
@@ -1136,11 +1154,19 @@
             })
             .<span class="ident">collect</span>();
 
+        <span class="comment">// the fasta header should contain the tool, path information, and coverage</span>
+        <span class="kw">let</span> <span class="ident">fasta_header</span> <span class="op">=</span> <span class="macro">format!</span>(
+            <span class="string">&quot;&gt;gfatk_linear:path={}:coverage={}&quot;</span>,
+            <span class="ident">chosen_path_string</span>.<span class="ident">join</span>(<span class="string">&quot;&quot;</span>),
+            <span class="ident">final_path</span>.<span class="number">1</span>
+        );
+
         <span class="prelude-val">Ok</span>((
-            <span class="ident">final_path</span>.<span class="ident">to_vec</span>(),
+            <span class="ident">final_path</span>.<span class="number">0</span>.<span class="ident">to_vec</span>(),
             <span class="comment">// error handling a bit annoying here.</span>
             <span class="ident">chosen_path_ids</span><span class="question-mark">?</span>,
             <span class="ident">difference_ids</span><span class="question-mark">?</span>,
+            <span class="ident">fasta_header</span>,
         ))
     }
 

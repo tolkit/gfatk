@@ -1,7 +1,7 @@
 use crate::gfa::gfa::GFAtk;
 use crate::load::{load_gfa, load_gfa_stdin};
 use crate::utils;
-use anyhow::{bail, Context, Result};
+use anyhow::{bail, Result};
 use indexmap::IndexMap;
 
 /// Force a linear representation of the GFA.
@@ -20,9 +20,6 @@ use indexmap::IndexMap;
 pub fn force_linear(matches: &clap::ArgMatches) -> Result<()> {
     // read in path and parse gfa
     let gfa_file = matches.value_of("GFA");
-    let fasta_header = matches
-        .value_of("fasta-header")
-        .context("No fasta header specified")?;
     let include_node_coverage = matches.is_present("include-node-coverage");
 
     let gfa: GFAtk = match gfa_file {
@@ -59,7 +56,7 @@ pub fn force_linear(matches: &clap::ArgMatches) -> Result<()> {
         false => None,
     };
 
-    let (chosen_path, chosen_path_ids, segments_not_in_path) =
+    let (chosen_path, chosen_path_ids, segments_not_in_path, fasta_header) =
         gfa_graph.all_paths_all_node_pairs(&graph_indices, rel_coverage_map.as_ref())?;
 
     let sorted_chosen_path_overlaps =
@@ -77,7 +74,7 @@ pub fn force_linear(matches: &clap::ArgMatches) -> Result<()> {
 
     gfa.print_path_to_fasta(
         merged_sorted_chosen_path_overlaps,
-        fasta_header,
+        &fasta_header,
         segments_not_in_path,
     )?;
 

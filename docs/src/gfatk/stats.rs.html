@@ -150,6 +150,12 @@
 <span id="148">148</span>
 <span id="149">149</span>
 <span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::gfa::graph::segments_subgraph</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::load::load_gfa</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils</span>;
@@ -209,7 +215,13 @@
             };
             <span class="prelude-val">Ok</span>(<span class="ident">res</span>.<span class="ident">segments</span>.<span class="ident">clone</span>())
         } <span class="kw">else</span> {
-            <span class="prelude-val">Ok</span>(<span class="ident">stat_vec</span>[<span class="number">0</span>].<span class="ident">segments</span>.<span class="ident">clone</span>())
+            <span class="comment">// TODO: make a better error message here?</span>
+            <span class="kw">let</span> <span class="ident">extracted_segments_op</span> <span class="op">=</span> <span class="ident">stat_vec</span>.<span class="ident">get</span>(<span class="number">0</span>);
+            <span class="kw">let</span> <span class="ident">extracted_segments</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">extracted_segments_op</span> {
+                <span class="prelude-val">Some</span>(<span class="ident">s</span>) =&gt; <span class="ident">s</span>,
+                <span class="prelude-val">None</span> =&gt; <span class="macro">bail!</span>(<span class="string">&quot;There were no segments to be extracted. Check input GFA file.&quot;</span>),
+            };
+            <span class="prelude-val">Ok</span>(<span class="ident">extracted_segments</span>.<span class="ident">segments</span>.<span class="ident">clone</span>())
         }
     }
 }

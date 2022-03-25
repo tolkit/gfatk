@@ -57,7 +57,13 @@ impl Stats {
             };
             Ok(res.segments.clone())
         } else {
-            Ok(stat_vec[0].segments.clone())
+            // TODO: make a better error message here?
+            let extracted_segments_op = stat_vec.get(0);
+            let extracted_segments = match extracted_segments_op {
+                Some(s) => s,
+                None => bail!("There were no segments to be extracted. Check input GFA file."),
+            };
+            Ok(extracted_segments.segments.clone())
         }
     }
 }

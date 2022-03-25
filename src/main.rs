@@ -65,14 +65,6 @@ fn main() -> Result<()> {
                         .help("Input GFA file.")
                 )
                 .arg(
-                    Arg::new("fasta-header")
-                        .short('f')
-                        .long("fasta-header")
-                        .takes_value(true)
-                        .default_value("gfatk-linear")
-                        .help("Name of the fasta header in the output file."),
-                )
-                .arg(
                     Arg::new("include-node-coverage")
                         .short('i')
                         .long("include-node-coverage")
