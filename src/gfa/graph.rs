@@ -406,11 +406,11 @@ impl GFAdigraph {
             let from = graph_indices.node_index_to_seg_id(weight.source())?;
             let to = graph_indices.node_index_to_seg_id(weight.target())?;
 
+            // no spaces between the formatted strings
             if index == 0 {
-                chosen_path_string
-                    .push(format!("{} {} -> {} {}", from, from_orient, to, to_orient));
+                chosen_path_string.push(format!("{}{}->{}{}", from, from_orient, to, to_orient));
             } else {
-                chosen_path_string.push(format!(" -> {} {}", to, to_orient));
+                chosen_path_string.push(format!("->{}{}", to, to_orient));
             }
         }
 
