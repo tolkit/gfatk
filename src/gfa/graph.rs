@@ -449,7 +449,7 @@ impl GFAdigraph {
 
         // the fasta header should contain the tool, path information, and coverage
         let fasta_header = format!(
-            ">gfatk_linear:path={}:coverage={}",
+            "gfatk_linear:path={}:coverage={}",
             chosen_path_string.join(""),
             final_path.1
         );
