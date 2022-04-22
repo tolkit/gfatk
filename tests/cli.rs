@@ -185,6 +185,41 @@ fn test_gfa_trim_sterr() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+// test `gfatk fasta`
+
+// H	VN:Z:1.0
+// S	11	ACCTT	ll:f:30.0
+// S	12	TCAAGG	ll:f:60.0
+// S	13	CTTGATT	ll:f:30.0
+// L	11	+	12	-	4M	ec:i:1
+// L	12	-	13	+	5M	ec:i:1
+// L	11	+	13	+	3M	ec:i:1
+// L	12	+	11	-	4M	ec:i:1
+// L	13	-	12	+	5M	ec:i:1
+// L	13	-	11	-	3M	ec:i:1
+
+// should output three fasta records in the order
+// in which they appear in the GFA
+
+#[test]
+fn test_gfa_fasta_stdout() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = Command::cargo_bin("gfatk")?;
+
+    cmd.arg("fasta").arg("./tests/test_linear.gfa");
+
+    cmd.assert().stdout(predicate::str::contains(
+        ">11
+ACCTT
+>12
+TCAAGG
+>13
+CTTGATT
+",
+    ));
+
+    Ok(())
+}
+
 // test for no edge coverage tags
 // if user wants to use:
 // `gfatk linear`, `gfatk dot`, `gfatk trim` or `gfatk stats`

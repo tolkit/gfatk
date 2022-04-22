@@ -136,6 +136,7 @@ fn nucleotide_counts(dna: &[u8]) -> HashMap<&u8, i32> {
 /// Calculate the GC content of a string slice.
 pub fn gc_content(dna: &[u8]) -> f32 {
     // G/C/A/T counts
+    // upper + lower
     let counts = nucleotide_counts(dna);
     let g_counts = counts.get(&71).unwrap_or(&0) + counts.get(&103).unwrap_or(&0);
     let c_counts = counts.get(&67).unwrap_or(&0) + counts.get(&99).unwrap_or(&0);
@@ -160,6 +161,8 @@ pub struct GFAGraphPair {
     pub seg_id: usize,
 }
 /// A vector of `GFAGraphPair`'s.
+/// 
+/// This should 100% have been a map-like structure...
 #[derive(Clone)]
 pub struct GFAGraphLookups(pub Vec<GFAGraphPair>);
 
@@ -222,5 +225,50 @@ impl fmt::Display for GFAGraphLookups {
         output += &seg_ids;
 
         write!(f, "{}\n", output)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+
+    #[test]
+    fn test_node_seg_id_indexes() {
+        let mut gl = GFAGraphLookups::new();
+        // just add two pairs
+        gl.push(GFAGraphPair {
+            node_index: NodeIndex::new(1),
+            seg_id: 12,
+        });
+
+        gl.push(GFAGraphPair {
+            node_index: NodeIndex::new(2),
+            seg_id: 10,
+        });
+
+        assert_eq!(12, gl.node_index_to_seg_id(NodeIndex::new(1)).unwrap());
+        assert_eq!(NodeIndex::new(2), gl.seg_id_to_node_index(10).unwrap());
+    }
+
+    #[test]
+    fn test_gc_content() {
+        let dna_bytes = vec![b'A', b'G', b'G', b'T', b'T', b'C'];
+
+        let gc = gc_content(&dna_bytes);
+
+        assert_eq!(gc, 0.5);
+    }
+
+    #[test]
+    fn test_cigar_parse() {
+        let cigar_ok = "120M".as_bytes();
+        let cigar_err = "30M10D20M5I10M".as_bytes();
+
+        let parsed_cigar = parse_cigar(cigar_ok).is_err();
+        let parsed_cigar2 = parse_cigar(cigar_err).is_err();
+
+        assert_eq!(parsed_cigar, false);
+        assert_eq!(parsed_cigar2, true);
     }
 }
