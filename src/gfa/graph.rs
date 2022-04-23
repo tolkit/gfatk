@@ -698,8 +698,226 @@ pub fn segments_subgraph<T: OptFields + Clone>(
 
 #[cfg(test)]
 mod tests {
+
+    use super::*;
+
+    // we want to make a test graph to play with
+    // make the inner graph representation of:
+    // ./examples/mito_NC_037304.1.MZ323108.1.fasta.BOTH.HiFiMapped.bam.filtered.1k.gfa
+
+    fn make_graph() -> GFAdigraph {
+        let mut graph = Graph::<usize, (Orientation, Orientation, Option<i64>)>::new();
+
+        // node weights are usize
+        let node0 = graph.add_node(0);
+        let node1 = graph.add_node(1);
+        let node2 = graph.add_node(2);
+        let node3 = graph.add_node(3);
+        let node4 = graph.add_node(4);
+        let node5 = graph.add_node(5);
+
+        // we create the following graph
+        //
+        //  0 <-----> 3 <-----> 1
+        //    \     / ˄ \     /
+        //      \ /   |   \ /
+        //      / \   |   / \
+        //    /     \ ˅ /     \
+        //  5 <-----> 2 <-----> 4
+        //
+
+        graph.extend_with_edges(&[
+            (
+                node0,
+                node3,
+                (Orientation::Backward, Orientation::Backward, Some(379)),
+            ),
+            (
+                node0,
+                node2,
+                (Orientation::Forward, Orientation::Backward, Some(338)),
+            ),
+            (
+                node1,
+                node3,
+                (Orientation::Backward, Orientation::Backward, Some(380)),
+            ),
+            (
+                node1,
+                node2,
+                (Orientation::Forward, Orientation::Backward, Some(374)),
+            ),
+            (
+                node2,
+                node4,
+                (Orientation::Backward, Orientation::Forward, Some(347)),
+            ),
+            (
+                node2,
+                node5,
+                (Orientation::Backward, Orientation::Forward, Some(399)),
+            ),
+            (
+                node2,
+                node1,
+                (Orientation::Forward, Orientation::Backward, Some(374)),
+            ),
+            (
+                node2,
+                node0,
+                (Orientation::Forward, Orientation::Backward, Some(338)),
+            ),
+            (
+                node3,
+                node5,
+                (Orientation::Backward, Orientation::Backward, Some(397)),
+            ),
+            (
+                node3,
+                node4,
+                (Orientation::Backward, Orientation::Backward, Some(349)),
+            ),
+            (
+                node3,
+                node1,
+                (Orientation::Forward, Orientation::Forward, Some(380)),
+            ),
+            (
+                node3,
+                node0,
+                (Orientation::Forward, Orientation::Forward, Some(379)),
+            ),
+            (
+                node4,
+                node2,
+                (Orientation::Backward, Orientation::Forward, Some(347)),
+            ),
+            (
+                node4,
+                node3,
+                (Orientation::Forward, Orientation::Forward, Some(349)),
+            ),
+            (
+                node5,
+                node2,
+                (Orientation::Backward, Orientation::Forward, Some(399)),
+            ),
+            (
+                node5,
+                node3,
+                (Orientation::Forward, Orientation::Forward, Some(397)),
+            ),
+        ]);
+
+        GFAdigraph(graph)
+    }
+
+    // there are 6 nodes in this graph
     #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
+    fn test_node_count() {
+        let graph = make_graph();
+
+        assert_eq!(graph.node_count(), 6);
+    }
+
+    // there are 16 edges in this graph (incl +/- orientations)
+    #[test]
+    fn test_edge_count() {
+        let graph = make_graph();
+
+        assert_eq!(graph.edge_count(), 16);
+    }
+
+    // there are two possible paths between node indexes 0 and 2
+    #[test]
+    fn test_path_generation() {
+        let graph = make_graph();
+
+        let paths = all_paths(&graph.0, NodeIndex::new(0), NodeIndex::new(2), None).unwrap();
+
+        // there should be two paths
+        let path1: Vec<NodeIndex> = vec![NodeIndex::new(0), NodeIndex::new(2)];
+        let path2: Vec<NodeIndex> = vec![
+            NodeIndex::new(0),
+            NodeIndex::new(3),
+            NodeIndex::new(1),
+            NodeIndex::new(2),
+        ];
+        let path3: Vec<NodeIndex> = vec![
+            NodeIndex::new(0),
+            NodeIndex::new(3),
+            NodeIndex::new(4),
+            NodeIndex::new(2),
+        ];
+        let path4: Vec<NodeIndex> = vec![
+            NodeIndex::new(0),
+            NodeIndex::new(3),
+            NodeIndex::new(5),
+            NodeIndex::new(2),
+        ];
+
+        assert_eq!(paths.contains(&path1), true);
+        assert_eq!(paths.contains(&path2), true);
+        assert_eq!(paths.contains(&path3), true);
+        assert_eq!(paths.contains(&path4), true);
+    }
+
+    //
+    #[test]
+    fn test_path_generation_incl_node_cov() {
+        let graph = make_graph();
+
+        let mut map: HashMap<NodeIndex, usize> = HashMap::new();
+
+        // we can provide a map to say we want to visit certain nodes twice
+        map.insert(NodeIndex::new(0), 1);
+        map.insert(NodeIndex::new(1), 1);
+        map.insert(NodeIndex::new(2), 2);
+        map.insert(NodeIndex::new(3), 2);
+        map.insert(NodeIndex::new(4), 1);
+        map.insert(NodeIndex::new(5), 1);
+
+        let lookup = GFAGraphLookups(vec![
+            crate::utils::GFAGraphPair {
+                node_index: NodeIndex::new(0),
+                seg_id: 4,
+            },
+            crate::utils::GFAGraphPair {
+                node_index: NodeIndex::new(2),
+                seg_id: 6,
+            },
+            crate::utils::GFAGraphPair {
+                node_index: NodeIndex::new(5),
+                seg_id: 9,
+            },
+            crate::utils::GFAGraphPair {
+                node_index: NodeIndex::new(3),
+                seg_id: 7,
+            },
+            crate::utils::GFAGraphPair {
+                node_index: NodeIndex::new(1),
+                seg_id: 5,
+            },
+            crate::utils::GFAGraphPair {
+                node_index: NodeIndex::new(4),
+                seg_id: 8,
+            },
+        ]);
+
+        // go between two adjacent nodes
+        let paths = graph.all_paths_all_node_pairs(&lookup, Some(&map));
+
+        let longest_path: Vec<NodeIndex> = vec![
+            NodeIndex::new(2),
+            NodeIndex::new(5),
+            NodeIndex::new(3),
+            NodeIndex::new(1),
+            NodeIndex::new(2),
+            NodeIndex::new(4),
+            NodeIndex::new(3),
+            NodeIndex::new(0),
+        ];
+
+        assert_eq!(paths.unwrap().0, longest_path)
     }
 }
