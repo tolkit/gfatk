@@ -1,3 +1,3 @@
 (function() {var implementors = {};
-implementors["gfatk"] = [{"text":"impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.59.0/core/marker/trait.Copy.html\" title=\"trait core::marker::Copy\">Copy</a> for <a class=\"struct\" href=\"gfatk/utils/struct.GFAGraphPair.html\" title=\"struct gfatk::utils::GFAGraphPair\">GFAGraphPair</a>","synthetic":false,"types":["gfatk::utils::GFAGraphPair"]}];
+implementors["gfatk"] = [{"text":"impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.60.0/core/marker/trait.Copy.html\" title=\"trait core::marker::Copy\">Copy</a> for <a class=\"struct\" href=\"gfatk/utils/struct.GFAGraphPair.html\" title=\"struct gfatk::utils::GFAGraphPair\">GFAGraphPair</a>","synthetic":false,"types":["gfatk::utils::GFAGraphPair"]}];
 if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
