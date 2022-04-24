@@ -904,10 +904,11 @@ mod tests {
             },
         ]);
 
-        // go between two adjacent nodes
+        // generate the paths
         let paths = graph.all_paths_all_node_pairs(&lookup, Some(&map));
 
-        let longest_path: Vec<NodeIndex> = vec![
+        // either this path
+        let longest_path1: Vec<NodeIndex> = vec![
             NodeIndex::new(2),
             NodeIndex::new(5),
             NodeIndex::new(3),
@@ -918,6 +919,21 @@ mod tests {
             NodeIndex::new(0),
         ];
 
-        assert_eq!(paths.unwrap().0, longest_path)
+        // or this path
+        let longest_path2: Vec<NodeIndex> = vec![
+            NodeIndex::new(2),
+            NodeIndex::new(4),
+            NodeIndex::new(3),
+            NodeIndex::new(1),
+            NodeIndex::new(2),
+            NodeIndex::new(5),
+            NodeIndex::new(3),
+            NodeIndex::new(0),
+        ];
+
+        // will be chosen
+        let both = vec![longest_path1, longest_path2];
+
+        assert!(both.contains(&paths.unwrap().0));
     }
 }

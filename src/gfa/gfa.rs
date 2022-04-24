@@ -15,7 +15,8 @@ use std::collections::HashMap;
 pub struct GFAtk(pub GFA<usize, OptionalFields>);
 
 impl GFAtk {
-    /// Returns a tuple of GFAGraphLookups (a struct of indices/node names) and an undirected GFA graph structure.
+    /// Returns a tuple of GFAGraphLookups (a struct of indices/node names) 
+    /// and an undirected GFA graph structure.
     pub fn into_ungraph(&self) -> Result<(GFAGraphLookups, GFAungraph)> {
         // alias to get GFA out
         let gfa = &self.0;
@@ -282,7 +283,8 @@ impl GFAtk {
 
     /// A method to print to STDOUT a fasta, given a path through the GFA.
     ///
-    /// The first segment is added first, then all subsequent segments (-overlap with previous segment).
+    /// The first segment is added first, then all subsequent segments 
+    /// (-overlap with previous segment).
     pub fn print_path_to_fasta(
         &self,
         merged_sorted_chosen_path_overlaps: IndexMap<usize, Vec<(Orientation, usize, &str)>>,
@@ -359,22 +361,19 @@ impl GFAtk {
                             let seq_minus_overlap = match start_overlap.0 {
                                 Orientation::Forward => {
                                     // do nothing
-                                    let seq_minus_overlap = s
-                                        .sequence
-                                        .get(start_overlap.1..)
-                                        .with_context(|| {
-                                        format!(
-                                            "{} is outside the bounds of the sequence.",
-                                            start_overlap.1
-                                        )
-                                    })?;
+                                    let seq_minus_overlap =
+                                        s.sequence.get(start_overlap.1..).with_context(|| {
+                                            format!(
+                                                "{} is outside the bounds of the sequence.",
+                                                start_overlap.1
+                                            )
+                                        })?;
                                     seq_minus_overlap.to_vec()
                                 }
                                 Orientation::Backward => {
                                     let revcomp_seq = reverse_complement(&s.sequence);
-                                    let seq_minus_overlap = revcomp_seq
-                                        .get(start_overlap.1..)
-                                        .with_context(|| {
+                                    let seq_minus_overlap =
+                                        revcomp_seq.get(start_overlap.1..).with_context(|| {
                                             format!(
                                                 "{} is outside the bounds of the sequence.",
                                                 start_overlap.1
@@ -657,8 +656,49 @@ impl Overlaps {
 
 #[cfg(test)]
 mod tests {
+
+    use super::*;
+    use crate::load::load_gfa;
+
+    // the GFA -> GFAtk structure used in tests below.
+    fn make_gfa(path: &str) -> GFAtk {
+        GFAtk(load_gfa(path).unwrap())
+    }
+
     #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
+    fn test_gfa_sequence_stats() {
+        let gfa = make_gfa("./tests/test_linear.gfa");
+
+        let (gc, cov, len) = gfa.sequence_stats(true).unwrap();
+
+        assert!(cov == 40.0);
+        assert!(gc == 0.39523807);
+        assert!(len == 18);
+    }
+
+    #[test]
+    fn test_gen_cov_hash() {
+        let gfa = make_gfa("./tests/test_linear.gfa");
+
+        let lookup = GFAGraphLookups(vec![
+            crate::utils::GFAGraphPair {
+                node_index: NodeIndex::new(0),
+                seg_id: 11,
+            },
+            crate::utils::GFAGraphPair {
+                node_index: NodeIndex::new(1),
+                seg_id: 12,
+            },
+            crate::utils::GFAGraphPair {
+                node_index: NodeIndex::new(2),
+                seg_id: 13,
+            },
+        ]);
+
+        let cov_hash = gfa.gen_cov_hash(&lookup).unwrap();
+
+        assert_eq!(cov_hash.get(&NodeIndex::new(0)).unwrap(), &1);
+        assert_eq!(cov_hash.get(&NodeIndex::new(1)).unwrap(), &2);
+        assert_eq!(cov_hash.get(&NodeIndex::new(2)).unwrap(), &1);
     }
 }
