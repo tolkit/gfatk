@@ -69,6 +69,12 @@ fn main() -> Result<()> {
                         .short('i')
                         .long("include-node-coverage")
                         .help("Should the coverage information of the segments be incorporated into linearisation?")
+                )
+                .arg(
+                    Arg::new("evaluate-subgraphs")
+                        .short('e')
+                        .long("evaluate-subgraphs")
+                        .help("If there are multiple subgraphs within a GFA, evaluate linear on each of these.")
                 ),
         )
         .subcommand(

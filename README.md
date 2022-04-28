@@ -75,7 +75,11 @@ gfatk extract-mito output.gfa | gfatk linear -i > linearised.fasta
 
 A couple of more detailed examples can be seen in the `examples` directory, where there is a `README.md` file. To view the auto-generated documentation of the binary itself, including details of all underlying functions, see:
 
-https://tolkit.github.io/gfatk/
+<p align="center">
+    <b>
+        <a href="https://tolkit.github.io/gfatk/">API documentation</a>
+    </b>
+</p>
 
 ## Testing
 

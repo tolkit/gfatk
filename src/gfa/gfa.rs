@@ -12,10 +12,11 @@ use petgraph::graph::{Graph, NodeIndex, UnGraph};
 use std::collections::HashMap;
 
 /// A wrapper around GFA from the gfa crate
+#[derive(Clone)]
 pub struct GFAtk(pub GFA<usize, OptionalFields>);
 
 impl GFAtk {
-    /// Returns a tuple of GFAGraphLookups (a struct of indices/node names) 
+    /// Returns a tuple of GFAGraphLookups (a struct of indices/node names)
     /// and an undirected GFA graph structure.
     pub fn into_ungraph(&self) -> Result<(GFAGraphLookups, GFAungraph)> {
         // alias to get GFA out
@@ -283,7 +284,7 @@ impl GFAtk {
 
     /// A method to print to STDOUT a fasta, given a path through the GFA.
     ///
-    /// The first segment is added first, then all subsequent segments 
+    /// The first segment is added first, then all subsequent segments
     /// (-overlap with previous segment).
     pub fn print_path_to_fasta(
         &self,

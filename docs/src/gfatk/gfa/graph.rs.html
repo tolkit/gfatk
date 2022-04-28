@@ -1354,7 +1354,7 @@
             <span class="kw">if</span> <span class="ident">index</span> <span class="op">==</span> <span class="number">0</span> {
                 <span class="ident">chosen_path_string</span>.<span class="ident">push</span>(<span class="macro">format!</span>(<span class="string">&quot;{}{},{}{}&quot;</span>, <span class="ident">from</span>, <span class="ident">from_orient</span>, <span class="ident">to</span>, <span class="ident">to_orient</span>));
             } <span class="kw">else</span> {
-                <span class="ident">chosen_path_string</span>.<span class="ident">push</span>(<span class="macro">format!</span>(<span class="string">&quot;-&gt;{}{}&quot;</span>, <span class="ident">to</span>, <span class="ident">to_orient</span>));
+                <span class="ident">chosen_path_string</span>.<span class="ident">push</span>(<span class="macro">format!</span>(<span class="string">&quot;,{}{}&quot;</span>, <span class="ident">to</span>, <span class="ident">to_orient</span>));
             }
         }
 
