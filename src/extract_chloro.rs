@@ -4,11 +4,10 @@ use anyhow::{Context, Result};
 
 /// Using a combination of GC% of the segments, relative coverage of the
 /// segments, and these parameters:
-/// -
 ///
 /// For example:
 /// ```bash
-/// gfatk extract-mito in.gfa > out.gfa
+/// gfatk extract-chloro in.gfa > out.gfa
 /// ```
 pub fn extract_chloro(matches: &clap::ArgMatches, genome_type: GenomeType) -> Result<()> {
     let result = stats::stats(matches, genome_type)?

@@ -12,7 +12,6 @@ byteorder = "1.4.3"
 indexmap = "1.7.0"
 itertools = "0.10.2"
 anyhow = "1.0"
-thiserror = "1.0"
 atty = "0.2"
 
 [dev-dependencies]
