@@ -1,6 +1,3 @@
-// extract sequences from a GFA
-// easy peasy
-
 use crate::gfa::gfa::GFAtk;
 use crate::load::{load_gfa, load_gfa_stdin};
 use crate::utils;

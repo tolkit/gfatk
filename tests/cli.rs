@@ -278,3 +278,59 @@ fn test_gfa_node_coverage_failure_linear() -> Result<(), Box<dyn std::error::Err
 
     Ok(())
 }
+
+// see `fn test_gfa_linear_stdout()`
+// for expected output explanation
+
+#[test]
+fn test_gfa_path_linear() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = Command::cargo_bin("gfatk")?;
+
+    let path = "13-,12+,11-";
+
+    cmd.arg("path").arg("./tests/test_linear.gfa").arg(path);
+
+    cmd.assert().stdout(predicate::str::contains(
+        ">13-,12+,11-
+AATCAAGGT
+",
+    ));
+
+    Ok(())
+}
+
+// As this GFA is circular, a legal path could loop forever.
+// But we will stop at 5 segments.
+//
+// H	VN:Z:1.0
+// S	1	AGCGTA	ll:f:30.0
+// S	2	TAACAG	ll:f:30.0
+// L	1	+	2	+	2M	ec:i:1
+// L	2	+	1	+	2M	ec:i:1
+//
+//
+// PATH: 1+ -> 2+ -> 1+ -> 2+ -> 1+
+// 1 AGCGTA
+// 2     TAACAG
+// 1         AGCGTA
+// 2             TAACAG
+// 1                 AGCGTA
+// P AGCGTAACAGCGTAACAGCGTA
+//
+
+#[test]
+fn test_gfa_path_circular() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = Command::cargo_bin("gfatk")?;
+
+    let path = "1+, 2+, 1+, 2+, 1+";
+
+    cmd.arg("path").arg("./tests/test_circular.gfa").arg(path);
+
+    cmd.assert().stdout(predicate::str::contains(
+        ">1+,2+,1+,2+,1+
+AGCGTAACAGCGTAACAGCGTA
+",
+    ));
+
+    Ok(())
+}

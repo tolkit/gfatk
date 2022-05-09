@@ -37,6 +37,10 @@
 <span id="32">32</span>
 <span id="33">33</span>
 <span id="34">34</span>
+<span id="35">35</span>
+<span id="36">36</span>
+<span id="37">37</span>
+<span id="38">38</span>
 </pre><pre class="rust"><code><span class="doccomment">//! `gfatk` is a tool for Graphical Fragment Assembly (GFA) manipulation.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! GFA&#39;s are at their heart, simple, directed graphs. As such, all internal</span>
@@ -52,6 +56,8 @@
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">dot</span>;
 <span class="doccomment">/// Extract a subgraph from a GFA.</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">extract</span>;
+<span class="doccomment">/// Extract the putative plastid subgraph in a GFA.</span>
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">extract_chloro</span>;
 <span class="doccomment">/// Extract the putative mitochondrial subgraph in a GFA.</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">extract_mito</span>;
 <span class="doccomment">/// Print all the sequences in a GFA to fasta format.</span>
@@ -65,6 +71,8 @@
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">load</span>;
 <span class="doccomment">/// Generate overlapping sequences between segments in a GFA.</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">overlap</span>;
+<span class="doccomment">/// Extract a fasta given a path.</span>
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">path</span>;
 <span class="doccomment">/// Generate statistics about the input GFA file.</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">stats</span>;
 <span class="doccomment">/// Utility to trim a GFA of isolated nodes.</span>

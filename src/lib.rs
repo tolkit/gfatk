@@ -13,6 +13,8 @@
 pub mod dot;
 /// Extract a subgraph from a GFA.
 pub mod extract;
+/// Extract the putative plastid subgraph in a GFA.
+pub mod extract_chloro;
 /// Extract the putative mitochondrial subgraph in a GFA.
 pub mod extract_mito;
 /// Print all the sequences in a GFA to fasta format.
@@ -26,6 +28,8 @@ pub mod linear;
 pub mod load;
 /// Generate overlapping sequences between segments in a GFA.
 pub mod overlap;
+/// Extract a fasta given a path.
+pub mod path;
 /// Generate statistics about the input GFA file.
 pub mod stats;
 /// Utility to trim a GFA of isolated nodes.

@@ -1,8 +1,9 @@
 use crate::gfa::graph::{segments_subgraph, GFAdigraph, GFAungraph};
 use crate::gfa::writer;
-use crate::utils;
+use crate::path::GFAPath;
+use crate::stats::GenomeType;
 use crate::utils::{
-    get_edge_coverage, parse_cigar, reverse_complement, GFAGraphLookups, GFAGraphPair,
+    self, get_edge_coverage, parse_cigar, reverse_complement, GFAGraphLookups, GFAGraphPair,
 };
 use anyhow::{bail, Context, Result};
 use gfa::gfa::{Orientation, GFA};
@@ -294,11 +295,6 @@ impl GFAtk {
     ) -> Result<()> {
         let gfa = &self.0;
 
-        // debugging
-        // for (k, v) in &merged_sorted_chosen_path_overlaps {
-        //     println!("Index {}: {:?}", k, v);
-        // }
-
         println!(">{}", fasta_header);
         // create iterator over the paths
         let mut path_iter = merged_sorted_chosen_path_overlaps.iter();
@@ -508,7 +504,7 @@ impl GFAtk {
     /// The internal function called in `gfatk stats`.
     ///
     /// Returns average GC%, average coverage, and total sequence length for a GFA (sub)graph.
-    pub fn sequence_stats(&self, further: bool) -> Result<(f32, f32, usize)> {
+    pub fn sequence_stats(&self, genome_type: GenomeType) -> Result<(f32, f32, usize)> {
         let gfa = &self.0;
 
         let cov = Self::get_coverage(&self)?;
@@ -531,7 +527,7 @@ impl GFAtk {
 
         let avg_gc = gc_vec.iter().sum::<f32>() / gc_vec.len() as f32;
 
-        if !further {
+        if genome_type == GenomeType::None {
             println!("\tTotal sequence length:\t{}", total_sequence_length);
             println!("\tTotal sequence overlap length:\t{}", total_overlap_length);
             println!(
@@ -599,6 +595,89 @@ impl GFAtk {
 
         Ok(rel_cov_map)
     }
+
+    /// Take a [`GFAPath`] and print out the path
+    /// from a GFA.
+    ///
+    /// Currently implemented requires two loops of the GFA, and storage
+    /// of the sequences in a [`HashMap`].
+    pub fn from_path_cli(&self, path: GFAPath, link_map: HashMap<String, usize>) -> Result<()> {
+        let gfa = &self.0;
+
+        // put all the segments in memory - easiest way for now.
+        let mut seg_map = HashMap::new();
+
+        for seg in &gfa.segments {
+            let id = seg.name;
+            let seq = seg.sequence.clone();
+
+            seg_map.insert(id, seq);
+        }
+
+        println!(">{}", path.to_string());
+
+        // now iterate over the path itself
+        for path_el in path.inner.windows(2) {
+            // from
+            let seg_id_from = path_el[0].segment_id;
+            let orientation_from = path_el[0].orientation;
+            // to
+            let seg_id_to = path_el[1].segment_id;
+            let orientation_to = path_el[1].orientation;
+
+            // format so we can match on the links map
+            let cigar_match = format!(
+                "{}{}|{}{}",
+                seg_id_from, orientation_from, seg_id_to, orientation_to
+            );
+
+            let overlap = *link_map.get(&cigar_match).context(format!(
+                "This link: {} - does not occur in the input GFA. Perhaps re-consider the input path?",
+                cigar_match
+            ))?;
+
+            // for the first element in the path
+            // we print the entire sequence
+            if path_el[0].index == 0 {
+                let sequence = match orientation_from {
+                    Orientation::Forward => seg_map.get(&seg_id_from).unwrap().to_vec(),
+                    Orientation::Backward => {
+                        let seq = seg_map.get(&seg_id_from).unwrap();
+                        utils::reverse_complement(seq)
+                    }
+                };
+
+                // and we must print out this second sequence, otherwise it's skipped!
+                let sequence2 = match orientation_to {
+                    Orientation::Forward => seg_map.get(&seg_id_to).unwrap()[overlap..].to_vec(),
+                    Orientation::Backward => {
+                        let seq = seg_map.get(&seg_id_to).unwrap();
+                        utils::reverse_complement(seq)[overlap..].to_vec()
+                    }
+                };
+
+                print!("{}", std::str::from_utf8(&sequence)?);
+                print!("{}", std::str::from_utf8(&sequence2)?);
+            } else {
+                // otherwise we print the second element of the windows :)
+                // and these are all dealt with in the same way
+                let sequence = match orientation_to {
+                    Orientation::Forward => seg_map.get(&seg_id_to).unwrap()[overlap..].to_vec(),
+                    Orientation::Backward => {
+                        let seq = seg_map.get(&seg_id_to).unwrap();
+                        utils::reverse_complement(seq)[overlap..].to_vec()
+                    }
+                };
+
+                print!("{}", std::str::from_utf8(&sequence)?);
+            }
+        }
+
+        // newline
+        println!("");
+
+        Ok(())
+    }
 }
 
 /// Overlap from one segment to another.
@@ -660,6 +739,7 @@ mod tests {
 
     use super::*;
     use crate::load::load_gfa;
+    use crate::stats::GenomeType;
 
     // the GFA -> GFAtk structure used in tests below.
     fn make_gfa(path: &str) -> GFAtk {
@@ -670,7 +750,8 @@ mod tests {
     fn test_gfa_sequence_stats() {
         let gfa = make_gfa("./tests/test_linear.gfa");
 
-        let (gc, cov, len) = gfa.sequence_stats(true).unwrap();
+        // could be mitochondria/chloroplast
+        let (gc, cov, len) = gfa.sequence_stats(GenomeType::Mitochondria).unwrap();
 
         assert!(cov == 40.0);
         assert!(gc == 0.39523807);

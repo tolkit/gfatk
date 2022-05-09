@@ -1,6 +1,5 @@
-use crate::gfa::graph::segments_subgraph;
 use crate::gfa::writer::gfa_string;
-use crate::stats;
+use crate::{gfa::graph::segments_subgraph, stats, stats::GenomeType};
 use anyhow::{Context, Result};
 
 /// Using a combination of GC% of the segments, relative coverage of the segments, and expected length of the mitochondrial genome, extract the putative mitochondrial subgraph.
@@ -9,9 +8,9 @@ use anyhow::{Context, Result};
 /// ```bash
 /// gfatk extract-mito in.gfa > out.gfa
 /// ```
-pub fn extract_mito(matches: &clap::ArgMatches) -> Result<()> {
-    let result =
-        stats::stats(matches, true)?.context("Should never reach here with further = true")?;
+pub fn extract_mito(matches: &clap::ArgMatches, genome_type: GenomeType) -> Result<()> {
+    let result = stats::stats(matches, genome_type)?
+        .context("Should never reach here with `stats::GenomeType::Mitochondria`")?;
 
     let subgraph = segments_subgraph(&result.0 .0, result.1);
 

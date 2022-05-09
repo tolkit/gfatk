@@ -23,10 +23,8 @@
 <span id="18">18</span>
 <span id="19">19</span>
 <span id="20">20</span>
-<span id="21">21</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::gfa::graph::segments_subgraph</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::gfa::writer::gfa_string</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::stats</span>;
+</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::gfa::writer::gfa_string</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">gfa::graph::segments_subgraph</span>, <span class="ident">stats</span>, <span class="ident">stats::GenomeType</span>};
 <span class="kw">use</span> <span class="ident">anyhow</span>::{<span class="ident">Context</span>, <span class="prelude-ty">Result</span>};
 
 <span class="doccomment">/// Using a combination of GC% of the segments, relative coverage of the segments, and expected length of the mitochondrial genome, extract the putative mitochondrial subgraph.</span>
@@ -35,9 +33,9 @@
 <span class="doccomment">/// ```bash</span>
 <span class="doccomment">/// gfatk extract-mito in.gfa &gt; out.gfa</span>
 <span class="doccomment">/// ```</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">extract_mito</span>(<span class="ident">matches</span>: <span class="kw-2">&amp;</span><span class="ident">clap::ArgMatches</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span>
-        <span class="ident">stats::stats</span>(<span class="ident">matches</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>.<span class="ident">context</span>(<span class="string">&quot;Should never reach here with further = true&quot;</span>)<span class="question-mark">?</span>;
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">extract_mito</span>(<span class="ident">matches</span>: <span class="kw-2">&amp;</span><span class="ident">clap::ArgMatches</span>, <span class="ident">genome_type</span>: <span class="ident">GenomeType</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">stats::stats</span>(<span class="ident">matches</span>, <span class="ident">genome_type</span>)<span class="question-mark">?</span>
+        .<span class="ident">context</span>(<span class="string">&quot;Should never reach here with `stats::GenomeType::Mitochondria`&quot;</span>)<span class="question-mark">?</span>;
 
     <span class="kw">let</span> <span class="ident">subgraph</span> <span class="op">=</span> <span class="ident">segments_subgraph</span>(<span class="kw-2">&amp;</span><span class="ident">result</span>.<span class="number">0</span> .<span class="number">0</span>, <span class="ident">result</span>.<span class="number">1</span>);
 

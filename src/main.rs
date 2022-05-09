@@ -3,14 +3,11 @@
 
 use anyhow::Result;
 use clap::{crate_version, Arg, Command};
-use gfatk::dot;
-use gfatk::extract;
-use gfatk::extract_mito;
-use gfatk::fasta;
-use gfatk::linear;
-use gfatk::overlap;
-use gfatk::stats;
-use gfatk::trim;
+use gfatk::{
+    dot, extract, extract_chloro, extract_mito, fasta, linear, overlap, path,
+    stats::{self, GenomeType},
+    trim,
+};
 
 fn main() -> Result<()> {
     let matches = Command::new("gfatk")
@@ -75,7 +72,7 @@ fn main() -> Result<()> {
                         .short('e')
                         .long("evaluate-subgraphs")
                         .help("If there are multiple subgraphs within a GFA, evaluate linear on each of these.")
-                ),
+                )
         )
         .subcommand(
             Command::new("fasta")
@@ -115,6 +112,40 @@ fn main() -> Result<()> {
                 ),
         )
         .subcommand(
+            Command::new("extract-chloro")
+                .about(
+                    "Extract the plastid from a GFA.",
+                )
+                .arg(
+                    Arg::new("GFA")
+                        .help("Input GFA file.")
+                )
+                .arg(
+                    Arg::new("size-lower")
+                        .long("size-lower")
+                        .default_value("126000")
+                        .help("Minimum size (bp) of expected plastid."),
+                )
+                .arg(
+                    Arg::new("size-upper")
+                        .long("size-upper")
+                        .default_value("180000")
+                        .help("Maximum size (bp) of expected plastid."),
+                )
+                .arg(
+                    Arg::new("gc-lower")
+                        .long("gc-lower")
+                        .default_value("36.0")
+                        .help("Minimum GC% of expected plastid."),
+                )
+                .arg(
+                    Arg::new("gc-upper")
+                        .long("gc-upper")
+                        .default_value("39.0")
+                        .help("Maximum GC% of expected plastid."),
+                ),
+        )
+        .subcommand(
             Command::new("dot")
                 .about("Return the dot representation of a GFA.")
                 .arg(
@@ -128,6 +159,27 @@ fn main() -> Result<()> {
                 .arg(
                     Arg::new("GFA")
                         .help("Input GFA file.")
+                ),
+        )
+        .subcommand(
+            Command::new("path")
+                .about("Supply an input path to evaluate a linear representation of.\nInput must be a text file of a single comma separated line with node ID's and orientations. E.g.:\n\t1+,2-,3+")
+                .arg(
+                    Arg::new("GFA")
+                        .index(1)
+                        .help("Input GFA file.")
+                )
+                .arg(
+                    Arg::new("path_cli")
+                        .index(2)
+                        .help("Input path from CLI.")
+                )
+                .arg(
+                    Arg::new("path_file")
+                        .short('p')
+                        .long("path")
+                        .takes_value(true)
+                        .help("Input path from file.")
                 ),
         )
         .get_matches();
@@ -146,16 +198,22 @@ fn main() -> Result<()> {
             fasta::fasta(matches)?;
         }
         Some(("stats", matches)) => {
-            stats::stats(matches, false)?;
+            stats::stats(matches, GenomeType::None)?;
         }
         Some(("extract-mito", matches)) => {
-            extract_mito::extract_mito(matches)?;
+            extract_mito::extract_mito(matches, GenomeType::Mitochondria)?;
+        }
+        Some(("extract-chloro", matches)) => {
+            extract_chloro::extract_chloro(matches, GenomeType::Chloroplast)?;
         }
         Some(("dot", matches)) => {
             dot::dot(matches)?;
         }
         Some(("trim", matches)) => {
             trim::trim(matches)?;
+        }
+        Some(("path", matches)) => {
+            path::from_path(matches)?;
         }
         _ => {
             println!("Subcommand invalid, run with '--help' for subcommand options. Exiting.");
