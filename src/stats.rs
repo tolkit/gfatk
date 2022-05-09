@@ -16,7 +16,7 @@ pub enum GenomeType {
 }
 
 /// The statistics associated with a subgraph in a GFA.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Stat {
     /// Arbitrary index of the subgraph(s).
     pub index: usize,

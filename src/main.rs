@@ -135,13 +135,13 @@ fn main() -> Result<()> {
                 .arg(
                     Arg::new("gc-lower")
                         .long("gc-lower")
-                        .default_value("36.0")
+                        .default_value("0.35")
                         .help("Minimum GC% of expected plastid."),
                 )
                 .arg(
                     Arg::new("gc-upper")
                         .long("gc-upper")
-                        .default_value("39.0")
+                        .default_value("0.39")
                         .help("Maximum GC% of expected plastid."),
                 ),
         )
