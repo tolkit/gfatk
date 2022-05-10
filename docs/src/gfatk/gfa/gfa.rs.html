@@ -789,8 +789,12 @@
 <span id="784">784</span>
 <span id="785">785</span>
 <span id="786">786</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::gfa::graph</span>::{<span class="ident">segments_subgraph</span>, <span class="ident">GFAdigraph</span>, <span class="ident">GFAungraph</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::gfa::writer</span>;
+<span id="787">787</span>
+<span id="788">788</span>
+</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::gfa</span>::{
+    <span class="ident">gfa_string</span>,
+    <span class="ident">graph</span>::{<span class="ident">segments_subgraph</span>, <span class="ident">GFAdigraph</span>, <span class="ident">GFAungraph</span>},
+};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::path::GFAPath</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::stats::GenomeType</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils</span>::{
@@ -888,7 +892,7 @@
         <span class="kw">let</span> <span class="ident">gfa</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
         <span class="kw">let</span> <span class="ident">subgraph_gfa</span> <span class="op">=</span> <span class="ident">GFAtk</span>(<span class="ident">segments_subgraph</span>(<span class="kw-2">&amp;</span><span class="ident">gfa</span>, <span class="ident">sequences_to_keep</span>));
 
-        <span class="macro">print!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">writer::gfa_string</span>(<span class="kw-2">&amp;</span><span class="ident">subgraph_gfa</span>.<span class="number">0</span>));
+        <span class="macro">print!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">gfa_string</span>(<span class="kw-2">&amp;</span><span class="ident">subgraph_gfa</span>.<span class="number">0</span>));
     }
 
     <span class="doccomment">/// Returns the overlaps between all the segments in a GFA.</span>
@@ -1405,7 +1409,7 @@
             <span class="ident">seg_map</span>.<span class="ident">insert</span>(<span class="ident">id</span>, <span class="ident">seq</span>);
         }
 
-        <span class="macro">println!</span>(<span class="string">&quot;&gt;{}&quot;</span>, <span class="ident">path</span>.<span class="ident">to_string</span>());
+        <span class="macro">println!</span>(<span class="string">&quot;&gt;{}&quot;</span>, <span class="ident">path</span>.<span class="ident">to_fasta_header</span>());
 
         <span class="comment">// now iterate over the path itself</span>
         <span class="kw">for</span> <span class="ident">path_el</span> <span class="kw">in</span> <span class="ident">path</span>.<span class="ident">inner</span>.<span class="ident">windows</span>(<span class="number">2</span>) {

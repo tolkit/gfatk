@@ -104,11 +104,30 @@ fn main() -> Result<()> {
                         .help("Input GFA file.")
                 )
                 .arg(
-                    Arg::new("size")
-                        .short('s')
-                        .long("size")
-                        .default_value("100000")
-                        .help("Minimum size of expected mitochondrion."),
+                    Arg::new("size-lower")
+                        .long("size-lower")
+                        // 200,000 default
+                        .default_value("200000")
+                        .help("Minimum size (bp) of expected mitochondria."),
+                )
+                .arg(
+                    Arg::new("size-upper")
+                        .long("size-upper")
+                        // 1 million is high enough for most species?
+                        .default_value("1000000")
+                        .help("Maximum size (bp) of expected mitochondria."),
+                )
+                .arg(
+                    Arg::new("gc-lower")
+                        .long("gc-lower")
+                        .default_value("0.42")
+                        .help("Minimum GC% of expected mitochondria."),
+                )
+                .arg(
+                    Arg::new("gc-upper")
+                        .long("gc-upper")
+                        .default_value("0.50")
+                        .help("Maximum GC% of expected mitochondria."),
                 ),
         )
         .subcommand(
@@ -192,7 +211,7 @@ fn main() -> Result<()> {
             extract::extract(matches)?;
         }
         Some(("linear", matches)) => {
-            linear::force_linear(matches)?;
+            linear::linear(matches)?;
         }
         Some(("fasta", matches)) => {
             fasta::fasta(matches)?;
@@ -213,10 +232,10 @@ fn main() -> Result<()> {
             trim::trim(matches)?;
         }
         Some(("path", matches)) => {
-            path::from_path(matches)?;
+            path::path(matches)?;
         }
         _ => {
-            println!("Subcommand invalid, run with '--help' for subcommand options. Exiting.");
+            eprintln!("Subcommand invalid, run with '--help' for subcommand options. Exiting.");
             std::process::exit(1);
         }
     }

@@ -1,4 +1,4 @@
-use crate::gfa::writer::gfa_string;
+use crate::gfa::gfa_string;
 use crate::{gfa::graph::segments_subgraph, stats, stats::GenomeType};
 use anyhow::{Context, Result};
 

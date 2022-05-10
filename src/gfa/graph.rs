@@ -77,32 +77,6 @@ impl GFAungraph {
 pub struct GFAdigraph(pub Graph<usize, (Orientation, Orientation, Option<i64>)>);
 
 impl GFAdigraph {
-    /// Given the last node index/seg ID in a path
-    /// check whether it forms an edge between any
-    /// other nodes in the path.
-    ///
-    /// Not used or tested yet.
-    #[warn(dead_code)]
-    fn check_last_node(&self, path: Vec<NodeIndex>) -> Option<NodeIndex> {
-        let gfa_graph = &self.0;
-        // get the last node in the path
-        let last_node = path[path.len() - 1];
-        // walk over edges of the graph
-        for edge in gfa_graph.edge_references() {
-            let from = edge.source();
-            let to = edge.target();
-            // we only care about where the last node == from
-            if last_node == from {
-                // if the 'to' node is contained in the path
-                // return true
-                if path.contains(&to) {
-                    return Some(last_node);
-                }
-            }
-        }
-        None
-    }
-
     /// The main function called from `gfatk dot`.
     ///
     /// It is a somewhat modified, simplified version of this:

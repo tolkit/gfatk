@@ -1,5 +1,7 @@
-use crate::gfa::graph::{segments_subgraph, GFAdigraph, GFAungraph};
-use crate::gfa::writer;
+use crate::gfa::{
+    gfa_string,
+    graph::{segments_subgraph, GFAdigraph, GFAungraph},
+};
 use crate::path::GFAPath;
 use crate::stats::GenomeType;
 use crate::utils::{
@@ -97,7 +99,7 @@ impl GFAtk {
         let gfa = &self.0;
         let subgraph_gfa = GFAtk(segments_subgraph(&gfa, sequences_to_keep));
 
-        print!("{}", writer::gfa_string(&subgraph_gfa.0));
+        print!("{}", gfa_string(&subgraph_gfa.0));
     }
 
     /// Returns the overlaps between all the segments in a GFA.
@@ -614,7 +616,7 @@ impl GFAtk {
             seg_map.insert(id, seq);
         }
 
-        println!(">{}", path.to_string());
+        println!(">{}", path.to_fasta_header());
 
         // now iterate over the path itself
         for path_el in path.inner.windows(2) {

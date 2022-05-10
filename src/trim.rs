@@ -1,6 +1,6 @@
 use crate::gfa::gfa::GFAtk;
+use crate::gfa::gfa_string;
 use crate::gfa::graph::segments_subgraph;
-use crate::gfa::writer::gfa_string;
 use crate::load::{load_gfa, load_gfa_stdin};
 use crate::utils;
 use anyhow::{bail, Result};

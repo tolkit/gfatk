@@ -1,8 +1,7 @@
-use crate::gfa::graph::segments_subgraph;
 use crate::load::load_gfa;
 use crate::utils;
-use crate::{gfa::gfa::GFAtk, load::load_gfa_stdin};
-use anyhow::{bail, Result};
+use crate::{gfa::gfa::GFAtk, gfa::graph::segments_subgraph, load::load_gfa_stdin};
+use anyhow::{bail, Context, Result};
 
 /// Enumeration of the genomes we are interested in.
 #[derive(PartialEq, Clone, Copy)]
@@ -42,14 +41,15 @@ impl Stats {
     // we extract the mito by ordering our stats
     // by gc content & coverage.
 
-    /// Extract the putative chloroplast genome from a GFA
+    /// Extract the putative mitochondrial/chloroplast genome from a GFA
     /// file.
     ///
     /// The upper and lower limits of genome size and GC content are supplied through the
-    /// CLI. Defaults should probably be
+    /// CLI. As the defaults will be different, the same function is accessed entry points
+    /// in the CLI.
 
     #[allow(unused_variables)]
-    pub fn extract_chloro(
+    pub fn extract_organelle(
         &mut self,
         size_lower: usize,
         mut size_upper: usize,
@@ -109,42 +109,6 @@ impl Stats {
             Ok(extracted_segments.segments.clone())
         }
     }
-
-    /// The function called from `gfatk extract-mito`.
-    ///
-    /// Extracts the putative mitochondrial subgraph from a GFA.
-    pub fn extract_mito(&mut self, size: usize) -> Result<Vec<usize>> {
-        let stat_vec = &mut self.0;
-        // reverse the cov..
-        stat_vec.sort_by(|a, b| (a.cov, b.gc).partial_cmp(&(b.cov, a.gc)).unwrap());
-
-        let stat_vec_len = stat_vec.len();
-
-        if stat_vec_len > 1 {
-            // now check that the length is sufficiently high
-            let z: Vec<&Stat> = stat_vec
-                .iter()
-                // hardcoded for now, but does not have to be.
-                .filter(|e| e.total_sequence_length > size)
-                .collect();
-            let res = match z.get(0) {
-                Some(stat) => stat,
-                None => bail!(
-                    "No subgraphs with minimal sequence length of {}. Maybe reduce <size>?",
-                    size
-                ),
-            };
-            Ok(res.segments.clone())
-        } else {
-            // TODO: make a better error message here?
-            let extracted_segments_op = stat_vec.get(0);
-            let extracted_segments = match extracted_segments_op {
-                Some(s) => s,
-                None => bail!("There were no segments to be extracted. Check input GFA file."),
-            };
-            Ok(extracted_segments.segments.clone())
-        }
-    }
 }
 
 // I've handled 'further' here really badly...
@@ -166,8 +130,11 @@ pub fn stats(
     let gfa_file = matches.value_of("GFA");
     // only passed through extract_mito
     let mito_args = if matches!(genome_type, GenomeType::Mitochondria) {
-        let size: usize = matches.value_of_t("size")?;
-        Some(size)
+        let size_lower: usize = matches.value_of_t("size-lower")?;
+        let size_upper: usize = matches.value_of_t("size-upper")?;
+        let gc_lower: f32 = matches.value_of_t("gc-lower")?;
+        let gc_upper: f32 = matches.value_of_t("gc-upper")?;
+        Some((size_lower, size_upper, gc_lower, gc_upper))
     } else {
         None
     };
@@ -182,12 +149,6 @@ pub fn stats(
         None
     };
 
-    let error_string = match genome_type {
-        GenomeType::Chloroplast => "extract-chloro",
-        GenomeType::Mitochondria => "extract-mito",
-        GenomeType::None => "stats",
-    };
-
     let gfa = match gfa_file {
         Some(f) => {
             if !f.ends_with(".gfa") {
@@ -200,7 +161,11 @@ pub fn stats(
             true => GFAtk(load_gfa_stdin(std::io::stdin().lock())?),
             false => bail!(
                 "No input from STDIN. Run `gfatk {} -h` for help.",
-                error_string
+                match genome_type {
+                    GenomeType::Chloroplast => "extract-chloro",
+                    GenomeType::Mitochondria => "extract-mito",
+                    GenomeType::None => "stats",
+                }
             ),
         },
     };
@@ -241,13 +206,22 @@ pub fn stats(
     // if we want to do more stat things
     match genome_type {
         GenomeType::Mitochondria => {
-            return Ok(Some((gfa, store_stats.extract_mito(mito_args.unwrap())?)))
-        }
-        GenomeType::Chloroplast => {
-            let chloro_args = chloro_args.unwrap();
+            let mito_args = mito_args.context("There were no `extract-mito` arguments.")?;
             return Ok(Some((
                 gfa,
-                store_stats.extract_chloro(
+                store_stats.extract_organelle(
+                    mito_args.0,
+                    mito_args.1,
+                    mito_args.2,
+                    mito_args.3,
+                )?,
+            )));
+        }
+        GenomeType::Chloroplast => {
+            let chloro_args = chloro_args.context("There were no `extract-chloro` arguments.")?;
+            return Ok(Some((
+                gfa,
+                store_stats.extract_organelle(
                     chloro_args.0,
                     chloro_args.1,
                     chloro_args.2,

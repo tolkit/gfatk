@@ -131,7 +131,7 @@
 <span class="doccomment">/// # account for node coverage</span>
 <span class="doccomment">/// gfatk -i linear in.gfa &gt; out.fasta</span>
 <span class="doccomment">/// ```</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">force_linear</span>(<span class="ident">matches</span>: <span class="kw-2">&amp;</span><span class="ident">clap::ArgMatches</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">linear</span>(<span class="ident">matches</span>: <span class="kw-2">&amp;</span><span class="ident">clap::ArgMatches</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="comment">// read in path and parse gfa</span>
     <span class="kw">let</span> <span class="ident">gfa_file</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">value_of</span>(<span class="string">&quot;GFA&quot;</span>);
     <span class="kw">let</span> <span class="ident">include_node_coverage</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">is_present</span>(<span class="string">&quot;include-node-coverage&quot;</span>);
@@ -172,11 +172,11 @@
                 <span class="comment">// make the new GFA</span>
                 <span class="kw">let</span> <span class="ident">subgraph_gfa</span> <span class="op">=</span> <span class="ident">GFAtk</span>(<span class="ident">segments_subgraph</span>(<span class="kw-2">&amp;</span><span class="ident">gfa</span>.<span class="number">0</span>, <span class="ident">id_set</span>.<span class="ident">to_vec</span>()));
                 <span class="kw">let</span> (<span class="ident">graph_indices_subgraph</span>, <span class="ident">subgraph</span>) <span class="op">=</span> <span class="ident">subgraph_gfa</span>.<span class="ident">into_digraph</span>()<span class="question-mark">?</span>;
-                <span class="ident">force_linear_inner</span>(<span class="ident">gfa</span>, <span class="ident">include_node_coverage</span>, <span class="ident">graph_indices_subgraph</span>, <span class="ident">subgraph</span>)<span class="question-mark">?</span>;
+                <span class="ident">linear_inner</span>(<span class="ident">gfa</span>, <span class="ident">include_node_coverage</span>, <span class="ident">graph_indices_subgraph</span>, <span class="ident">subgraph</span>)<span class="question-mark">?</span>;
             }
         }
         <span class="bool-val">false</span> =&gt; {
-            <span class="ident">force_linear_inner</span>(<span class="ident">gfa</span>, <span class="ident">include_node_coverage</span>, <span class="ident">graph_indices</span>, <span class="ident">gfa_graph</span>)<span class="question-mark">?</span>;
+            <span class="ident">linear_inner</span>(<span class="ident">gfa</span>, <span class="ident">include_node_coverage</span>, <span class="ident">graph_indices</span>, <span class="ident">gfa_graph</span>)<span class="question-mark">?</span>;
         }
     }
 
@@ -184,7 +184,7 @@
 }
 
 <span class="doccomment">/// Reusable function to call on subgraphs in a GFA if necessary.</span>
-<span class="kw">fn</span> <span class="ident">force_linear_inner</span>(
+<span class="kw">fn</span> <span class="ident">linear_inner</span>(
     <span class="ident">gfa</span>: <span class="ident">GFAtk</span>,
     <span class="ident">include_node_coverage</span>: <span class="ident">bool</span>,
     <span class="ident">graph_indices</span>: <span class="ident">GFAGraphLookups</span>,

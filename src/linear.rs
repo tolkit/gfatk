@@ -18,7 +18,7 @@ use indexmap::IndexMap;
 /// # account for node coverage
 /// gfatk -i linear in.gfa > out.fasta
 /// ```
-pub fn force_linear(matches: &clap::ArgMatches) -> Result<()> {
+pub fn linear(matches: &clap::ArgMatches) -> Result<()> {
     // read in path and parse gfa
     let gfa_file = matches.value_of("GFA");
     let include_node_coverage = matches.is_present("include-node-coverage");
@@ -59,11 +59,11 @@ pub fn force_linear(matches: &clap::ArgMatches) -> Result<()> {
                 // make the new GFA
                 let subgraph_gfa = GFAtk(segments_subgraph(&gfa.0, id_set.to_vec()));
                 let (graph_indices_subgraph, subgraph) = subgraph_gfa.into_digraph()?;
-                force_linear_inner(gfa, include_node_coverage, graph_indices_subgraph, subgraph)?;
+                linear_inner(gfa, include_node_coverage, graph_indices_subgraph, subgraph)?;
             }
         }
         false => {
-            force_linear_inner(gfa, include_node_coverage, graph_indices, gfa_graph)?;
+            linear_inner(gfa, include_node_coverage, graph_indices, gfa_graph)?;
         }
     }
 
@@ -71,7 +71,7 @@ pub fn force_linear(matches: &clap::ArgMatches) -> Result<()> {
 }
 
 /// Reusable function to call on subgraphs in a GFA if necessary.
-fn force_linear_inner(
+fn linear_inner(
     gfa: GFAtk,
     include_node_coverage: bool,
     graph_indices: GFAGraphLookups,

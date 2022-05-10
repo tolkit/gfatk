@@ -28,7 +28,7 @@ enum CLIOpt {
 /// ```bash
 /// gfatk path ./input.gfa "12+, 11+, 2-, 2+"
 /// ```
-pub fn from_path(matches: &clap::ArgMatches) -> Result<()> {
+pub fn path(matches: &clap::ArgMatches) -> Result<()> {
     // read in path and parse gfa
     let gfa_file = matches.value_of("GFA");
     let path_cli = matches.value_of("path_cli");
@@ -119,7 +119,7 @@ impl GFAPath {
         self.inner.push(other);
     }
     /// Convert to a string for inclusion in the fasta header.
-    pub fn to_string(&self) -> String {
+    pub fn to_fasta_header(&self) -> String {
         let mut output = String::new();
 
         for el in &self.inner {
