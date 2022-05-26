@@ -153,6 +153,44 @@ L	13	-	11	-	3M	ec:i:1
     Ok(())
 }
 
+// now we will test multiple values placed as args on the command line
+// so the output here should be equivalent to the input GFA (plus a little rearrangement)
+#[test]
+fn test_subgraph_extraction_multiple() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = Command::cargo_bin("gfatk")?;
+
+    // just one base either side
+    cmd.arg("extract")
+        .arg("./tests/test_subgraphs.gfa")
+        .arg("-s")
+        .arg("11,14");
+
+    cmd.assert().stdout(predicate::str::starts_with(
+        "H	VN:Z:1.0
+S	11	ACCTT	ll:f:30
+S	12	TCAAGG	ll:f:60
+S	13	CTTGATT	ll:f:30
+S	14	ACCTT	ll:f:30
+S	15	TCAAGG	ll:f:60
+S	16	CTTGATT	ll:f:30
+L	11	+	12	-	4M	ec:i:1
+L	12	-	13	+	5M	ec:i:1
+L	11	+	13	+	3M	ec:i:1
+L	12	+	11	-	4M	ec:i:1
+L	13	-	12	+	5M	ec:i:1
+L	13	-	11	-	3M	ec:i:1
+L	14	+	15	-	4M	ec:i:1
+L	15	-	16	+	5M	ec:i:1
+L	14	+	16	+	3M	ec:i:1
+L	15	+	14	-	4M	ec:i:1
+L	16	-	15	+	5M	ec:i:1
+L	16	-	14	-	3M	ec:i:1
+",
+    ));
+
+    Ok(())
+}
+
 // test `gfatk trim`
 
 // H	VN:Z:1.0
@@ -299,6 +337,8 @@ AATCAAGGT
     Ok(())
 }
 
+// test `gfatk path`
+//
 // As this GFA is circular, a legal path could loop forever.
 // But we will stop at 5 segments.
 //

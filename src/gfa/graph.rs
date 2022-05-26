@@ -22,16 +22,19 @@ impl GFAungraph {
     /// The algorithm called in `gfatk extract`.
     ///
     /// The number of iterations of searching for neighbouring nodes can be modified.
+    ///
+    /// It's a naive algorithm, but it's fast enough for our purposes.
     pub fn recursive_search(
         &self,
-        sequence_id: usize,
+        sequence_id: Vec<usize>,
         iterations: i32,
         mut collect_sequence_names: Vec<NodeIndex>,
         graph_indices: GFAGraphLookups,
     ) -> Result<Vec<usize>> {
         let gfa_graph = &self.0;
+
         eprintln!(
-            "[+]\tRecursively searching around node {} at depth {}",
+            "[+]\tRecursively searching around nodes {:?} at depth {}",
             sequence_id, iterations
         );
 
@@ -40,6 +43,7 @@ impl GFAungraph {
             // collect all the neighbours of all the current node indices
             for index in collect_sequence_names.clone() {
                 for c in gfa_graph.neighbors(index) {
+                    // could possibly add a conditional in here.
                     collect_sequence_names.push(c);
                 }
             }

@@ -39,12 +39,15 @@ fn main() -> Result<()> {
                         .help("Input GFA file.")
                 )
                 .arg(
-                    Arg::new("sequence-id")
+                    Arg::new("sequence-ids")
                         .short('s')
-                        .long("sequence-id")
+                        .long("sequence-ids")
                         .takes_value(true)
                         .required(true)
-                        .help("Extract subgraph of which this sequence is part of."),
+                        .multiple_values(true)
+                        .use_value_delimiter(true)
+                        .require_value_delimiter(true)
+                        .help("Extract subgraph of which this sequence is part of. Specifying multiple segments requires a delimiter, e.g. 1,2,3"),
                 )
                 .arg(
                     Arg::new("iterations")
@@ -182,7 +185,7 @@ fn main() -> Result<()> {
         )
         .subcommand(
             Command::new("path")
-                .about("Supply an input path to evaluate a linear representation of.\nInput must be a text file of a single comma separated line with node ID's and orientations. E.g.:\n\t1+,2-,3+")
+                .about("Supply an input path to evaluate a linear representation of. Input must be a text file of a single comma separated line with node ID's and orientations. E.g.:\n\t1+,2-,3+")
                 .arg(
                     Arg::new("GFA")
                         .index(1)
