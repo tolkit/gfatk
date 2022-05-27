@@ -941,6 +941,10 @@
 <span id="936">936</span>
 <span id="937">937</span>
 <span id="938">938</span>
+<span id="939">939</span>
+<span id="940">940</span>
+<span id="941">941</span>
+<span id="942">942</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::gfa::gfa::GFAtk</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils</span>::{<span class="ident">format_usize_to_kb</span>, <span class="ident">GFAGraphLookups</span>};
 <span class="kw">use</span> <span class="ident">anyhow</span>::{<span class="ident">bail</span>, <span class="ident">Context</span>, <span class="prelude-ty">Result</span>};
@@ -965,16 +969,19 @@
     <span class="doccomment">/// The algorithm called in `gfatk extract`.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// The number of iterations of searching for neighbouring nodes can be modified.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// It&#39;s a naive algorithm, but it&#39;s fast enough for our purposes.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">recursive_search</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">sequence_id</span>: <span class="ident">usize</span>,
+        <span class="ident">sequence_id</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>,
         <span class="ident">iterations</span>: <span class="ident">i32</span>,
         <span class="kw-2">mut</span> <span class="ident">collect_sequence_names</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">NodeIndex</span><span class="op">&gt;</span>,
         <span class="ident">graph_indices</span>: <span class="ident">GFAGraphLookups</span>,
     ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">gfa_graph</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
+
         <span class="macro">eprintln!</span>(
-            <span class="string">&quot;[+]\tRecursively searching around node {} at depth {}&quot;</span>,
+            <span class="string">&quot;[+]\tRecursively searching around nodes {:?} at depth {}&quot;</span>,
             <span class="ident">sequence_id</span>, <span class="ident">iterations</span>
         );
 
@@ -983,6 +990,7 @@
             <span class="comment">// collect all the neighbours of all the current node indices</span>
             <span class="kw">for</span> <span class="ident">index</span> <span class="kw">in</span> <span class="ident">collect_sequence_names</span>.<span class="ident">clone</span>() {
                 <span class="kw">for</span> <span class="ident">c</span> <span class="kw">in</span> <span class="ident">gfa_graph</span>.<span class="ident">neighbors</span>(<span class="ident">index</span>) {
+                    <span class="comment">// could possibly add a conditional in here.</span>
                     <span class="ident">collect_sequence_names</span>.<span class="ident">push</span>(<span class="ident">c</span>);
                 }
             }

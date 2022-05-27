@@ -49,15 +49,11 @@
 <span id="44">44</span>
 <span id="45">45</span>
 <span id="46">46</span>
-<span id="47">47</span>
-<span id="48">48</span>
-<span id="49">49</span>
-<span id="50">50</span>
-<span id="51">51</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::gfa::gfa::GFAtk</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::load</span>::{<span class="ident">load_gfa</span>, <span class="ident">load_gfa_stdin</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils</span>;
-<span class="kw">use</span> <span class="ident">anyhow</span>::{<span class="ident">bail</span>, <span class="ident">Context</span>, <span class="prelude-ty">Result</span>};
+<span class="kw">use</span> <span class="ident">anyhow</span>::{<span class="ident">bail</span>, <span class="prelude-ty">Result</span>};
+<span class="kw">use</span> <span class="ident">petgraph::graph::NodeIndex</span>;
 
 <span class="doccomment">/// Supply a sequence/segment ID from the GFA, and extract the GFA with all nodes connected to the input node.</span>
 <span class="doccomment">///</span>
@@ -68,7 +64,7 @@
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">extract</span>(<span class="ident">matches</span>: <span class="kw-2">&amp;</span><span class="ident">clap::ArgMatches</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="comment">// read in path and parse gfa</span>
     <span class="kw">let</span> <span class="ident">gfa_file</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">value_of</span>(<span class="string">&quot;GFA&quot;</span>);
-    <span class="kw">let</span> <span class="ident">sequence_id</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">value_of_t</span>(<span class="string">&quot;sequence-id&quot;</span>)<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="ident">sequence_ids</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">values_of_t</span>(<span class="string">&quot;sequence-ids&quot;</span>)<span class="question-mark">?</span>.<span class="ident">into_iter</span>().<span class="ident">collect</span>();
     <span class="kw">let</span> <span class="ident">iterations</span>: <span class="ident">i32</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">value_of_t</span>(<span class="string">&quot;iterations&quot;</span>)<span class="question-mark">?</span>;
 
     <span class="kw">let</span> <span class="ident">gfa</span>: <span class="ident">GFAtk</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">gfa_file</span> {
@@ -87,19 +83,13 @@
     <span class="kw">let</span> (<span class="ident">graph_indices</span>, <span class="ident">gfa_graph</span>) <span class="op">=</span> <span class="ident">gfa</span>.<span class="ident">into_ungraph</span>()<span class="question-mark">?</span>;
 
     <span class="comment">// get the node index of the target sequence ID.</span>
-    <span class="kw">let</span> <span class="ident">target_index</span> <span class="op">=</span> <span class="ident">graph_indices</span>
-        .<span class="ident">seg_id_to_node_index</span>(<span class="ident">sequence_id</span>)
-        .<span class="ident">context</span>(<span class="string">&quot;Sequence ID not found.&quot;</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">collect_sequence_names</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-    <span class="comment">// and this is the first item in this vector</span>
-    <span class="ident">collect_sequence_names</span>.<span class="ident">push</span>(<span class="ident">target_index</span>);
+    <span class="kw">let</span> <span class="ident">target_indices</span> <span class="op">=</span> <span class="ident">sequence_ids</span>
+        .<span class="ident">iter</span>()
+        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">graph_indices</span>.<span class="ident">seg_id_to_node_index</span>(<span class="kw-2">*</span><span class="ident">e</span>).<span class="ident">unwrap</span>())
+        .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">NodeIndex</span><span class="op">&gt;</span><span class="op">&gt;</span>();
 
-    <span class="kw">let</span> <span class="ident">sequences_to_keep</span> <span class="op">=</span> <span class="ident">gfa_graph</span>.<span class="ident">recursive_search</span>(
-        <span class="ident">sequence_id</span>,
-        <span class="ident">iterations</span>,
-        <span class="ident">collect_sequence_names</span>,
-        <span class="ident">graph_indices</span>,
-    )<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="ident">sequences_to_keep</span> <span class="op">=</span>
+        <span class="ident">gfa_graph</span>.<span class="ident">recursive_search</span>(<span class="ident">sequence_ids</span>, <span class="ident">iterations</span>, <span class="ident">target_indices</span>, <span class="ident">graph_indices</span>)<span class="question-mark">?</span>;
 
     <span class="ident">gfa</span>.<span class="ident">print_extract</span>(<span class="ident">sequences_to_keep</span>);
 
