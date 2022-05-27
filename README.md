@@ -4,7 +4,7 @@
     <img width="300" height="132" src="https://www.darwintreeoflife.org/wp-content/themes/dtol/dist/assets/gfx/dtol-logo-round.png">
 </p>
 
-A command line utility to explore, extract, and linearise plant mitochondrial assemblies. The Graphical Fragment Assembly files (GFAs) used to refine the code in this repository are almost exclusively generated from the assembly program <a href="https://github.com/maickrau/MBG">MBG</a>. See the testing section below for caveats.
+A command line utility to explore, extract, and linearise plant mitochondrial assemblies. The Graphical Fragment Assembly files (GFA's) used to refine the code in this repository are almost exclusively generated from the assembly program <a href="https://github.com/maickrau/MBG">MBG</a>. See the testing section below for caveats.
 
 ## Install
 
@@ -32,44 +32,55 @@ cargo build --release
 cargo install --path .
 ```
 
-## Pipeline
+## Features
 
-The pipeline is still being ironed out, but it progresses like this:
+The features of the toolkit reflect only their usefulness in debugging, visualising, and linearising GFA's from (especially) plant mitochondrial genome assemblies output from <a href="https://github.com/maickrau/MBG">MBG</a>. These genomes are usually pretty small (up to 2Mb), and in many cases have circular or branching paths.
 
-- Assemble plant mitome/plastome using MBG
-- Extract mitochondrial subgraph from the MBG output GFA
-- Linearise the GFA by traversing the graph to find the longest path (simple or not)
+Current help:
 
-In terms of `gfatk` commands, it looks like this:
-
-```bash
-# install rust and `cargo install --path .` etc.
-# MBG output = output.gfa
-
-# optionally check what your GFA structure is
-gfatk stats output.gfa
-# or check what the graph looks like visually
-# using `dot` from `graphviz`
-gfatk dot output.gfa | dot -Tsvg > output.svg
-
-# extract the mitochondrial subgraph
-# this is done using coverage, GC content info
-# and expected minimum genome size (100,000bp)
-# then check stats
-gfatk extract-mito output.gfa | gfatk stats
-
-# if this isn't the right subgraph, manually intervene
-# select one segment name from the subgraph of interest
-gfatk extract output.gfa -s 2 | gfatk stats
-
-# now we linearise
-gfatk extract-mito output.gfa | gfatk linear > linearised.fasta
-# alternatively pass the `-i` flag which will include
-# coverage information from the GFA itself
-gfatk extract-mito output.gfa | gfatk linear -i > linearised.fasta
-# if the graph is even slightly complex, this last command
-# will fail with a stack overflow.
 ```
+gfatk 0.2.0
+Max Brown <mb39@sanger.ac.uk>
+Explore and linearise (mitochondrial) GFA files.
+
+USAGE:
+    gfatk [SUBCOMMAND]
+
+OPTIONS:
+    -h, --help       Print help information
+    -V, --version    Print version information
+
+SUBCOMMANDS:
+    dot               Return the dot representation of a GFA.
+    extract           Extract subgraph from a GFA, given a segment name.
+    extract-chloro    Extract the plastid from a GFA.
+    extract-mito      Extract the mitochondria from a GFA.
+    fasta             Extract a fasta file.
+                          Almost as simple as: awk '/^S/{print ">"$2"\n"$3}'.
+    help              Print this message or the help of the given subcommand(s)
+    linear            Force a linear representation of the graph.
+    overlap           Extract overlaps from a GFA.
+    path              Supply an input path to evaluate a linear representation of. Input must be
+                          a text file of a single comma separated line with node ID's and
+                          orientations. E.g.:
+                                1+,2-,3+
+    stats             Some stats about the input GFA.
+    trim              Trim a GFA to remove nodes of degree < 4 (i.e. only has one neighbour).
+```
+
+To explain each of these briefly:
+- `gfatk dot <GFA>` - generates a <a href="https://graphviz.org/doc/info/lang.html">DOT language</a> representation of the GFA.
+- `gfatk extract <GFA> -s <segment-ids>` - extracts the subgraph from the GFA, given a segment name, or multiple (if multiple, these must be comma separated without space).
+- `gfatk extract-chloro <GFA>` - extracts the plastid from the GFA. It has default parameters which seem to work okay.
+- `gfatk extract-mito <GFA>` - extracts the mitochondria from the GFA. It has default parameters which seem to work okay.
+- `gfatk fasta <GFA>` - extracts a fasta file from the GFA. I say it's almost as simple as the `awk` version, but the toolkit does some checks to see if we are actually dealing with a GFA or not.
+- `gfatk linear <GFA> -e -i` - forces the longest linear legal representation of the graph. You can evaluate within subgraphs (`-e`), or include node coverage information (`-i`).
+- `gfatk overlap <GFA>` - extracts the overlaps from the GFA. These are taken from the CIGAR string from each of the links, and optionally extended (e.g. `-s 1000` to 1000bp either side of the overlap).
+- `gfatk path <GFA> <path> (-p path/to/path.txt)` - evaluates a linear representation of the graph, given an input path. The input path can be on the command line, or a file. Simply, it must be an comma separated list of node ID's and orientations (1+,2-,3+ ... ).
+- `gfatk stats <GFA>` - some stats about the input GFA. Can be quite verbose for large, unconnected graphs.
+- `gfatk trim <GFA>` - removes segments if they have only a single neighbour. Useful for trimming GFA's which have segments attached at low coverage.
+
+Many of these commands can be chained in a pipeline, e.g. `gfatk extract-chloro in.gfa | gfatk linear > out.gfa`.
 
 ## Examples and docs
 
@@ -81,7 +92,7 @@ A couple of more detailed examples can be seen in the `examples` directory, wher
     </b>
 </p>
 
-## Testing
+## Requirements and testing
 
 Some unit tests are now provided in the `tests` directory. To run these (you'll need Rust):
 
@@ -89,7 +100,7 @@ Some unit tests are now provided in the `tests` directory. To run these (you'll 
 cargo test --release
 ```
 
-For full functionality of the toolkit, two tags are required, node coverage and edge coverage. Other functionality will fail if the CIGAR string is not purely an overlap; i.e. in the format `<integer>M`. Only GFA version 1 supported.
+For full functionality of the toolkit, two tags are required, node coverage and edge coverage. Other functionality will fail if the CIGAR string is not purely an overlap; i.e. in the format `<integer>M`. Only GFA version 1 supported. Only header (`H`), segment (`S`), and link (`L`) lines are required. Other lines (e.g. path, `P`), will I think be ignored.
 
 ```
 H	VN:Z:1.0
@@ -115,3 +126,4 @@ Many thanks to the developers of MBG, and partners in the Tree of Life program, 
 - Alex Twyford
 - Lucia Campos
 - Chenxi Zhou
+- Mark Blaxter
