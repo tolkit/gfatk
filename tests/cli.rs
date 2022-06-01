@@ -47,6 +47,18 @@ fn test_gfa_linear_stdout() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+// test gfatk linear on a single segmented GFA
+// this would previously error out.
+#[test]
+fn test_gfa_linear_single_segment() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = Command::cargo_bin("gfatk")?;
+
+    cmd.arg("linear").arg("./tests/test_single_segment.gfa");
+    cmd.assert().stdout(predicate::str::contains("AGCGTA"));
+
+    Ok(())
+}
+
 // test `gfatk overlap`
 
 // same test GFA as `gfatk linear`

@@ -40,6 +40,17 @@ pub fn linear(matches: &clap::ArgMatches) -> Result<()> {
     // load gfa into graph structure
     let (graph_indices, gfa_graph) = gfa.into_digraph()?;
 
+    // if we have only one node (segment) then all we can do
+    // is print the sequence
+    // otherwise we hit this error: `Error: There was no highest coverage path.`
+    // makes sense as you can't have a path of length 1.
+    if gfa_graph.node_count() == 1 {
+        // as we would in `gfatk fasta`
+        eprintln!("[+]\tOnly a single segment detected. Printing sequence and exiting.");
+        gfa.print_sequences()?;
+        std::process::exit(0);
+    }
+
     // check how many subgraphs there are
     let subgraphs = gfa_graph.weakly_connected_components(graph_indices.clone())?;
 
