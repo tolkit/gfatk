@@ -48,7 +48,7 @@ pub fn linear(matches: &clap::ArgMatches) -> Result<()> {
         // as we would in `gfatk fasta`
         eprintln!("[+]\tOnly a single segment detected. Printing sequence and exiting.");
         gfa.print_sequences()?;
-        std::process::exit(0);
+        return Ok(())
     }
 
     // check how many subgraphs there are

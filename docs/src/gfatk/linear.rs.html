@@ -172,7 +172,7 @@
         <span class="comment">// as we would in `gfatk fasta`</span>
         <span class="macro">eprintln!</span>(<span class="string">&quot;[+]\tOnly a single segment detected. Printing sequence and exiting.&quot;</span>);
         <span class="ident">gfa</span>.<span class="ident">print_sequences</span>()<span class="question-mark">?</span>;
-        <span class="ident">std::process::exit</span>(<span class="number">0</span>);
+        <span class="kw">return</span> <span class="prelude-val">Ok</span>(())
     }
 
     <span class="comment">// check how many subgraphs there are</span>
