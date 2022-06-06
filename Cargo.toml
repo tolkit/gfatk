@@ -3,6 +3,18 @@ name = "gfatk"
 version = "0.2.0"
 edition = "2021"
 
+description = """
+gfatk is a command line tool for manipulating small to medium sized
+GFA files, and specifically for output from the genome assembler MBG.
+"""
+
+documentation = "https://github.com/tolkit/gfatk"
+homepage = "https://github.com/tolkit/gfatk"
+repository = "https://github.com/tolkit/gfatk"
+keywords = ["gfa", "gfatk", "assembly", "genome"]
+categories = ["command-line-utilities"]
+license = "MIT"
+
 [dependencies]
 gfa = "0.10"
 bstr = "0.2"
