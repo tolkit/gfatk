@@ -294,10 +294,13 @@ impl GFAtk {
         merged_sorted_chosen_path_overlaps: IndexMap<usize, Vec<(Orientation, usize, &str)>>,
         fasta_header: &str,
         segments_not_in_path: Vec<usize>,
+        subgraph_index_header: Option<String>,
     ) -> Result<()> {
         let gfa = &self.0;
+        // modify the header if necessary to include the subgraph index
+        let subgraph_index_header = subgraph_index_header.unwrap_or("".to_string());
 
-        println!(">{}", fasta_header);
+        println!(">{}{}", fasta_header, subgraph_index_header);
         // create iterator over the paths
         let mut path_iter = merged_sorted_chosen_path_overlaps.iter();
         // get the first element of the iterator.
@@ -406,8 +409,9 @@ impl GFAtk {
                         Some(seg) => {
                             if seg.name == segment {
                                 println!(
-                                    ">{}\n{}",
+                                    ">{}{}\n{}",
                                     segment,
+                                    subgraph_index_header,
                                     std::str::from_utf8(&seg.sequence).with_context(|| format!(
                                         "Malformed UTF8: {:?}",
                                         &seg.sequence
@@ -426,8 +430,9 @@ impl GFAtk {
     /// The internal function called when `gfatk fasta` is called.
     ///
     /// Prints all segments of the GFA as-is.
-    pub fn print_sequences(&self) -> Result<()> {
+    pub fn print_sequences(&self, subgraph_index_header: Option<String>) -> Result<()> {
         let gfa = &self.0;
+        let subgraph_index_header = subgraph_index_header.unwrap_or("".to_string());
 
         for line in gfa.lines_iter() {
             match line.some_segment() {
@@ -435,7 +440,7 @@ impl GFAtk {
                     let seq = std::str::from_utf8(&s.sequence)
                         .with_context(|| format!("Malformed UTF8: {:?}", &s.sequence))?;
                     let id = s.name;
-                    println!(">{}\n{}", id, seq);
+                    println!(">{}{}\n{}", id, subgraph_index_header, seq);
                 }
                 None => (),
             }

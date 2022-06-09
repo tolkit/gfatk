@@ -47,7 +47,7 @@ pub fn linear(matches: &clap::ArgMatches) -> Result<()> {
     if gfa_graph.node_count() == 1 {
         // as we would in `gfatk fasta`
         eprintln!("[+]\tOnly a single segment detected. Printing sequence and exiting.");
-        gfa.print_sequences()?;
+        gfa.print_sequences(None)?;
         return Ok(());
     }
 
@@ -64,7 +64,9 @@ pub fn linear(matches: &clap::ArgMatches) -> Result<()> {
 
     match evaluate_subgraphs {
         true => {
-            for id_set in &subgraphs {
+            for (mut index, id_set) in subgraphs.iter().enumerate() {
+                // so we don't zero index on the fasta headers
+                index += 1;
                 // have to make the extra allocation here.
                 let gfa = gfa.clone();
                 // make the new GFA
@@ -73,14 +75,23 @@ pub fn linear(matches: &clap::ArgMatches) -> Result<()> {
                 // check the node count here. If there's one segment, then we can just print the sequence.
                 // otherwise we go ahead and linearise the subgraph.
                 if subgraph.node_count() == 1 {
-                    subgraph_gfa.print_sequences()?;
+                    let subgraph_index_header = Some(format!(" subgraph-{}", index));
+                    subgraph_gfa.print_sequences(subgraph_index_header)?;
                 } else {
-                    linear_inner(gfa, include_node_coverage, graph_indices_subgraph, subgraph)?;
+                    // add a subgraph index to the fasta header
+                    let subgraph_index_header = Some(format!(" subgraph-{}", index));
+                    linear_inner(
+                        gfa,
+                        include_node_coverage,
+                        graph_indices_subgraph,
+                        subgraph,
+                        subgraph_index_header,
+                    )?;
                 }
             }
         }
         false => {
-            linear_inner(gfa, include_node_coverage, graph_indices, gfa_graph)?;
+            linear_inner(gfa, include_node_coverage, graph_indices, gfa_graph, None)?;
         }
     }
 
@@ -93,6 +104,7 @@ fn linear_inner(
     include_node_coverage: bool,
     graph_indices: GFAGraphLookups,
     gfa_graph: GFAdigraph,
+    subgraph_index_header: Option<String>,
 ) -> Result<()> {
     // don't evaluate the coverage if we don't care about it
     let rel_coverage_map = match include_node_coverage {
@@ -120,6 +132,7 @@ fn linear_inner(
         merged_sorted_chosen_path_overlaps,
         &fasta_header,
         segments_not_in_path,
+        subgraph_index_header,
     )?;
     Ok(())
 }

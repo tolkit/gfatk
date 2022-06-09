@@ -26,7 +26,9 @@ pub fn fasta(matches: &clap::ArgMatches) -> Result<()> {
         },
     };
 
-    gfa.print_sequences()?;
+    // None here, as we aren't lookiing/care about
+    // subgraphs.
+    gfa.print_sequences(None)?;
 
     Ok(())
 }
