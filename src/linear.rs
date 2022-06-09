@@ -48,7 +48,7 @@ pub fn linear(matches: &clap::ArgMatches) -> Result<()> {
         // as we would in `gfatk fasta`
         eprintln!("[+]\tOnly a single segment detected. Printing sequence and exiting.");
         gfa.print_sequences()?;
-        return Ok(())
+        return Ok(());
     }
 
     // check how many subgraphs there are
@@ -70,7 +70,13 @@ pub fn linear(matches: &clap::ArgMatches) -> Result<()> {
                 // make the new GFA
                 let subgraph_gfa = GFAtk(segments_subgraph(&gfa.0, id_set.to_vec()));
                 let (graph_indices_subgraph, subgraph) = subgraph_gfa.into_digraph()?;
-                linear_inner(gfa, include_node_coverage, graph_indices_subgraph, subgraph)?;
+                // check the node count here. If there's one segment, then we can just print the sequence.
+                // otherwise we go ahead and linearise the subgraph.
+                if subgraph.node_count() == 1 {
+                    subgraph_gfa.print_sequences()?;
+                } else {
+                    linear_inner(gfa, include_node_coverage, graph_indices_subgraph, subgraph)?;
+                }
             }
         }
         false => {
