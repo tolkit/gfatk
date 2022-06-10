@@ -35,6 +35,8 @@
 <span id="30">30</span>
 <span id="31">31</span>
 <span id="32">32</span>
+<span id="33">33</span>
+<span id="34">34</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::gfa::gfa::GFAtk</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::load</span>::{<span class="ident">load_gfa</span>, <span class="ident">load_gfa_stdin</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils</span>;
@@ -63,7 +65,9 @@
         },
     };
 
-    <span class="ident">gfa</span>.<span class="ident">print_sequences</span>()<span class="question-mark">?</span>;
+    <span class="comment">// None here, as we aren&#39;t lookiing/care about</span>
+    <span class="comment">// subgraphs.</span>
+    <span class="ident">gfa</span>.<span class="ident">print_sequences</span>(<span class="prelude-val">None</span>)<span class="question-mark">?</span>;
 
     <span class="prelude-val">Ok</span>(())
 }
