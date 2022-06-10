@@ -97,9 +97,11 @@ fn parse_path(
 #[derive(Debug, Clone, Copy)]
 pub struct GFAPathElement {
     /// The ID of the GFA path element.
-    /// It must match that of
+    /// It must match that of the segments in the GFA.
     pub segment_id: usize,
+    /// The orientation of the segment.
     pub orientation: Orientation,
+    /// The index of the struct.
     pub index: usize,
 }
 
@@ -148,16 +150,15 @@ fn parse_path_string(path_string: &str, gfa: &GFAtk) -> Result<(GFAPath, HashMap
     // path_string consists of e.g.:
     // 1+, 2-, 3+, 4-, ...
     // split
-    let mut split_path: Vec<&str> = path_string.split(",").collect();
+    let mut split_path: Vec<&str> = path_string.split(',').collect();
     // trim whitespace
     for token in split_path.iter_mut() {
         *token = token.trim();
     }
     // now allocate to GFAPath
     let mut gfa_path = GFAPath::new();
-    let mut index = 0;
 
-    for token in split_path {
+    for (index, token) in split_path.into_iter().enumerate() {
         let mut token_string = token.to_owned();
         let orientation = token_string
             .pop()
@@ -182,8 +183,6 @@ fn parse_path_string(path_string: &str, gfa: &GFAtk) -> Result<(GFAPath, HashMap
             orientation: o_enum,
             index,
         });
-
-        index += 1;
     }
 
     Ok((gfa_path, link_map))

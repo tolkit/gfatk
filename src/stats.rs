@@ -99,7 +99,7 @@ impl Stats {
                 0 => bail!("No subgraphs within the bounds:\nsize_upper: {size_upper}\nsize_lower: {size_lower}\ngc_upper: {gc_upper}\ngc_lower: {gc_lower}\nTry changing limits?"),
                 1.. => {
                     // extract all segments
-                    let segments = stat_vec.iter().map(|Stat { segments, .. }| segments.clone()).flatten().collect();
+                    let segments = stat_vec.iter().flat_map(|Stat { segments, .. }| segments.clone()).collect();
                     Ok(segments)
                 },
                 _ => unreachable!()

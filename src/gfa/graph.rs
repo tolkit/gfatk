@@ -229,14 +229,10 @@ impl GFAdigraph {
     ) -> Result<(Vec<NodeIndex>, Vec<usize>, Vec<usize>, String)> {
         let graph = &self.0;
         let nodes = graph.node_identifiers();
-        let node_pairs = nodes.permutations(2).collect::<Vec<_>>();
 
-        let all_paths: Result<Vec<_>> = node_pairs
-            .into_iter()
-            .map(|pair| {
-                let path = all_paths(&graph, pair[0], pair[1], rel_coverage_map);
-                path
-            })
+        let all_paths: Result<Vec<_>> = nodes
+            .permutations(2)
+            .map(|pair| all_paths(graph, pair[0], pair[1], rel_coverage_map))
             .collect();
 
         // make the set of legal paths through the GFA
@@ -311,7 +307,7 @@ impl GFAdigraph {
                         }
                     }
                     // keep if any of the elements is true
-                    let do_keep = keep_vec.iter().any(|e| *e == true);
+                    let do_keep = keep_vec.iter().any(|e| *e);
 
                     // debugging...
                     // eprintln!("a->b: {:?}", a_b_edges);
@@ -333,7 +329,7 @@ impl GFAdigraph {
                 }
             }
         }
-        valid_paths.sort_by(|a, b| b.len().cmp(&a.len()));
+        valid_paths.sort_by_key(|b| std::cmp::Reverse(b.len()));
         valid_paths.dedup();
 
         // check if we have coverages
@@ -378,7 +374,7 @@ impl GFAdigraph {
             }
 
             let highest_coverage_path_op =
-                map.iter().max_by(|a, b| a.1.cmp(&b.1)).map(|(k, v)| (k, v));
+                map.iter().max_by(|a, b| a.1.cmp(b.1)).map(|(k, v)| (k, v));
 
             // explicit error out here
             let highest_coverage_path = match highest_coverage_path_op {
@@ -436,18 +432,15 @@ impl GFAdigraph {
         // make a vector of nodes not in the final path
         // these will be passed later and printed to a fasta.
         let final_path_set: HashSet<_> = final_path.0.iter().collect();
-        let nodes: Vec<_> = graph.node_identifiers().collect();
-        let difference: Vec<_> = nodes
-            .into_iter()
+
+        let difference: Vec<_> = graph
+            .node_identifiers()
             .filter(|item| !final_path_set.contains(item))
             .collect();
 
         let difference_ids: Result<Vec<usize>> = difference
             .iter()
-            .map(|e| {
-                let seg_id = graph_indices.node_index_to_seg_id(*e);
-                seg_id
-            })
+            .map(|e| graph_indices.node_index_to_seg_id(*e))
             .collect();
 
         // the fasta header should contain the tool, path information, and coverage
@@ -590,7 +583,7 @@ fn recursive_path_finder_incl_coverage<T, U, Ix: IndexType>(
 
             let test = *rel_coverage_map.get(&next_node).unwrap();
 
-            if !visited.contains_key(&next_node) || !(*visited.get(&next_node).unwrap() == test) {
+            if !visited.contains_key(&next_node) || *visited.get(&next_node).unwrap() != test {
                 *visited.entry(next_node).or_insert(0) += 1;
                 let descendant_paths = recursive_path_finder_incl_coverage(
                     graph,

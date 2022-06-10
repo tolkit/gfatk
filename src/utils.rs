@@ -17,8 +17,8 @@ pub fn is_stdin() -> bool {
 }
 
 /// Get the coverage associated with an edge (`ec` tag in the GFA).
-pub fn get_edge_coverage(options: &Vec<OptField>) -> Result<i64> {
-    for op in options {
+pub fn get_edge_coverage(options: &[OptField]) -> Result<i64> {
+    if let Some(op) = options.iter().next() {
         match op.tag {
             // ec
             [101, 99] => match op.value {
@@ -39,8 +39,8 @@ pub fn get_option_string(options: Vec<OptField>) -> Result<String> {
             .with_context(|| format!("Malformed UTF8: {:?}", op.tag))?;
         let value = match op.value {
             Float(f) => format!(":f:{:.3}", f),
-            A(a) => format!(":A:{}", a.to_string()),
-            Int(i) => format!(":i:{}", i.to_string()),
+            A(a) => format!(":A:{}", a),
+            Int(i) => format!(":i:{}", i),
             Z(z) => format!(
                 ":Z:{}",
                 std::str::from_utf8(&z).with_context(|| format!("Malformed UTF8: {:?}", z))?
@@ -64,7 +64,7 @@ pub fn get_option_string(options: Vec<OptField>) -> Result<String> {
     }
     // should always end in \t ^
     let tag_val_op_un = tag_val
-        .strip_suffix("\t")
+        .strip_suffix('\t')
         .context("Could not strip a tab from the suffix of the tag.")?;
     Ok(tag_val_op_un.to_string())
 }
@@ -161,7 +161,7 @@ pub struct GFAGraphPair {
     pub seg_id: usize,
 }
 /// A vector of `GFAGraphPair`'s.
-/// 
+///
 /// This should 100% have been a map-like structure...
 #[derive(Clone)]
 pub struct GFAGraphLookups(pub Vec<GFAGraphPair>);
@@ -224,7 +224,7 @@ impl fmt::Display for GFAGraphLookups {
 
         output += &seg_ids;
 
-        write!(f, "{}\n", output)
+        writeln!(f, "{}", output)
     }
 }
 

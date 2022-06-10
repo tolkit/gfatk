@@ -97,7 +97,7 @@ impl GFAtk {
     /// A method to print a GFA to STDOUT, given a vector of sequence ID's to keep.
     pub fn print_extract(&self, sequences_to_keep: Vec<usize>) {
         let gfa = &self.0;
-        let subgraph_gfa = GFAtk(segments_subgraph(&gfa, sequences_to_keep));
+        let subgraph_gfa = GFAtk(segments_subgraph(gfa, sequences_to_keep));
 
         print!("{}", gfa_string(&subgraph_gfa.0));
     }
@@ -159,15 +159,15 @@ impl GFAtk {
                     let overlap_str = match overlap_seq {
                         Some(sl) => std::str::from_utf8(sl)
                             .with_context(|| format!("Malformed UTF8: {:?}", sl))?,
-                        None => std::str::from_utf8(&from_seq[..])
-                            .with_context(|| format!("Malformed UTF8: {:?}", &from_seq[..]))?,
+                        None => std::str::from_utf8(from_seq)
+                            .with_context(|| format!("Malformed UTF8: {:?}", from_seq))?,
                     };
                     overlap_str_from_f = Some(overlap_str.to_string());
                 }
                 // if the relative negative strand matches
                 // revcomp and take the end.
                 Orientation::Backward => {
-                    let revcomp = reverse_complement(&from_seq);
+                    let revcomp = reverse_complement(from_seq);
                     // let overlap_revcomp = revcomp[revcomp.len() - overlap - extend_length..].to_vec();
                     let overlap_revcomp = revcomp.get(revcomp.len() - overlap - extend_length..);
 
@@ -203,7 +203,7 @@ impl GFAtk {
                 // if the relative negative strand matches
                 // revcomp and take the start.
                 Orientation::Backward => {
-                    let revcomp = reverse_complement(&to_seq);
+                    let revcomp = reverse_complement(to_seq);
                     // let overlap_revcomp = revcomp[overlap..overlap + extend_length].to_vec();
                     let overlap_revcomp = revcomp.get(overlap..overlap + extend_length);
 
@@ -239,7 +239,7 @@ impl GFAtk {
     /// Which is a tuple of from/to, the orientation of the overlap, the extent of the overlap, and whether the overlap is at the start or end of a segment.
     pub fn determine_path_overlaps(
         &self,
-        chosen_path: &Vec<NodeIndex>,
+        chosen_path: &[NodeIndex],
         graph_indices: GFAGraphLookups,
         chosen_path_ids: &Vec<usize>,
     ) -> Result<Vec<(usize, Orientation, usize, &str)>> {
@@ -399,7 +399,7 @@ impl GFAtk {
 
         // just a blank new line.
         // as the last statements were just print!.
-        println!("");
+        println!();
 
         // print the rest of the segments
         if !segments_not_in_path.is_empty() {
@@ -514,7 +514,7 @@ impl GFAtk {
     pub fn sequence_stats(&self, genome_type: GenomeType) -> Result<(f32, f32, usize)> {
         let gfa = &self.0;
 
-        let cov = Self::get_coverage(&self)?;
+        let cov = Self::get_coverage(self)?;
 
         let mut total_overlap_length = 0;
         for link in &gfa.links {
@@ -528,7 +528,7 @@ impl GFAtk {
             let seq = &segment.sequence;
             total_sequence_length += seq.len();
 
-            let gc = utils::gc_content(&seq);
+            let gc = utils::gc_content(seq);
             gc_vec.push(gc);
         }
 
@@ -583,7 +583,7 @@ impl GFAtk {
         // we process the rest
         let result = lowest_cov_iter.try_fold(init, |acc, x| {
             // return None if x is NaN
-            let cmp = x.1.partial_cmp(&acc.1)?;
+            let cmp = x.1.partial_cmp(acc.1)?;
             // if x is less than the acc
             let min = if let std::cmp::Ordering::Less = cmp {
                 x
@@ -681,7 +681,7 @@ impl GFAtk {
         }
 
         // newline
-        println!("");
+        println!();
 
         Ok(())
     }
