@@ -2,6 +2,7 @@ use crate::load::load_gfa;
 use crate::utils;
 use crate::{gfa::gfa::GFAtk, gfa::graph::segments_subgraph, load::load_gfa_stdin};
 use anyhow::{bail, Context, Result};
+use petgraph::algo::is_cyclic_directed;
 
 /// Enumeration of the genomes we are interested in.
 #[derive(PartialEq, Clone, Copy)]
@@ -27,6 +28,9 @@ pub struct Stat {
     pub segments: Vec<usize>,
     /// Total sequence length of all the segments.
     pub total_sequence_length: usize,
+    /// Whether the subgraph is circular
+    /// (only applies to mitochondrial genomes).
+    pub is_circular: bool,
 }
 
 /// A vector of `Stat`.
@@ -70,9 +74,9 @@ impl Stats {
         let stat_vec_len = stat_vec.len();
         // filter this vector to have stats in line with the span/gc
 
-        if stat_vec_len > 1 {
+        if stat_vec_len > 0 {
             // apply the filter
-            let mut z: Vec<&Stat> = stat_vec
+            let stat_vec: Vec<&Stat> = stat_vec
                 .iter()
                 .filter(
                     |Stat {
@@ -81,6 +85,7 @@ impl Stats {
                          cov,
                          segments,
                          total_sequence_length,
+                         is_circular,
                      }| {
                         (gc > &gc_lower && gc < &gc_upper)
                             && (total_sequence_length > &size_lower
@@ -88,25 +93,19 @@ impl Stats {
                     },
                 )
                 .collect();
-            // We could just return the complete set of deduped segments
-            // that were found
-            z.sort_by(|a, b| (b.cov, a.gc).partial_cmp(&(a.cov, b.gc)).unwrap());
-
-            let res = match z.get(0) {
-                Some(stat) => stat,
-                None => bail!(
-                    "No subgraphs within the bounds:\nsize_upper: {size_upper}\nsize_lower: {size_lower}\ngc_upper: {gc_upper}\ngc_lower: {gc_lower}\nTry changing limits?"
-                ),
-            };
-            Ok(res.segments.clone())
+            // let's return all the filtered segments
+            // and see if it works for now
+            match stat_vec.len() {
+                0 => bail!("No subgraphs within the bounds:\nsize_upper: {size_upper}\nsize_lower: {size_lower}\ngc_upper: {gc_upper}\ngc_lower: {gc_lower}\nTry changing limits?"),
+                1.. => {
+                    // extract all segments
+                    let segments = stat_vec.iter().map(|Stat { segments, .. }| segments.clone()).flatten().collect();
+                    Ok(segments)
+                },
+                _ => unreachable!()
+            }
         } else {
-            // we only have 1 or no segments
-            let extracted_segments_op = stat_vec.get(0);
-            let extracted_segments = match extracted_segments_op {
-                Some(s) => s,
-                None => bail!("There were no segments to be extracted. Check input GFA file."),
-            };
-            Ok(extracted_segments.segments.clone())
+            bail!("There were no segments to be extracted. Check input GFA file.");
         }
     }
 }
@@ -183,11 +182,15 @@ pub fn stats(
 
         let (graph_indices_subgraph, subgraph) = subgraph_gfa.into_digraph()?;
 
+        // we want to see if the subgraph is circular.
+        let is_circular = is_cyclic_directed(&subgraph.0);
+
         // print stats
         if genome_type == GenomeType::None {
             println!("Subgraph {}:", no_subgraphs + 1);
             println!("\tNumber of nodes/segments: {}", subgraph.node_count());
             println!("\tNumber of edges/links: {}", subgraph.edge_count());
+            println!("\tCircular: {}", is_circular);
             // equivalent to id_set
             println!("{}", graph_indices_subgraph);
         }
@@ -199,7 +202,9 @@ pub fn stats(
             cov,
             segments: id_set.clone(),
             total_sequence_length,
+            is_circular,
         });
+
         no_subgraphs += 1;
     }
 
