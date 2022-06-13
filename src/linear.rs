@@ -4,6 +4,7 @@ use crate::load::{load_gfa, load_gfa_stdin};
 use crate::utils::{self, GFAGraphLookups};
 use anyhow::{bail, Result};
 use indexmap::IndexMap;
+use petgraph::algo::is_cyclic_directed;
 
 /// Force a linear representation of the GFA.
 ///
@@ -72,14 +73,19 @@ pub fn linear(matches: &clap::ArgMatches) -> Result<()> {
                 // make the new GFA
                 let subgraph_gfa = GFAtk(segments_subgraph(&gfa.0, id_set.to_vec()));
                 let (graph_indices_subgraph, subgraph) = subgraph_gfa.into_digraph()?;
+
+                // it can be useful to see here whether the subgraph is cyclic
+                let is_circular = is_cyclic_directed(&subgraph.0);
                 // check the node count here. If there's one segment, then we can just print the sequence.
                 // otherwise we go ahead and linearise the subgraph.
                 if subgraph.node_count() == 1 {
-                    let subgraph_index_header = Some(format!(" subgraph-{}", index));
+                    let subgraph_index_header =
+                        Some(format!(" subgraph-{}:is_circular-{}", index, is_circular));
                     subgraph_gfa.print_sequences(subgraph_index_header)?;
                 } else {
                     // add a subgraph index to the fasta header
-                    let subgraph_index_header = Some(format!(" subgraph-{}", index));
+                    let subgraph_index_header =
+                        Some(format!(" subgraph-{}:is_circular-{}", index, is_circular));
                     linear_inner(
                         gfa,
                         include_node_coverage,
