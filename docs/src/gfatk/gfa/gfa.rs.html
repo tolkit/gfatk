@@ -796,6 +796,10 @@
 <span id="791">791</span>
 <span id="792">792</span>
 <span id="793">793</span>
+<span id="794">794</span>
+<span id="795">795</span>
+<span id="796">796</span>
+<span id="797">797</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::gfa</span>::{
     <span class="ident">gfa_string</span>,
     <span class="ident">graph</span>::{<span class="ident">segments_subgraph</span>, <span class="ident">GFAdigraph</span>, <span class="ident">GFAungraph</span>},
@@ -1309,7 +1313,11 @@
     <span class="doccomment">/// The internal function called in `gfatk stats`.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Returns average GC%, average coverage, and total sequence length for a GFA (sub)graph.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sequence_stats</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">genome_type</span>: <span class="ident">GenomeType</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">f32</span>, <span class="ident">f32</span>, <span class="ident">usize</span>)<span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sequence_stats</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">genome_type</span>: <span class="ident">GenomeType</span>,
+        <span class="ident">tabular</span>: <span class="ident">bool</span>,
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">f32</span>, <span class="ident">f32</span>, <span class="ident">usize</span>)<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">gfa</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
 
         <span class="kw">let</span> <span class="ident">cov</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::get_coverage</span>(<span class="self">self</span>)<span class="question-mark">?</span>;
@@ -1332,7 +1340,7 @@
 
         <span class="kw">let</span> <span class="ident">avg_gc</span> <span class="op">=</span> <span class="ident">gc_vec</span>.<span class="ident">iter</span>().<span class="ident">sum</span>::<span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>() <span class="op">/</span> <span class="ident">gc_vec</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">f32</span>;
 
-        <span class="kw">if</span> <span class="ident">genome_type</span> <span class="op">==</span> <span class="ident">GenomeType::None</span> {
+        <span class="kw">if</span> <span class="op">!</span><span class="ident">tabular</span> <span class="op">&amp;&amp;</span> <span class="ident">genome_type</span> <span class="op">==</span> <span class="ident">GenomeType::None</span> {
             <span class="macro">println!</span>(<span class="string">&quot;\tTotal sequence length:\t{}&quot;</span>, <span class="ident">total_sequence_length</span>);
             <span class="macro">println!</span>(<span class="string">&quot;\tTotal sequence overlap length:\t{}&quot;</span>, <span class="ident">total_overlap_length</span>);
             <span class="macro">println!</span>(

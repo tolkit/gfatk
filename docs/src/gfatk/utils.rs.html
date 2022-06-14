@@ -432,7 +432,7 @@
 <span class="comment">// I just realise this should 100000% be a hashmap... change that later.</span>
 
 <span class="doccomment">/// A pair consisting of a node index and a segment ID.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">GFAGraphPair</span> {
     <span class="doccomment">/// The node index (petgraph&#39;s `NodeIndex`).</span>
     <span class="kw">pub</span> <span class="ident">node_index</span>: <span class="ident">NodeIndex</span>,
@@ -442,7 +442,7 @@
 <span class="doccomment">/// A vector of `GFAGraphPair`&#39;s.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// This should 100% have been a map-like structure...</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">GFAGraphLookups</span>(<span class="kw">pub</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">GFAGraphPair</span><span class="op">&gt;</span>);
 
 <span class="kw">impl</span> <span class="ident">GFAGraphLookups</span> {
