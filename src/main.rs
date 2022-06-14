@@ -95,6 +95,12 @@ fn main() -> Result<()> {
                 .arg(
                     Arg::new("GFA")
                         .help("Input GFA file.")
+                )
+                .arg(
+                    Arg::new("tabular")
+                        .short('t')
+                        .long("tabular")
+                        .help("Output tabular stats.")
                 ),
         )
         .subcommand(

@@ -1,0 +1,4 @@
+Subgraph Index	GC%	Node Count	Edge Count	Coverage	Segments	Total Sequence Length	Is Circular
+0	0.43313026	3	4	260.559	1,18,19	234918	true
+1	0.44169486	1	0	335.414	5	196595	false
+2	0.4364983	3	4	297.23132	11,16,17	159349	true

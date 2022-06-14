@@ -153,7 +153,7 @@ pub fn gc_content(dna: &[u8]) -> f32 {
 // I just realise this should 100000% be a hashmap... change that later.
 
 /// A pair consisting of a node index and a segment ID.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct GFAGraphPair {
     /// The node index (petgraph's `NodeIndex`).
     pub node_index: NodeIndex,
@@ -163,7 +163,7 @@ pub struct GFAGraphPair {
 /// A vector of `GFAGraphPair`'s.
 ///
 /// This should 100% have been a map-like structure...
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct GFAGraphLookups(pub Vec<GFAGraphPair>);
 
 impl GFAGraphLookups {

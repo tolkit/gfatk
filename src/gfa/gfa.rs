@@ -511,7 +511,11 @@ impl GFAtk {
     /// The internal function called in `gfatk stats`.
     ///
     /// Returns average GC%, average coverage, and total sequence length for a GFA (sub)graph.
-    pub fn sequence_stats(&self, genome_type: GenomeType) -> Result<(f32, f32, usize)> {
+    pub fn sequence_stats(
+        &self,
+        genome_type: GenomeType,
+        tabular: bool,
+    ) -> Result<(f32, f32, usize)> {
         let gfa = &self.0;
 
         let cov = Self::get_coverage(self)?;
@@ -534,7 +538,7 @@ impl GFAtk {
 
         let avg_gc = gc_vec.iter().sum::<f32>() / gc_vec.len() as f32;
 
-        if genome_type == GenomeType::None {
+        if !tabular && genome_type == GenomeType::None {
             println!("\tTotal sequence length:\t{}", total_sequence_length);
             println!("\tTotal sequence overlap length:\t{}", total_overlap_length);
             println!(

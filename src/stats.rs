@@ -1,5 +1,5 @@
 use crate::load::load_gfa;
-use crate::utils;
+use crate::utils::{self, GFAGraphLookups};
 use crate::{gfa::gfa::GFAtk, gfa::graph::segments_subgraph, load::load_gfa_stdin};
 use anyhow::{bail, Context, Result};
 use petgraph::algo::is_cyclic_directed;
@@ -22,6 +22,12 @@ pub struct Stat {
     pub index: usize,
     /// The average GC% across a subgraph.
     pub gc: f32,
+    /// The node count of the graph.
+    pub node_count: usize,
+    /// The edge count of the graph.
+    pub edge_count: usize,
+    /// The segments of the (sub)graph.
+    pub graph_indices_subgraph: GFAGraphLookups,
     /// The average coverage across a subgraph.
     pub cov: f32,
     /// Names of the segments.
@@ -42,8 +48,53 @@ impl Stats {
         let stats = &mut self.0;
         stats.push(stat);
     }
-    // we extract the mito by ordering our stats
-    // by gc content & coverage.
+
+    /// Print tabular form of [`Stats`] to STDOUT.
+    pub fn print_tabular(&self) {
+        let headers = [
+            "subgraph_index",
+            "gc",
+            "node_count",
+            "edge_count",
+            "coverage",
+            "segments",
+            "total_seq_len",
+            "is_circular",
+        ];
+        // print headers
+        println!("{}", headers.join("\t"));
+        // fill the rows
+        for Stat {
+            index,
+            gc,
+            node_count,
+            edge_count,
+            graph_indices_subgraph: _,
+            cov,
+            segments,
+            total_sequence_length,
+            is_circular,
+        } in &self.0
+        {
+            let segment_string = segments
+                .iter()
+                .map(|s| s.to_string())
+                .collect::<Vec<String>>()
+                .join(",");
+
+            println!(
+                "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+                index,
+                gc,
+                node_count,
+                edge_count,
+                cov,
+                segment_string,
+                total_sequence_length,
+                is_circular
+            );
+        }
+    }
 
     /// Extract the putative mitochondrial/chloroplast genome from a GFA
     /// file.
@@ -52,7 +103,6 @@ impl Stats {
     /// CLI. As the defaults will be different, the same function is accessed entry points
     /// in the CLI.
 
-    #[allow(unused_variables)]
     pub fn extract_organelle(
         &mut self,
         size_lower: usize,
@@ -80,12 +130,15 @@ impl Stats {
                 .iter()
                 .filter(
                     |Stat {
-                         index,
+                         index: _,
                          gc,
-                         cov,
-                         segments,
+                         cov: _,
+                         segments: _,
                          total_sequence_length,
-                         is_circular,
+                         is_circular: _,
+                         node_count: _,
+                         edge_count: _,
+                         graph_indices_subgraph: _,
                      }| {
                         (gc > &gc_lower && gc < &gc_upper)
                             && (total_sequence_length > &size_lower
@@ -125,8 +178,8 @@ pub fn stats(
     matches: &clap::ArgMatches,
     genome_type: GenomeType,
 ) -> Result<Option<(GFAtk, Vec<usize>)>> {
-    // required so unwrap safely
     let gfa_file = matches.value_of("GFA");
+    let tabular = matches.is_present("tabular");
     // only passed through extract_mito
     let mito_args = if matches!(genome_type, GenomeType::Mitochondria) {
         let size_lower: usize = matches.value_of_t("size-lower")?;
@@ -186,7 +239,7 @@ pub fn stats(
         let is_circular = is_cyclic_directed(&subgraph.0);
 
         // print stats
-        if genome_type == GenomeType::None {
+        if !tabular && genome_type == GenomeType::None {
             println!("Subgraph {}:", no_subgraphs + 1);
             println!("\tNumber of nodes/segments: {}", subgraph.node_count());
             println!("\tNumber of edges/links: {}", subgraph.edge_count());
@@ -194,10 +247,15 @@ pub fn stats(
             // equivalent to id_set
             println!("{}", graph_indices_subgraph);
         }
-        let (avg_gc, cov, total_sequence_length) = subgraph_gfa.sequence_stats(genome_type)?;
+
+        let (avg_gc, cov, total_sequence_length) =
+            subgraph_gfa.sequence_stats(genome_type, tabular)?;
 
         store_stats.push(Stat {
             index: no_subgraphs,
+            node_count: subgraph.node_count(),
+            edge_count: subgraph.edge_count(),
+            graph_indices_subgraph,
             gc: avg_gc,
             cov,
             segments: id_set.clone(),
@@ -206,6 +264,11 @@ pub fn stats(
         });
 
         no_subgraphs += 1;
+    }
+
+    if tabular {
+        // print tabular data
+        store_stats.print_tabular();
     }
 
     // if we want to do more stat things
@@ -234,7 +297,11 @@ pub fn stats(
                 )?,
             )));
         }
-        GenomeType::None => println!("Total number of subgraphs: {}", no_subgraphs),
+        GenomeType::None => {
+            if !tabular {
+                println!("Total number of subgraphs: {}", no_subgraphs)
+            }
+        }
     }
 
     Ok(None)
