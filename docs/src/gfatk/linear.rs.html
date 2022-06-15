@@ -147,6 +147,23 @@
 <span id="142">142</span>
 <span id="143">143</span>
 <span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::gfa::gfa::GFAtk</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::gfa::graph</span>::{<span class="ident">segments_subgraph</span>, <span class="ident">GFAdigraph</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::load</span>::{<span class="ident">load_gfa</span>, <span class="ident">load_gfa_stdin</span>};
@@ -173,6 +190,8 @@
     <span class="kw">let</span> <span class="ident">gfa_file</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">value_of</span>(<span class="string">&quot;GFA&quot;</span>);
     <span class="kw">let</span> <span class="ident">include_node_coverage</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">is_present</span>(<span class="string">&quot;include-node-coverage&quot;</span>);
     <span class="kw">let</span> <span class="ident">evaluate_subgraphs</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">is_present</span>(<span class="string">&quot;evaluate-subgraphs&quot;</span>);
+    <span class="comment">// this unwrap_or is redundant.</span>
+    <span class="kw">let</span> <span class="ident">node_threshold</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">value_of_t</span>(<span class="string">&quot;node-threshold&quot;</span>).<span class="ident">unwrap_or</span>(<span class="number">60</span>);
 
     <span class="kw">let</span> <span class="ident">gfa</span>: <span class="ident">GFAtk</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">gfa_file</span> {
         <span class="prelude-val">Some</span>(<span class="ident">f</span>) =&gt; {
@@ -183,7 +202,7 @@
         }
         <span class="prelude-val">None</span> =&gt; <span class="kw">match</span> <span class="ident">utils::is_stdin</span>() {
             <span class="bool-val">true</span> =&gt; <span class="ident">GFAtk</span>(<span class="ident">load_gfa_stdin</span>(<span class="ident">std::io::stdin</span>().<span class="ident">lock</span>())<span class="question-mark">?</span>),
-            <span class="bool-val">false</span> =&gt; <span class="macro">bail!</span>(<span class="string">&quot;No input from STDIN. Run `gfatk extract -h` for help.&quot;</span>),
+            <span class="bool-val">false</span> =&gt; <span class="macro">bail!</span>(<span class="string">&quot;No input from STDIN. Run `gfatk linear -h` for help.&quot;</span>),
         },
     };
 
@@ -209,7 +228,10 @@
         <span class="macro">eprintln!</span>(
             <span class="string">&quot;[-]\tThe input GFA has multiple subgraphs ({}).&quot;</span>,
             <span class="ident">subgraphs</span>.<span class="ident">len</span>()
-        )
+        );
+        <span class="kw">if</span> <span class="op">!</span><span class="ident">evaluate_subgraphs</span> {
+            <span class="macro">eprintln!</span>(<span class="string">&quot;[-]\tYou did not specify the `-e` option, so only the first subgraph will be linearised.&quot;</span>);
+        }
     }
 
     <span class="kw">match</span> <span class="ident">evaluate_subgraphs</span> {
@@ -231,6 +253,12 @@
                     <span class="kw">let</span> <span class="ident">subgraph_index_header</span> <span class="op">=</span>
                         <span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">&quot; subgraph-{}:is_circular-{}&quot;</span>, <span class="ident">index</span>, <span class="ident">is_circular</span>));
                     <span class="ident">subgraph_gfa</span>.<span class="ident">print_sequences</span>(<span class="ident">subgraph_index_header</span>)<span class="question-mark">?</span>;
+                } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">subgraph</span>.<span class="ident">node_count</span>() <span class="op">&gt;</span> <span class="ident">node_threshold</span> {
+                    <span class="macro">eprintln!</span>(
+                        <span class="string">&quot;[-]\tDetected {} nodes in a subgraph. Skipping.&quot;</span>,
+                        <span class="ident">subgraph</span>.<span class="ident">node_count</span>()
+                    );
+                    <span class="kw">continue</span>;
                 } <span class="kw">else</span> {
                     <span class="comment">// add a subgraph index to the fasta header</span>
                     <span class="kw">let</span> <span class="ident">subgraph_index_header</span> <span class="op">=</span>
@@ -246,6 +274,12 @@
             }
         }
         <span class="bool-val">false</span> =&gt; {
+            <span class="kw">if</span> <span class="ident">gfa_graph</span>.<span class="ident">node_count</span>() <span class="op">&gt;</span> <span class="ident">node_threshold</span> {
+                <span class="macro">bail!</span>(
+                    <span class="string">&quot;Detected {} nodes in this graph! It may be possible to linearise some subgraphs (if present) with the `-e` flag. Exiting.&quot;</span>,
+                    <span class="ident">gfa_graph</span>.<span class="ident">node_count</span>()
+                );
+            }
             <span class="ident">linear_inner</span>(<span class="ident">gfa</span>, <span class="ident">include_node_coverage</span>, <span class="ident">graph_indices</span>, <span class="ident">gfa_graph</span>, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
         }
     }

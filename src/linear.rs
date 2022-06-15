@@ -24,6 +24,8 @@ pub fn linear(matches: &clap::ArgMatches) -> Result<()> {
     let gfa_file = matches.value_of("GFA");
     let include_node_coverage = matches.is_present("include-node-coverage");
     let evaluate_subgraphs = matches.is_present("evaluate-subgraphs");
+    // this unwrap_or is redundant.
+    let node_threshold: usize = matches.value_of_t("node-threshold").unwrap_or(60);
 
     let gfa: GFAtk = match gfa_file {
         Some(f) => {
@@ -34,7 +36,7 @@ pub fn linear(matches: &clap::ArgMatches) -> Result<()> {
         }
         None => match utils::is_stdin() {
             true => GFAtk(load_gfa_stdin(std::io::stdin().lock())?),
-            false => bail!("No input from STDIN. Run `gfatk extract -h` for help."),
+            false => bail!("No input from STDIN. Run `gfatk linear -h` for help."),
         },
     };
 
@@ -60,7 +62,10 @@ pub fn linear(matches: &clap::ArgMatches) -> Result<()> {
         eprintln!(
             "[-]\tThe input GFA has multiple subgraphs ({}).",
             subgraphs.len()
-        )
+        );
+        if !evaluate_subgraphs {
+            eprintln!("[-]\tYou did not specify the `-e` option, so only the first subgraph will be linearised.");
+        }
     }
 
     match evaluate_subgraphs {
@@ -82,6 +87,12 @@ pub fn linear(matches: &clap::ArgMatches) -> Result<()> {
                     let subgraph_index_header =
                         Some(format!(" subgraph-{}:is_circular-{}", index, is_circular));
                     subgraph_gfa.print_sequences(subgraph_index_header)?;
+                } else if subgraph.node_count() > node_threshold {
+                    eprintln!(
+                        "[-]\tDetected {} nodes in a subgraph. Skipping.",
+                        subgraph.node_count()
+                    );
+                    continue;
                 } else {
                     // add a subgraph index to the fasta header
                     let subgraph_index_header =
@@ -97,6 +108,12 @@ pub fn linear(matches: &clap::ArgMatches) -> Result<()> {
             }
         }
         false => {
+            if gfa_graph.node_count() > node_threshold {
+                bail!(
+                    "Detected {} nodes in this graph! It may be possible to linearise some subgraphs (if present) with the `-e` flag. Exiting.",
+                    gfa_graph.node_count()
+                );
+            }
             linear_inner(gfa, include_node_coverage, graph_indices, gfa_graph, None)?;
         }
     }

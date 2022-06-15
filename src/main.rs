@@ -76,6 +76,15 @@ fn main() -> Result<()> {
                         .long("evaluate-subgraphs")
                         .help("If there are multiple subgraphs within a GFA, evaluate linear on each of these.")
                 )
+                .arg(
+                    Arg::new("node-threshold")
+                        .short('n')
+                        .long("node-threshold")
+                        .default_value("60")
+                        .takes_value(true)
+                        .required(false)
+                        .help("If a (sub)graph contains too many nodes, `gfatk linear` will hang.")
+                )
         )
         .subcommand(
             Command::new("fasta")
