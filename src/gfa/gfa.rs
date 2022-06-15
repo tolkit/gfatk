@@ -762,7 +762,7 @@ mod tests {
         let gfa = make_gfa("./tests/test_linear.gfa");
 
         // could be mitochondria/chloroplast
-        let (gc, cov, len) = gfa.sequence_stats(GenomeType::Mitochondria).unwrap();
+        let (gc, cov, len) = gfa.sequence_stats(GenomeType::Mitochondria, false).unwrap();
 
         assert!(cov == 40.0);
         assert!(gc == 0.39523807);

@@ -1564,7 +1564,7 @@
         <span class="kw">let</span> <span class="ident">gfa</span> <span class="op">=</span> <span class="ident">make_gfa</span>(<span class="string">&quot;./tests/test_linear.gfa&quot;</span>);
 
         <span class="comment">// could be mitochondria/chloroplast</span>
-        <span class="kw">let</span> (<span class="ident">gc</span>, <span class="ident">cov</span>, <span class="ident">len</span>) <span class="op">=</span> <span class="ident">gfa</span>.<span class="ident">sequence_stats</span>(<span class="ident">GenomeType::Mitochondria</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> (<span class="ident">gc</span>, <span class="ident">cov</span>, <span class="ident">len</span>) <span class="op">=</span> <span class="ident">gfa</span>.<span class="ident">sequence_stats</span>(<span class="ident">GenomeType::Mitochondria</span>, <span class="bool-val">false</span>).<span class="ident">unwrap</span>();
 
         <span class="macro">assert!</span>(<span class="ident">cov</span> <span class="op">==</span> <span class="number">40.0</span>);
         <span class="macro">assert!</span>(<span class="ident">gc</span> <span class="op">==</span> <span class="number">0.39523807</span>);
