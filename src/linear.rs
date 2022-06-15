@@ -83,6 +83,7 @@ pub fn linear(matches: &clap::ArgMatches) -> Result<()> {
                 let is_circular = is_cyclic_directed(&subgraph.0);
                 // check the node count here. If there's one segment, then we can just print the sequence.
                 // otherwise we go ahead and linearise the subgraph.
+
                 if subgraph.node_count() == 1 {
                     let subgraph_index_header =
                         Some(format!(" subgraph-{}:is_circular-{}", index, is_circular));
@@ -98,7 +99,7 @@ pub fn linear(matches: &clap::ArgMatches) -> Result<()> {
                     let subgraph_index_header =
                         Some(format!(" subgraph-{}:is_circular-{}", index, is_circular));
                     linear_inner(
-                        gfa,
+                        subgraph_gfa,
                         include_node_coverage,
                         graph_indices_subgraph,
                         subgraph,
