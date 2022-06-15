@@ -242,6 +242,13 @@ impl GFAdigraph {
         for paths in all_paths? {
             // iterate over each path
             for path in paths {
+                // I think easiest to just append all paths length = 2
+                // does this make sense? if there are paths of longer length
+                // than two, these will *always* be the highest coverage
+                // so no need to filter later.
+                if path.len() == 2 {
+                    valid_paths.push(path.clone());
+                }
                 // iterate over adjacent nodes
                 let node_pairs = path.windows(2);
                 // and the skipped iterator

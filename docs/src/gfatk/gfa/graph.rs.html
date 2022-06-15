@@ -938,6 +938,13 @@
 <span id="933">933</span>
 <span id="934">934</span>
 <span id="935">935</span>
+<span id="936">936</span>
+<span id="937">937</span>
+<span id="938">938</span>
+<span id="939">939</span>
+<span id="940">940</span>
+<span id="941">941</span>
+<span id="942">942</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::gfa::gfa::GFAtk</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils</span>::{<span class="ident">format_usize_to_kb</span>, <span class="ident">GFAGraphLookups</span>};
 <span class="kw">use</span> <span class="ident">anyhow</span>::{<span class="ident">bail</span>, <span class="ident">Context</span>, <span class="prelude-ty">Result</span>};
@@ -1182,6 +1189,13 @@
         <span class="kw">for</span> <span class="ident">paths</span> <span class="kw">in</span> <span class="ident">all_paths</span><span class="question-mark">?</span> {
             <span class="comment">// iterate over each path</span>
             <span class="kw">for</span> <span class="ident">path</span> <span class="kw">in</span> <span class="ident">paths</span> {
+                <span class="comment">// I think easiest to just append all paths length = 2</span>
+                <span class="comment">// does this make sense? if there are paths of longer length</span>
+                <span class="comment">// than two, these will *always* be the highest coverage</span>
+                <span class="comment">// so no need to filter later.</span>
+                <span class="kw">if</span> <span class="ident">path</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="number">2</span> {
+                    <span class="ident">valid_paths</span>.<span class="ident">push</span>(<span class="ident">path</span>.<span class="ident">clone</span>());
+                }
                 <span class="comment">// iterate over adjacent nodes</span>
                 <span class="kw">let</span> <span class="ident">node_pairs</span> <span class="op">=</span> <span class="ident">path</span>.<span class="ident">windows</span>(<span class="number">2</span>);
                 <span class="comment">// and the skipped iterator</span>
