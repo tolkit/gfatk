@@ -42,7 +42,7 @@ The features of the toolkit reflect only their usefulness in debugging, visualis
 Current help:
 
 ```
-gfatk 0.2.0
+gfatk 0.2.14
 Max Brown <mb39@sanger.ac.uk>
 Explore and linearise (mitochondrial) GFA files.
 
