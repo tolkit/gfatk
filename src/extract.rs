@@ -1,7 +1,7 @@
 use crate::gfa::gfa::GFAtk;
 use crate::load::{load_gfa, load_gfa_stdin};
 use crate::utils;
-use anyhow::{bail, Result};
+use anyhow::{bail, Context, Result};
 use petgraph::graph::NodeIndex;
 
 /// Supply a sequence/segment ID from the GFA, and extract the GFA with all nodes connected to the input node.
@@ -34,8 +34,11 @@ pub fn extract(matches: &clap::ArgMatches) -> Result<()> {
     // get the node index of the target sequence ID.
     let target_indices = sequence_ids
         .iter()
-        .map(|e| graph_indices.seg_id_to_node_index(*e).unwrap())
-        .collect::<Vec<NodeIndex>>();
+        .map(|e| graph_indices.seg_id_to_node_index(*e))
+        .collect::<Result<Vec<NodeIndex>>>();
+
+    let target_indices =
+        target_indices.context("One of your input segment ID's does not exist in the graph.")?;
 
     let sequences_to_keep =
         gfa_graph.recursive_search(sequence_ids, iterations, target_indices, graph_indices)?;

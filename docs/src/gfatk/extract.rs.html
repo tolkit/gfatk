@@ -49,10 +49,13 @@
 <span id="44">44</span>
 <span id="45">45</span>
 <span id="46">46</span>
+<span id="47">47</span>
+<span id="48">48</span>
+<span id="49">49</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::gfa::gfa::GFAtk</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::load</span>::{<span class="ident">load_gfa</span>, <span class="ident">load_gfa_stdin</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils</span>;
-<span class="kw">use</span> <span class="ident">anyhow</span>::{<span class="ident">bail</span>, <span class="prelude-ty">Result</span>};
+<span class="kw">use</span> <span class="ident">anyhow</span>::{<span class="ident">bail</span>, <span class="ident">Context</span>, <span class="prelude-ty">Result</span>};
 <span class="kw">use</span> <span class="ident">petgraph::graph::NodeIndex</span>;
 
 <span class="doccomment">/// Supply a sequence/segment ID from the GFA, and extract the GFA with all nodes connected to the input node.</span>
@@ -85,8 +88,11 @@
     <span class="comment">// get the node index of the target sequence ID.</span>
     <span class="kw">let</span> <span class="ident">target_indices</span> <span class="op">=</span> <span class="ident">sequence_ids</span>
         .<span class="ident">iter</span>()
-        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">graph_indices</span>.<span class="ident">seg_id_to_node_index</span>(<span class="kw-2">*</span><span class="ident">e</span>).<span class="ident">unwrap</span>())
-        .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">NodeIndex</span><span class="op">&gt;</span><span class="op">&gt;</span>();
+        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">graph_indices</span>.<span class="ident">seg_id_to_node_index</span>(<span class="kw-2">*</span><span class="ident">e</span>))
+        .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">NodeIndex</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>();
+
+    <span class="kw">let</span> <span class="ident">target_indices</span> <span class="op">=</span>
+        <span class="ident">target_indices</span>.<span class="ident">context</span>(<span class="string">&quot;One of your input segment ID&#39;s does not exist in the graph.&quot;</span>)<span class="question-mark">?</span>;
 
     <span class="kw">let</span> <span class="ident">sequences_to_keep</span> <span class="op">=</span>
         <span class="ident">gfa_graph</span>.<span class="ident">recursive_search</span>(<span class="ident">sequence_ids</span>, <span class="ident">iterations</span>, <span class="ident">target_indices</span>, <span class="ident">graph_indices</span>)<span class="question-mark">?</span>;
