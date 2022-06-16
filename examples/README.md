@@ -43,10 +43,10 @@ The output is grouped by subgraph, as this is the natural unit in a GFA. The sub
 
 ```bash
 # extract the mitochondrion from the GFA.
-gfatk extract-mito ./examples/drAilAlti1_k=5001a=5w=250u=150.gfa > ./drAilAlti1_k=5001a=5w=250u=150_extract_mito.gfa
+gfatk extract-mito drAilAlti1_k=5001a=5w=250u=150.gfa > ./drAilAlti1_k=5001a=5w=250u=150_extract_mito.gfa
 # we can also check the stats directly from an extraction
 # by piping the output to `gfatk stats`
-gfatk extract-mito ./examples/drAilAlti1_k=5001a=5w=250u=150.gfa | gfatk stats -t
+gfatk extract-mito drAilAlti1_k=5001a=5w=250u=150.gfa | gfatk stats -t
 ```
 
 Under the hood, `gfatk extract-mito` uses `gfatk stats` to make a decision on which subgraph is a mitochondrion. Now that we have a putative mitochondrion, we can use `gfatk linear` to get a linearised assembly.
@@ -69,5 +69,50 @@ If you follow that chosen path through the graph, each of the big loops get incl
 The whole pipeline can be run in a single line:
 
 ```bash
-gfatk extract-mito ./examples/drAilAlti1_k=5001a=5w=250u=150.gfa | gfatk linear -e -i > drAilAlti1_k=5001a=5w=250u=150_extract_mito.fa
+gfatk extract-mito drAilAlti1_k=5001a=5w=250u=150.gfa | gfatk linear -e -i > drAilAlti1_k=5001a=5w=250u=150_extract_mito.fa
 ```
+
+But what about the chloroplast? We also have functionality to extract this too. If we run through the above:
+
+```bash
+# yep, extract-chloro
+gfatk extract-chloro ./drAilAlti1_k=5001a=5w=250u=150.gfa | gfatk linear -e -i
+```
+
+We get an error!
+
+```
+thread 'main' has overflowed its stack
+fatal runtime error: stack overflow
+```
+
+This is because segment 2 has coverage ~200x, whilst the other segments are ~4000x +. This means segment two would need to appear twenty times in the linearised assembly, which is too many possible paths to compute. We can however, save this by removing the `-i` flag.
+
+```bash
+# yep, extract-chloro
+gfatk extract-chloro ./drAilAlti1_k=5001a=5w=250u=150.gfa | gfatk linear -e > drAilAlti1_k=5001a=5w=250u=150_extract_chloro.fa
+```
+
+Now we get this printed to the STDERR:
+
+```
+[+]     Highest cumulative coverage path = 16456
+[+]     Chosen path through graph: 8-,5+,10+,21+,20+
+```
+
+And we notice that segment two no longer appears in the longest path. It is instead appended as an extra record in the fasta file at the end. We can check this quickly with `grep`.
+
+```bash
+grep "^>" drAilAlti1_k=5001a=5w=250u=150_extract_chloro.fa
+```
+
+Returning:
+
+```
+>gfatk_linear:path=8-,5+,10+,21+,20+:coverage=16456 subgraph-1:is_circular-true
+>2 subgraph-1:is_circular-true
+```
+
+And from these fasta headers, we can see that both of these fasta records came from the same subgraph, subgraph 1.
+
+All of this functionality in `gfatk` is the basis of the <a href="https://github.com/tolkit/plant-organellome-assembly">plant organelle assembly pipeline</a>.
