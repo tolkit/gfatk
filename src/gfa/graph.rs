@@ -230,6 +230,10 @@ impl GFAdigraph {
         let graph = &self.0;
         let nodes = graph.node_identifiers();
 
+        // TODO:
+        // should we count the nodes here and make a call as to
+        // whether to make the calculation or not?
+
         let all_paths: Result<Vec<_>> = nodes
             .permutations(2)
             .map(|pair| all_paths(graph, pair[0], pair[1], rel_coverage_map))
@@ -556,7 +560,26 @@ pub fn all_paths<T, U, Ix: IndexType>(
             // for the set of visited nodes
             let mut visited = HashMap::new();
             visited.insert(start_node, 1);
-            recursive_path_finder_incl_coverage(graph, start_node, end_node, &mut visited, cov_map)
+            // a counter for recursion depth.
+            let depth = 0;
+            match recursive_path_finder_incl_coverage(
+                graph,
+                start_node,
+                end_node,
+                &mut visited,
+                cov_map,
+                depth,
+            ) {
+                Some(p) => p,
+                None => {
+                    // copy of the chunk below!
+                    // so if we go past the self imposed stack limit
+                    // we default to our other (not including coverage) method.
+                    let mut visited = HashSet::new();
+                    visited.insert(start_node);
+                    recursive_path_finder_no_coverage(graph, start_node, end_node, &mut visited)
+                }
+            }
         }
         None => {
             let mut visited = HashSet::new();
@@ -566,23 +589,32 @@ pub fn all_paths<T, U, Ix: IndexType>(
     }
 }
 
+/// A recursion depth limit, so we don't hit a stack overflow
+/// and instead, abort and call another function.
+///
+/// Why is it 1000? Seemed sensible, and that's what python's is.
+const MAX_RECURSION_DEPTH: usize = 1000;
+
 /// Function called by `all_paths` where a `HashMap` is supplied instead of a
 /// `HashSet` in order to keep track of how many times a segment/node has been
 /// passed in a path.
 ///
-/// Causes a stack overflow if the variance in node coverages
-/// is too high.
+/// Should be no more stack overflows.
 fn recursive_path_finder_incl_coverage<T, U, Ix: IndexType>(
     graph: &Graph<T, U, Directed, Ix>,
     start_node: NodeIndex<Ix>,
     end_node: NodeIndex<Ix>,
     visited: &mut HashMap<NodeIndex<Ix>, usize>,
     rel_coverage_map: &HashMap<NodeIndex<Ix>, usize>,
-) -> Result<Vec<Vec<NodeIndex<Ix>>>> {
+    depth: usize,
+) -> Option<Result<Vec<Vec<NodeIndex<Ix>>>>> {
+    if depth > MAX_RECURSION_DEPTH {
+        return None;
+    }
     // if the start node is the same as the end
     // the path is just to the end node
     if start_node == end_node {
-        Ok(vec![vec![end_node]])
+        Some(Ok(vec![vec![end_node]]))
     } else {
         let mut paths = Vec::new();
         for edge in graph.edges_directed(start_node, Outgoing) {
@@ -592,13 +624,18 @@ fn recursive_path_finder_incl_coverage<T, U, Ix: IndexType>(
 
             if !visited.contains_key(&next_node) || *visited.get(&next_node).unwrap() != test {
                 *visited.entry(next_node).or_insert(0) += 1;
-                let descendant_paths = recursive_path_finder_incl_coverage(
+                let descendant_paths = match recursive_path_finder_incl_coverage(
                     graph,
                     next_node,
                     end_node,
                     visited,
                     rel_coverage_map,
-                )?;
+                    depth + 1,
+                ) {
+                    // can I get rid of this unwrap? is it safe?
+                    Some(p) => p.unwrap(),
+                    None => return None,
+                };
                 visited.remove(&next_node);
                 paths.extend(
                     descendant_paths
@@ -612,7 +649,7 @@ fn recursive_path_finder_incl_coverage<T, U, Ix: IndexType>(
                 )
             }
         }
-        Ok(paths)
+        Some(Ok(paths))
     }
 }
 
