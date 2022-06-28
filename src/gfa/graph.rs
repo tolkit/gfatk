@@ -230,15 +230,15 @@ impl GFAdigraph {
         let graph = &self.0;
         let nodes = graph.node_identifiers();
 
-        // TODO:
-        // should we count the nodes here and make a call as to
-        // whether to make the calculation or not?
-
         let all_paths: Result<Vec<_>> = nodes
             .permutations(2)
-            .map(|pair| all_paths(graph, pair[0], pair[1], rel_coverage_map))
+            .enumerate()
+            .map(|(index, pair)| all_paths(graph, pair[0], pair[1], rel_coverage_map, index))
             .collect();
 
+        // this is kind of annoying to add this, but I could not think
+        // of another way to overcome the eprint!() in `all_paths()`
+        eprintln!();
         // make the set of legal paths through the GFA
 
         let mut valid_paths = Vec::new();
@@ -554,6 +554,7 @@ pub fn all_paths<T, U, Ix: IndexType>(
     start_node: NodeIndex<Ix>,
     end_node: NodeIndex<Ix>,
     rel_coverage_map: Option<&HashMap<NodeIndex<Ix>, usize>>,
+    index: usize,
 ) -> Result<Vec<Vec<NodeIndex<Ix>>>> {
     match rel_coverage_map {
         Some(cov_map) => {
@@ -569,6 +570,7 @@ pub fn all_paths<T, U, Ix: IndexType>(
                 &mut visited,
                 cov_map,
                 depth,
+                index,
             ) {
                 Some(p) => p,
                 None => {
@@ -607,8 +609,14 @@ fn recursive_path_finder_incl_coverage<T, U, Ix: IndexType>(
     visited: &mut HashMap<NodeIndex<Ix>, usize>,
     rel_coverage_map: &HashMap<NodeIndex<Ix>, usize>,
     depth: usize,
+    index: usize,
 ) -> Option<Result<Vec<Vec<NodeIndex<Ix>>>>> {
     if depth > MAX_RECURSION_DEPTH {
+        eprint!(
+            "\r[-]\tRecursion depth limit ({}) exceeded in permutation {}. Switching to default path finder.",
+            MAX_RECURSION_DEPTH,
+            index + 1
+        );
         return None;
     }
     // if the start node is the same as the end
@@ -631,6 +639,7 @@ fn recursive_path_finder_incl_coverage<T, U, Ix: IndexType>(
                     visited,
                     rel_coverage_map,
                     depth + 1,
+                    index,
                 ) {
                     // can I get rid of this unwrap? is it safe?
                     Some(p) => p.unwrap(),
@@ -873,7 +882,7 @@ mod tests {
     fn test_path_generation() {
         let graph = make_graph();
 
-        let paths = all_paths(&graph.0, NodeIndex::new(0), NodeIndex::new(2), None).unwrap();
+        let paths = all_paths(&graph.0, NodeIndex::new(0), NodeIndex::new(2), None, 0).unwrap();
 
         // there should be two paths
         let path1: Vec<NodeIndex> = vec![NodeIndex::new(0), NodeIndex::new(2)];
