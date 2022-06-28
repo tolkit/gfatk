@@ -12,9 +12,9 @@ Grab from the releases (Mac & Linux only):
 
 ```bash
 # for mac
-curl -L "https://github.com/tolkit/gfatk/releases/download/0.2.14/gfatk_mac_0.2.14" > gfatk && chmod +x gfatk
+curl -L "https://github.com/tolkit/gfatk/releases/download/0.2.16/gfatk_mac_0.2.16" > gfatk && chmod +x gfatk
 # and linux (ubuntu)
-curl -L "https://github.com/tolkit/gfatk/releases/download/0.2.14/gfatk_ubuntu_0.2.14" > gfatk && chmod +x gfatk
+curl -L "https://github.com/tolkit/gfatk/releases/download/0.2.16/gfatk_ubuntu_0.2.16" > gfatk && chmod +x gfatk
 ```
 
 Or build from source.
@@ -42,7 +42,7 @@ The features of the toolkit reflect only their usefulness in debugging, visualis
 Current help:
 
 ```
-gfatk 0.2.14
+gfatk 0.2.16
 Max Brown <mb39@sanger.ac.uk>
 Explore and linearise (mitochondrial) GFA files.
 
@@ -73,12 +73,12 @@ SUBCOMMANDS:
 
 To explain each of these briefly:
 - `gfatk dot <GFA>` - generates a <a href="https://graphviz.org/doc/info/lang.html">DOT language</a> representation of the GFA.
-- `gfatk extract <GFA> -s <segment-ids>` - extracts the subgraph from the GFA, given a segment name, or multiple (if multiple, these must be comma separated without space).
+- `gfatk extract <GFA> -s <segment-ids> -i <iterations>` - extracts the subgraph from the GFA, given a segment name, or multiple (if multiple, these must be comma separated without space). Number of iterations may need to be increased for large graphs.
 - `gfatk extract-chloro <GFA>` - extracts the plastid from the GFA. It has default parameters which seem to work okay.
 - `gfatk extract-mito <GFA>` - extracts the mitochondria from the GFA. It has default parameters which seem to work okay.
 - `gfatk fasta <GFA>` - extracts a fasta file from the GFA. This simply prints each of the segments from the GFA. I say it's almost as simple as the `awk` version, but the toolkit does some checks to see if we are actually dealing with a GFA or not.
-- `gfatk linear <GFA> -e -i` - forces the longest linear legal representation of the graph. You can evaluate within subgraphs (`-e`), or include node coverage information (`-i`).
-- `gfatk overlap <GFA>` - extracts the overlaps from the GFA. These are taken from the CIGAR string from each of the links, and optionally extended (e.g. `-s 1000` to 1000bp either side of the overlap).
+- `gfatk linear <GFA> -e -i -n <node-threshold>` - forces the longest linear legal representation of the graph. You can evaluate within subgraphs (`-e`), or include node coverage information (`-i`).
+- `gfatk overlap <GFA> -s <size>` - extracts the overlaps from the GFA. These are taken from the CIGAR string from each of the links, and optionally extended (e.g. `-s 1000` to 1000bp either side of the overlap).
 - `gfatk path <GFA> <path> (-p path/to/path.txt)` - evaluates a linear representation of the graph, given an input path. The input path can be on the command line, or a file. Simply, it must be an comma separated list of node ID's and orientations (1+,2-,3+ ... ).
 - `gfatk stats <GFA> -t` - some stats about the input GFA. Can be quite verbose for large, unconnected graphs. `-t` outputs tabular data (TSV).
 - `gfatk trim <GFA>` - removes segments if they have only a single neighbour. Useful for trimming GFA's which have segments attached at low coverage.
