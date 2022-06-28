@@ -1445,7 +1445,7 @@
             );
 
             <span class="kw">let</span> <span class="ident">overlap</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">link_map</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">cigar_match</span>).<span class="ident">context</span>(<span class="macro">format!</span>(
-                <span class="string">&quot;This link: {} - does not occur in the input GFA. Perhaps re-consider the input path?&quot;</span>,
+                <span class="string">&quot;\nError: This link: {} - does not occur in the input GFA. Perhaps re-consider the input path?&quot;</span>,
                 <span class="ident">cigar_match</span>
             ))<span class="question-mark">?</span>;
 
