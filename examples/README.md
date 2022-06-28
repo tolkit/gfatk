@@ -79,17 +79,17 @@ But what about the chloroplast? We also have functionality to extract this too. 
 gfatk extract-chloro ./drAilAlti1_k=5001a=5w=250u=150.gfa | gfatk linear -e -i
 ```
 
-We get an error!
+We get a warning!
 
 ```
-thread 'main' has overflowed its stack
-fatal runtime error: stack overflow
+[-]     Recursion depth limit (1000) exceeded in permutation 30. Switching to default path finder.
+[+]     Highest cumulative coverage path = 16456
+[+]     Chosen path through graph: 20-,21-,10-,5-,8+
 ```
 
 This is because segment 2 has coverage ~200x, whilst the other segments are ~4000x +. This means segment two would need to appear twenty times in the linearised assembly, which is too many possible paths to compute. We can however, save this by removing the `-i` flag.
 
 ```bash
-# yep, extract-chloro
 gfatk extract-chloro ./drAilAlti1_k=5001a=5w=250u=150.gfa | gfatk linear -e > drAilAlti1_k=5001a=5w=250u=150_extract_chloro.fa
 ```
 
@@ -116,3 +116,64 @@ Returning:
 And from these fasta headers, we can see that both of these fasta records came from the same subgraph, subgraph 1.
 
 All of this functionality in `gfatk` is the basis of the <a href="https://github.com/tolkit/plant-organellome-assembly">plant organelle assembly pipeline</a>.
+
+### Other `gfatk` functionality
+
+The above illustrates most of the functionality of `gfatk`, however there are a few more tools which can be elaborated on here.
+
+#### `gfatk fasta`
+
+If you want to print the segments out in fasta format, this is the one for you. For example:
+
+```bash
+gfatk fasta ./drAilAlti1_k=5001a=5w=250u=150.gfa | grep "^>"
+# lists segments 1-22, nothing fancy going on here.
+
+# you could do the same thing with awk
+# awk '/^S/{print ">"$2"\n"$3}'
+# or gfatools
+# ./gfatools gfa2fa ...
+```
+
+#### `gfatk path`
+
+Sometimes, a path may need to be manually specified. For example, in the GFA at the beginning, we see the chloroplast. This could not be linearised including node coverage due to an extra segment (segment 2) being present. We could omit this, and specify our own path:
+
+```bash
+gfatk path ./drAilAlti1_k=5001a=5w=250u=150_extract_chloro.gfa 20+,21-,10-,5-,8+,21+
+```
+
+Of course, we could specify any subpath:
+
+```bash
+gfatk path ./drAilAlti1_k=5001a=5w=250u=150_extract_chloro.gfa 20+,21-,10-,5-
+```
+
+In any orientation that is legal:
+
+```bash
+# e.g.
+gfatk path ./drAilAlti1_k=5001a=5w=250u=150_extract_chloro.gfa 5+,10+,21+
+```
+
+#### `gfatk extract`
+
+Sometimes the automatic subgraph extractions by `gfatk extract-chloro/mito` will fail. `gfatk extract` provides a way of manually extracting the subgraph we are interested in. We can only really extract subgraphs, extracting individual nodes seemed less useful.
+
+For example:
+
+```bash
+# extract the mito
+gfatk extract -s 4 ./drAilAlti1_k=5001a=5w=250u=150.gfa
+# extract the chloro
+gfatk extract -s 20 ./drAilAlti1_k=5001a=5w=250u=150.gfa
+# extract both and remove shrapnel
+gfatk extract -s 4,20 ./drAilAlti1_k=5001a=5w=250u=150.gfa
+# for large graphs, the iterations of searching may need to be
+# increased
+gfatk extract -i 30 -s 20 ./drAilAlti1_k=5001a=5w=250u=150.gfa 
+
+# gfatools also supports subgraph extraction
+# ./gfatools view -l <id> -r 1 <gfa> > out.gfa
+# but this deletes the CIGAR overlaps...
+```
