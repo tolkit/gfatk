@@ -643,7 +643,7 @@ impl GFAtk {
             );
 
             let overlap = *link_map.get(&cigar_match).context(format!(
-                "This link: {} - does not occur in the input GFA. Perhaps re-consider the input path?",
+                "\nError: This link: {} - does not occur in the input GFA. Perhaps re-consider the input path?",
                 cigar_match
             ))?;
 
