@@ -627,6 +627,27 @@ impl GFAtk {
 
         println!(">{}", path.to_fasta_header());
 
+        // if we have only one segment, print this fully
+        if path.inner.len() == 1 {
+            match path.inner[0].orientation {
+                Orientation::Forward => {
+                    let seq = seg_map
+                        .get(&path.inner[0].segment_id)
+                        .context("This segment ID does not exist in the GFA")?
+                        .to_vec();
+                    println!("{}", std::str::from_utf8(&seq)?);
+                }
+                Orientation::Backward => {
+                    let seq = seg_map
+                        .get(&path.inner[0].segment_id)
+                        .context("This segment ID does not exist in the GFA")?;
+                    println!("{}", std::str::from_utf8(&utils::reverse_complement(seq))?);
+                }
+            }
+            // probably not strictly necessary, but nice to be explicit in the return.
+            return Ok(());
+        }
+
         // now iterate over the path itself
         for path_el in path.inner.windows(2) {
             // from
@@ -643,7 +664,7 @@ impl GFAtk {
             );
 
             let overlap = *link_map.get(&cigar_match).context(format!(
-                "\nError: This link: {} - does not occur in the input GFA. Perhaps re-consider the input path?",
+                "This link: {} - does not occur in the input GFA. Perhaps re-consider the input path?",
                 cigar_match
             ))?;
 

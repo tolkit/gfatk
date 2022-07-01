@@ -386,3 +386,24 @@ AGCGTAACAGCGTAACAGCGTA
 
     Ok(())
 }
+
+// add a quick test for this, as this was broken before.
+// a single segment (given it's in the GFA), will print the
+// segment in full.
+
+#[test]
+fn test_gfa_path_single_segment() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = Command::cargo_bin("gfatk")?;
+
+    let path = "11+";
+
+    cmd.arg("path").arg("./tests/test_linear.gfa").arg(path);
+
+    cmd.assert().stdout(predicate::str::contains(
+        ">11+
+ACCTT
+",
+    ));
+
+    Ok(())
+}
