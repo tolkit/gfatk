@@ -204,19 +204,6 @@ impl GFAdigraph {
         Ok(out_vec)
     }
 
-    // core algorithm for gfatk linear
-    // iterate over all pairs of nodes to find the paths
-    // then search though all these paths to find the
-    // longest which doesn't violate sequence orientation
-
-    // need to emit segment ID's that did not make it into the
-    // longest path here.
-
-    // return the path, the path ID's, id's not in the path, and the
-    // `String` of a fasta header.
-
-    // -> (Vec<NodeIndex>, Vec<usize>, Vec<usize>)
-
     /// The main function called from `gfatk linear`.
     ///
     /// This function will generate the longest path through the GFA, by
@@ -300,7 +287,7 @@ impl GFAdigraph {
                         })
                         .collect();
 
-                    // we can then compare the orientation of the 'to' Orientation
+                    // 1. we can then compare the orientation of the 'to' Orientation
                     // for a->b and c->b
                     let mut keep_vec = Vec::new();
                     for e in &a_b_edges {
@@ -319,12 +306,6 @@ impl GFAdigraph {
                     }
                     // keep if any of the elements is true
                     let do_keep = keep_vec.iter().any(|e| *e);
-
-                    // debugging...
-                    // eprintln!("a->b: {:?}", a_b_edges);
-                    // eprintln!("c->b: {:?}", c_b_edges);
-                    // eprintln!("Do not keep: {}", do_keep);
-                    // eprintln!("");
 
                     // if we got to here and diff is still false, break out of this path
                     // it's a no-go...
@@ -359,22 +340,54 @@ impl GFAdigraph {
             // don't care about memory allocations for the moment.
             let mut map = HashMap::new();
 
-            for path in &valid_paths {
+            'outer: for path in &valid_paths {
                 let mut path_coverage = 0;
 
                 let node_pairs = path.windows(2);
-                for pair in node_pairs {
-                    let from = pair[0];
-                    let to = pair[1];
-                    let connecting = &mut graph.edges_connecting(from, to);
-                    let coverage = connecting
+                let node_pairs_skip = path.iter().skip(1).collect::<Vec<_>>();
+                let node_pairs_skip = node_pairs_skip.windows(2);
+
+                for (pair, pair_skip) in node_pairs.zip(node_pairs_skip) {
+                    let pair_from = pair[0];
+                    let pair_to = pair[1];
+                    let pair_connecting = &mut graph.edges_connecting(pair_from, pair_to);
+
+                    let pair_weight = pair_connecting
                         .next()
                         .with_context(|| {
-                            format!("No connecting edges from {:?} to {:?}", from, to)
+                            format!("No connecting edges from {:?} to {:?}", pair_from, pair_to)
                         })?
-                        .weight()
-                        .2;
+                        .weight();
 
+                    // orientation
+                    let pair_to_orient = pair_weight.1;
+
+                    let pair_skip_from = pair_skip[0];
+                    let pair_skip_to = pair_skip[1];
+                    let pair_skip_connecting =
+                        &mut graph.edges_connecting(*pair_skip_from, *pair_skip_to);
+
+                    let pair_skip_weight = pair_skip_connecting
+                        .next()
+                        .with_context(|| {
+                            format!(
+                                "No connecting edges from {:?} to {:?}",
+                                pair_skip_from, pair_skip_to
+                            )
+                        })?
+                        .weight();
+
+                    // orientation
+                    let pair_skip_from_orient = pair_skip_weight.0;
+
+                    // if we do not have matching orientations from the present to node
+                    // and the skipped from node, this path can't exist!
+                    // Thanks, Tree of Heaven.
+                    if (pair_to, pair_to_orient) != (*pair_skip_from, pair_skip_from_orient) {
+                        continue 'outer;
+                    }
+
+                    let coverage = pair_weight.2;
                     match coverage {
                         Some(c) => path_coverage += c,
                         None => (),
