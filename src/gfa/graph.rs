@@ -340,16 +340,26 @@ impl GFAdigraph {
             // don't care about memory allocations for the moment.
             let mut map = HashMap::new();
 
+            // test this please.
             'outer: for path in &valid_paths {
                 let mut path_coverage = 0;
 
-                let node_pairs = path.windows(2);
-                let node_pairs_skip = path.iter().skip(1).collect::<Vec<_>>();
-                let node_pairs_skip = node_pairs_skip.windows(2);
+                // try a different method
+                let mut fi = 0;
+                let mut se = 1;
+                let mut th = 2;
 
-                for (pair, pair_skip) in node_pairs.zip(node_pairs_skip) {
-                    let pair_from = pair[0];
-                    let pair_to = pair[1];
+                let path_len = path.len();
+                for _ in 0..path_len {
+                    let pair_from = match path.get(fi) {
+                        Some(p) => *p,
+                        None => continue,
+                    };
+                    let pair_to = match path.get(se) {
+                        Some(p) => *p,
+                        None => continue,
+                    };
+
                     let pair_connecting = &mut graph.edges_connecting(pair_from, pair_to);
 
                     let pair_weight = pair_connecting
@@ -362,29 +372,38 @@ impl GFAdigraph {
                     // orientation
                     let pair_to_orient = pair_weight.1;
 
-                    let pair_skip_from = pair_skip[0];
-                    let pair_skip_to = pair_skip[1];
-                    let pair_skip_connecting =
-                        &mut graph.edges_connecting(*pair_skip_from, *pair_skip_to);
+                    // basically don't evaluate this on the last two 'triplets'
+                    if th != path_len - 2 {
+                        let pair_skip_from = match path.get(se) {
+                            Some(p) => *p,
+                            None => continue,
+                        };
+                        let pair_skip_to = match path.get(th) {
+                            Some(p) => *p,
+                            None => continue,
+                        };
+                        let pair_skip_connecting =
+                            &mut graph.edges_connecting(pair_skip_from, pair_skip_to);
 
-                    let pair_skip_weight = pair_skip_connecting
-                        .next()
-                        .with_context(|| {
-                            format!(
-                                "No connecting edges from {:?} to {:?}",
-                                pair_skip_from, pair_skip_to
-                            )
-                        })?
-                        .weight();
+                        let pair_skip_weight = pair_skip_connecting
+                            .next()
+                            .with_context(|| {
+                                format!(
+                                    "No connecting edges from {:?} to {:?}",
+                                    pair_skip_from, pair_skip_to
+                                )
+                            })?
+                            .weight();
 
-                    // orientation
-                    let pair_skip_from_orient = pair_skip_weight.0;
+                        // orientation
+                        let pair_skip_from_orient = pair_skip_weight.0;
 
-                    // if we do not have matching orientations from the present to node
-                    // and the skipped from node, this path can't exist!
-                    // Thanks, Tree of Heaven.
-                    if (pair_to, pair_to_orient) != (*pair_skip_from, pair_skip_from_orient) {
-                        continue 'outer;
+                        // if we do not have matching orientations from the present to node
+                        // and the skipped from node, this path can't exist!
+                        // Thanks, Tree of Heaven.
+                        if (pair_to, pair_to_orient) != (pair_skip_from, pair_skip_from_orient) {
+                            continue 'outer;
+                        }
                     }
 
                     let coverage = pair_weight.2;
@@ -392,6 +411,9 @@ impl GFAdigraph {
                         Some(c) => path_coverage += c,
                         None => (),
                     }
+                    fi += 1;
+                    se += 1;
+                    th += 1;
                 }
 
                 map.insert(path, path_coverage);
