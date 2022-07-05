@@ -324,6 +324,14 @@ impl GFAdigraph {
         valid_paths.sort_by_key(|b| std::cmp::Reverse(b.len()));
         valid_paths.dedup();
 
+        for p in valid_paths.iter() {
+            eprintln!(
+                "{:?}",
+                p.iter()
+                    .map(|e| graph_indices.node_index_to_seg_id(*e).unwrap())
+                    .collect::<Vec<_>>()
+            );
+        }
         // check if we have coverages
         // if we do then we shall incorporate this information
         // maybe add an expected number of segments?
@@ -373,7 +381,7 @@ impl GFAdigraph {
                     let pair_to_orient = pair_weight.1;
 
                     // basically don't evaluate this on the last two 'triplets'
-                    if th != path_len - 2 {
+                    if th < path_len - 2 {
                         let pair_skip_from = match path.get(se) {
                             Some(p) => *p,
                             None => continue,
