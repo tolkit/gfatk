@@ -323,15 +323,7 @@ impl GFAdigraph {
         }
         valid_paths.sort_by_key(|b| std::cmp::Reverse(b.len()));
         valid_paths.dedup();
-
-        for p in valid_paths.iter() {
-            eprintln!(
-                "{:?}",
-                p.iter()
-                    .map(|e| graph_indices.node_index_to_seg_id(*e).unwrap())
-                    .collect::<Vec<_>>()
-            );
-        }
+        
         // check if we have coverages
         // if we do then we shall incorporate this information
         // maybe add an expected number of segments?
