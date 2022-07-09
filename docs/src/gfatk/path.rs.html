@@ -204,7 +204,7 @@
 
 <span class="doccomment">/// Which option is used on the CLI, either a string</span>
 <span class="doccomment">/// or a file path.</span>
-<span class="kw">enum</span> <span class="ident">CLIOpt</span> {
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">CLIOpt</span> {
     <span class="doccomment">/// From the command line.</span>
     <span class="ident">String</span>,
     <span class="doccomment">/// From a file.</span>
@@ -260,14 +260,14 @@
         },
     }<span class="question-mark">?</span>;
 
-    <span class="ident">gfa</span>.<span class="ident">from_path_cli</span>(<span class="ident">path</span>, <span class="ident">link_map</span>)<span class="question-mark">?</span>;
+    <span class="ident">gfa</span>.<span class="ident">from_path_cli</span>(<span class="ident">path</span>, <span class="ident">link_map</span>, <span class="string">&quot;path&quot;</span>, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
 
     <span class="prelude-val">Ok</span>(())
 }
 
 <span class="doccomment">/// Parse either a string, or a file, containing</span>
 <span class="doccomment">/// the path.</span>
-<span class="kw">fn</span> <span class="ident">parse_path</span>(
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse_path</span>(
     <span class="ident">path</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
     <span class="ident">is_cli</span>: <span class="ident">CLIOpt</span>,
     <span class="ident">gfa</span>: <span class="kw-2">&amp;</span><span class="ident">GFAtk</span>,

@@ -1,9 +1,9 @@
 use crate::gfa::gfa::GFAtk;
 use crate::gfa::graph::{segments_subgraph, GFAdigraph};
 use crate::load::{load_gfa, load_gfa_stdin};
+use crate::path::{parse_path, CLIOpt};
 use crate::utils::{self, GFAGraphLookups};
-use anyhow::{bail, Result};
-use indexmap::IndexMap;
+use anyhow::{bail, Context, Result};
 use petgraph::algo::is_cyclic_directed;
 
 /// Force a linear representation of the GFA.
@@ -136,27 +136,49 @@ fn linear_inner(
         false => None,
     };
 
-    let (chosen_path, chosen_path_ids, segments_not_in_path, fasta_header) =
+    let (chosen_path, segments_not_in_path, mut fasta_header) =
         gfa_graph.all_paths_all_node_pairs(&graph_indices, rel_coverage_map.as_ref())?;
 
-    let sorted_chosen_path_overlaps =
-        gfa.determine_path_overlaps(&chosen_path, graph_indices, &chosen_path_ids)?;
+    // add in subgraph index header
+    fasta_header += &subgraph_index_header.clone().unwrap_or("".to_string());
 
-    // merge constrand on the ids
-    // as order is critical, we use an IndexMap
-    let mut merged_sorted_chosen_path_overlaps = IndexMap::new();
-    for (id, orientation, overlap, side) in sorted_chosen_path_overlaps {
-        merged_sorted_chosen_path_overlaps
-            .entry(id)
-            .or_insert(Vec::new())
-            .push((orientation, overlap, side));
+    let mut chosen_path_as_string = String::new();
+
+    for (node, orientation) in chosen_path {
+        let node_id = graph_indices.node_index_to_seg_id(node)?;
+        chosen_path_as_string += &format!("{}{},", node_id, orientation);
+    }
+    // remove last comma
+    chosen_path_as_string.pop();
+
+    let (path, link_map) = parse_path(&chosen_path_as_string, CLIOpt::String, &gfa)?;
+
+    gfa.from_path_cli(path, link_map, "linear", Some(&fasta_header))?;
+
+    // print the rest of the fasta headers
+    // print the rest of the segments
+    if !segments_not_in_path.is_empty() {
+        for segment in segments_not_in_path {
+            for line in gfa.0.lines_iter() {
+                match line.some_segment() {
+                    Some(seg) => {
+                        if seg.name == segment {
+                            println!(
+                                ">{}{}\n{}",
+                                segment,
+                                subgraph_index_header.clone().unwrap_or("".into()),
+                                std::str::from_utf8(&seg.sequence).with_context(|| format!(
+                                    "Malformed UTF8: {:?}",
+                                    &seg.sequence
+                                ))?
+                            )
+                        }
+                    }
+                    None => {}
+                }
+            }
+        }
     }
 
-    gfa.print_path_to_fasta(
-        merged_sorted_chosen_path_overlaps,
-        &fasta_header,
-        segments_not_in_path,
-        subgraph_index_header,
-    )?;
     Ok(())
 }

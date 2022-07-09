@@ -185,7 +185,6 @@ dependencies = [
  "byteorder",
  "clap",
  "gfa",
- "indexmap",
  "itertools",
  "petgraph",
  "predicates",

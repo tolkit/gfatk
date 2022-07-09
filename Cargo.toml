@@ -21,7 +21,6 @@ bstr = "0.2"
 clap = { version = "3.1.5", features = ["cargo"] }
 petgraph = "0.6.0"
 byteorder = "1.4.3"
-indexmap = "1.7.0"
 itertools = "0.10.2"
 anyhow = "1.0"
 atty = "0.2"
