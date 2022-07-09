@@ -10,7 +10,7 @@ use std::io::{BufRead, BufReader};
 
 /// Which option is used on the CLI, either a string
 /// or a file path.
-enum CLIOpt {
+pub enum CLIOpt {
     /// From the command line.
     String,
     /// From a file.
@@ -66,14 +66,14 @@ pub fn path(matches: &clap::ArgMatches) -> Result<()> {
         },
     }?;
 
-    gfa.from_path_cli(path, link_map)?;
+    gfa.from_path_cli(path, link_map, "path", None)?;
 
     Ok(())
 }
 
 /// Parse either a string, or a file, containing
 /// the path.
-fn parse_path(
+pub fn parse_path(
     path: &str,
     is_cli: CLIOpt,
     gfa: &GFAtk,

@@ -10,7 +10,6 @@ use crate::utils::{
 use anyhow::{bail, Context, Result};
 use gfa::gfa::{Orientation, GFA};
 use gfa::optfields::{OptFieldVal, OptionalFields};
-use indexmap::IndexMap;
 use petgraph::graph::{Graph, NodeIndex, UnGraph};
 use std::collections::HashMap;
 
@@ -234,199 +233,6 @@ impl GFAtk {
         Ok(from_to)
     }
 
-    /// Computes the overlaps between segments as a vector of:
-    /// `(usize, Orientation, usize, &str)`
-    /// Which is a tuple of from/to, the orientation of the overlap, the extent of the overlap, and whether the overlap is at the start or end of a segment.
-    pub fn determine_path_overlaps(
-        &self,
-        chosen_path: &[NodeIndex],
-        graph_indices: GFAGraphLookups,
-        chosen_path_ids: &Vec<usize>,
-    ) -> Result<Vec<(usize, Orientation, usize, &str)>> {
-        let gfa = &self.0;
-        // another new vec of (id, overlap, start/end)
-        // to sort out for fasta generation
-        let mut chosen_path_overlaps = Vec::new();
-
-        for edge in &gfa.links {
-            let from = edge.from_segment;
-            let to = edge.to_segment;
-            let from_orient = edge.from_orient;
-            let to_orient = edge.to_orient;
-
-            // overlap
-            let overlap = parse_cigar(&edge.overlap)?;
-            // here look at the strandedness between pairs of nodes
-            let path_pairs = chosen_path.windows(2);
-            for path in path_pairs {
-                let from_path = graph_indices.node_index_to_seg_id(path[0])?;
-                let to_path = graph_indices.node_index_to_seg_id(path[1])?;
-
-                // okay this appears to work.
-                if from == from_path && to == to_path {
-                    chosen_path_overlaps.push((from, from_orient, overlap, "end"));
-                    chosen_path_overlaps.push((to, to_orient, overlap, "start"));
-                }
-            }
-        }
-
-        chosen_path_overlaps.sort();
-        chosen_path_overlaps.dedup();
-
-        let mut sorted_chosen_path_overlaps = Vec::new();
-        // sorting (allocate to new vec)
-        for path_id in chosen_path_ids {
-            for path_id2 in &chosen_path_overlaps {
-                if &path_id2.0 == path_id {
-                    sorted_chosen_path_overlaps.push(*path_id2)
-                }
-            }
-        }
-        Ok(sorted_chosen_path_overlaps)
-    }
-
-    /// A method to print to STDOUT a fasta, given a path through the GFA.
-    ///
-    /// The first segment is added first, then all subsequent segments
-    /// (-overlap with previous segment).
-    pub fn print_path_to_fasta(
-        &self,
-        merged_sorted_chosen_path_overlaps: IndexMap<usize, Vec<(Orientation, usize, &str)>>,
-        fasta_header: &str,
-        segments_not_in_path: Vec<usize>,
-        subgraph_index_header: Option<String>,
-    ) -> Result<()> {
-        let gfa = &self.0;
-        // modify the header if necessary to include the subgraph index
-        let subgraph_index_header = subgraph_index_header.unwrap_or("".to_string());
-
-        println!(">{}{}", fasta_header, subgraph_index_header);
-        // create iterator over the paths
-        let mut path_iter = merged_sorted_chosen_path_overlaps.iter();
-        // get the first element of the iterator.
-        let (id_init, vector_init) = path_iter
-            .next()
-            .context("First element of the path not found.")?;
-
-        for line in gfa.lines_iter() {
-            match line.some_segment() {
-                Some(s) => {
-                    if s.name == *id_init {
-                        let orientation = vector_init[0].0;
-                        match orientation {
-                            Orientation::Forward => {
-                                // do nothing except print
-                                print!(
-                                    "{}",
-                                    std::str::from_utf8(&s.sequence).with_context(|| format!(
-                                        "Malformed UTF8: {:?}",
-                                        &s.sequence
-                                    ))?
-                                );
-                            }
-                            Orientation::Backward => {
-                                let revcomp_seq = reverse_complement(&s.sequence);
-                                print!(
-                                    "{}",
-                                    std::str::from_utf8(&revcomp_seq).with_context(|| format!(
-                                        "Malformed UTF8: {:?}",
-                                        revcomp_seq
-                                    ))?
-                                );
-                            }
-                        }
-                    }
-                }
-                None => (),
-            }
-        }
-
-        // now do the rest of the paths
-        for (id, vector) in path_iter {
-            // get the from and to sequences.
-            for line in gfa.lines_iter() {
-                // if we meet a segment, let's do something
-                match line.some_segment() {
-                    Some(s) => {
-                        // we've got the segment we wanted
-                        if s.name == *id {
-                            // remove start overlap
-                            // but we need to watch out for orientation
-                            // only need the starting overlaps
-                            let start_overlap = vector
-                                .iter()
-                                .find(|(_or, _ov, side)| side == &"start")
-                                .context("Start overlap could not be found.")?;
-
-                            // start and end orientation should be the same
-                            // hence just matching on start here.
-                            let seq_minus_overlap = match start_overlap.0 {
-                                Orientation::Forward => {
-                                    // do nothing
-                                    let seq_minus_overlap =
-                                        s.sequence.get(start_overlap.1..).with_context(|| {
-                                            format!(
-                                                "{} is outside the bounds of the sequence.",
-                                                start_overlap.1
-                                            )
-                                        })?;
-                                    seq_minus_overlap.to_vec()
-                                }
-                                Orientation::Backward => {
-                                    let revcomp_seq = reverse_complement(&s.sequence);
-                                    let seq_minus_overlap =
-                                        revcomp_seq.get(start_overlap.1..).with_context(|| {
-                                            format!(
-                                                "{} is outside the bounds of the sequence.",
-                                                start_overlap.1
-                                            )
-                                        })?;
-                                    seq_minus_overlap.to_vec()
-                                }
-                            };
-                            print!(
-                                "{}",
-                                std::str::from_utf8(&seq_minus_overlap).with_context(|| {
-                                    format!("Malformed UTF8: {:?}", &seq_minus_overlap)
-                                })?
-                            );
-                        }
-                    }
-                    None => (),
-                }
-            }
-        }
-
-        // just a blank new line.
-        // as the last statements were just print!.
-        println!();
-
-        // print the rest of the segments
-        if !segments_not_in_path.is_empty() {
-            for segment in segments_not_in_path {
-                for line in gfa.lines_iter() {
-                    match line.some_segment() {
-                        Some(seg) => {
-                            if seg.name == segment {
-                                println!(
-                                    ">{}{}\n{}",
-                                    segment,
-                                    subgraph_index_header,
-                                    std::str::from_utf8(&seg.sequence).with_context(|| format!(
-                                        "Malformed UTF8: {:?}",
-                                        &seg.sequence
-                                    ))?
-                                )
-                            }
-                        }
-                        None => {}
-                    }
-                }
-            }
-        }
-        Ok(())
-    }
-
     /// The internal function called when `gfatk fasta` is called.
     ///
     /// Prints all segments of the GFA as-is.
@@ -612,7 +418,13 @@ impl GFAtk {
     ///
     /// Currently implemented requires two loops of the GFA, and storage
     /// of the sequences in a [`HashMap`].
-    pub fn from_path_cli(&self, path: GFAPath, link_map: HashMap<String, usize>) -> Result<()> {
+    pub fn from_path_cli(
+        &self,
+        path: GFAPath,
+        link_map: HashMap<String, usize>,
+        call: &str,
+        fasta_header: Option<&str>,
+    ) -> Result<()> {
         let gfa = &self.0;
 
         // put all the segments in memory - easiest way for now.
@@ -625,7 +437,11 @@ impl GFAtk {
             seg_map.insert(id, seq);
         }
 
-        println!(">{}", path.to_fasta_header());
+        match call {
+            "path" => println!(">{}", path.to_fasta_header()),
+            "linear" => println!(">{}", fasta_header.unwrap()),
+            _ => bail!("Should never reach here."),
+        }
 
         // if we have only one segment, print this fully
         if path.inner.len() == 1 {

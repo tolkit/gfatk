@@ -213,7 +213,7 @@ impl GFAdigraph {
         &self,
         graph_indices: &GFAGraphLookups,
         rel_coverage_map: Option<&HashMap<NodeIndex, usize>>,
-    ) -> Result<(Vec<NodeIndex>, Vec<usize>, Vec<usize>, String)> {
+    ) -> Result<(Vec<(NodeIndex, Orientation)>, Vec<usize>, String)> {
         let graph = &self.0;
         let nodes = graph.node_identifiers();
 
@@ -324,77 +324,93 @@ impl GFAdigraph {
         valid_paths.sort_by_key(|b| std::cmp::Reverse(b.len()));
         valid_paths.dedup();
 
-        // check if we have coverages
-        // if we do then we shall incorporate this information
-        // maybe add an expected number of segments?
-
+        // now make the final path
         let final_path = {
-            // now iterate over all the paths again
-            // let mut index = 0;
-            // iterate over all the paths of this length
-            // keep track of lengths
-
-            // let mut final_path = Vec::new();
-            // let mut final_coverage = 0;
             // push path and coverage into map
             // don't care about memory allocations for the moment.
             let mut map = HashMap::new();
 
+            // test this please.
             'outer: for path in &valid_paths {
                 let mut path_coverage = 0;
 
-                let node_pairs = path.windows(2);
-                let node_pairs_skip = path.iter().skip(1).collect::<Vec<_>>();
-                let node_pairs_skip = node_pairs_skip.windows(2);
+                // test this
+                let mut path_orientations = Vec::new();
 
-                for (pair, pair_skip) in node_pairs.zip(node_pairs_skip) {
-                    let pair_from = pair[0];
-                    let pair_to = pair[1];
-                    let pair_connecting = &mut graph.edges_connecting(pair_from, pair_to);
+                // try a different method
+                let mut fi = 0;
+                let mut se = 1;
 
-                    let pair_weight = pair_connecting
-                        .next()
-                        .with_context(|| {
-                            format!("No connecting edges from {:?} to {:?}", pair_from, pair_to)
-                        })?
-                        .weight();
+                let path_len = path.len();
+                for _ in 0..path_len {
+                    let node_1 = match path.get(fi) {
+                        Some(p) => *p,
+                        None => continue,
+                    };
+                    let node_2 = match path.get(se) {
+                        Some(p) => *p,
+                        None => continue,
+                    };
 
-                    // orientation
-                    let pair_to_orient = pair_weight.1;
+                    let pair_connecting = &mut graph.edges_connecting(node_1, node_2);
+                    // from node 1 to node 2, we just choose the first edge
+                    // as I think it doesn't matter which edge is chosen (they will have the same coverage in MBG)
+                    if fi == 0 {
+                        let pair_weight = pair_connecting
+                            .next()
+                            .with_context(|| {
+                                format!("No connecting edges from {:?} to {:?}", node_1, node_2)
+                            })?
+                            .weight();
 
-                    let pair_skip_from = pair_skip[0];
-                    let pair_skip_to = pair_skip[1];
-                    let pair_skip_connecting =
-                        &mut graph.edges_connecting(*pair_skip_from, *pair_skip_to);
+                        let node_1_orientation = pair_weight.0;
+                        let node_2_orientation = pair_weight.1;
+                        // this will be path_orientations[0]
+                        path_orientations.push(node_1_orientation);
+                        // this will be path_orientations[1]
+                        path_orientations.push(node_2_orientation);
 
-                    let pair_skip_weight = pair_skip_connecting
-                        .next()
-                        .with_context(|| {
-                            format!(
-                                "No connecting edges from {:?} to {:?}",
-                                pair_skip_from, pair_skip_to
-                            )
-                        })?
-                        .weight();
+                        let coverage = pair_weight.2;
+                        match coverage {
+                            Some(c) => path_coverage += c,
+                            None => (),
+                        }
+                    } else {
+                        // this might be wrong...
+                        let prev_orientation = path_orientations[fi];
+                        let pair_weight =
+                            pair_connecting.find(|e| e.weight().0 == prev_orientation);
 
-                    // orientation
-                    let pair_skip_from_orient = pair_skip_weight.0;
+                        // if:
+                        // A -> B (orientation)
+                        // is not equal to
+                        // B (orientation) -> C
+                        // we skip this path.
+                        if pair_weight.is_none() {
+                            continue 'outer;
+                        }
+                        let node_2_orientation = pair_weight.unwrap().weight().1;
+                        path_orientations.push(node_2_orientation);
 
-                    // if we do not have matching orientations from the present to node
-                    // and the skipped from node, this path can't exist!
-                    // Thanks, Tree of Heaven.
-                    if (pair_to, pair_to_orient) != (*pair_skip_from, pair_skip_from_orient) {
-                        continue 'outer;
+                        let coverage = pair_weight.unwrap().weight().2;
+                        match coverage {
+                            Some(c) => path_coverage += c,
+                            None => (),
+                        }
                     }
 
-                    let coverage = pair_weight.2;
-                    match coverage {
-                        Some(c) => path_coverage += c,
-                        None => (),
-                    }
+                    // increment the indices.
+                    fi += 1;
+                    se += 1;
                 }
 
-                map.insert(path, path_coverage);
+                let path_orientation_tuple = path
+                    .iter()
+                    .zip(path_orientations.iter())
+                    .map(|(e, f)| (*e, *f))
+                    .collect::<Vec<_>>();
+
+                map.insert(path_orientation_tuple, path_coverage);
             }
 
             let highest_coverage_path_op =
@@ -416,18 +432,14 @@ impl GFAdigraph {
         let mut chosen_path_string = Vec::new();
         let final_path_node_pairs = final_path.0.windows(2);
         for (index, pair) in final_path_node_pairs.enumerate() {
-            let from = pair[0];
-            let to = pair[1];
-            let connecting = &mut graph.edges_connecting(from, to);
-            let weight = connecting
-                .next()
-                .with_context(|| format!("No connecting edges from {:?} to {:?}", from, to))?;
-            let from_orient = weight.weight().0;
-            let to_orient = weight.weight().1;
+            let from = pair[0].0;
+            let from_orient = pair[0].1;
+            let to = pair[1].0;
+            let to_orient = pair[1].1;
 
             // get segment ID from Node Indices
-            let from = graph_indices.node_index_to_seg_id(weight.source())?;
-            let to = graph_indices.node_index_to_seg_id(weight.target())?;
+            let from = graph_indices.node_index_to_seg_id(from)?;
+            let to = graph_indices.node_index_to_seg_id(to)?;
 
             // no spaces between the formatted strings
             if index == 0 {
@@ -442,20 +454,9 @@ impl GFAdigraph {
             chosen_path_string.join("")
         );
 
-        // sort out the path now
-        // we need the strandedness information
-        // now sort these overlaps so they are the same order
-        // chosen path -> id's
-        let chosen_path_ids = final_path
-            .0
-            .iter()
-            // .1 needed
-            .map(|e| graph_indices.node_index_to_seg_id(*e))
-            .collect::<Result<Vec<_>>>();
-
         // make a vector of nodes not in the final path
         // these will be passed later and printed to a fasta.
-        let final_path_set: HashSet<_> = final_path.0.iter().collect();
+        let final_path_set: HashSet<_> = final_path.0.iter().map(|(e, _f)| *e).collect();
 
         let difference: Vec<_> = graph
             .node_identifiers()
@@ -474,13 +475,7 @@ impl GFAdigraph {
             final_path.1
         );
 
-        Ok((
-            final_path.0.to_vec(),
-            // error handling a bit annoying here.
-            chosen_path_ids?,
-            difference_ids?,
-            fasta_header,
-        ))
+        Ok((final_path.0.to_vec(), difference_ids?, fasta_header))
     }
 
     /// Simple wrapper of `Graph.node_count()` in petgraph.
@@ -996,6 +991,8 @@ mod tests {
         // will be chosen
         let both = vec![longest_path1, longest_path2];
 
-        assert!(both.contains(&paths.unwrap().0));
+        let path = &paths.unwrap().0.iter().map(|(a, _)| *a).collect::<Vec<_>>();
+
+        assert!(both.contains(path));
     }
 }
