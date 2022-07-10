@@ -12,9 +12,9 @@ Grab from the releases (Mac & Linux only):
 
 ```bash
 # for mac
-curl -L "https://github.com/tolkit/gfatk/releases/download/0.2.16/gfatk_mac_0.2.16" > gfatk && chmod +x gfatk
+curl -L "https://github.com/tolkit/gfatk/releases/download/0.2.16/gfatk_mac_0.2.2" > gfatk && chmod +x gfatk
 # and linux (ubuntu)
-curl -L "https://github.com/tolkit/gfatk/releases/download/0.2.16/gfatk_ubuntu_0.2.16" > gfatk && chmod +x gfatk
+curl -L "https://github.com/tolkit/gfatk/releases/download/0.2.16/gfatk_ubuntu_0.2.2" > gfatk && chmod +x gfatk
 ```
 
 Or build from source.
@@ -42,7 +42,7 @@ The features of the toolkit reflect only their usefulness in debugging, visualis
 Current help:
 
 ```
-gfatk 0.2.16
+gfatk 0.2.2
 Max Brown <mb39@sanger.ac.uk>
 Explore and linearise (mitochondrial) GFA files.
 
