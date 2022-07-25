@@ -7,6 +7,7 @@ use gfatk::{
     dot, extract, extract_chloro, extract_mito, fasta, linear, overlap, path,
     stats::{self, GenomeType},
     trim,
+    rename,
 };
 
 fn main() -> Result<()> {
@@ -219,6 +220,14 @@ fn main() -> Result<()> {
                         .help("Input path from file.")
                 ),
         )
+        .subcommand(
+            Command::new("rename")
+                .about("Rename the segment ID's of a GFA.")
+                .arg(
+                    Arg::new("GFA")
+                        .help("Input GFA file.")
+                )
+        )
         .get_matches();
 
     match matches.subcommand() {
@@ -251,6 +260,9 @@ fn main() -> Result<()> {
         }
         Some(("path", matches)) => {
             path::path(matches)?;
+        }
+        Some(("rename", matches)) => {
+            rename::rename_gfa(matches)?;
         }
         _ => {
             eprintln!("Subcommand invalid, run with '--help' for subcommand options. Exiting.");

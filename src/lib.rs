@@ -30,6 +30,8 @@ pub mod load;
 pub mod overlap;
 /// Extract a fasta given a path.
 pub mod path;
+/// Rename a GFA's segment ID's to a 1-indexed [`usize`].
+pub mod rename;
 /// Generate statistics about the input GFA file.
 pub mod stats;
 /// Utility to trim a GFA of isolated nodes.
