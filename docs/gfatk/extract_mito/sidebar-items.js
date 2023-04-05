@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["extract_mito","Using a combination of GC% of the segments, relative coverage of the segments, and expected length of the mitochondrial genome, extract the putative mitochondrial subgraph."]]});
+window.SIDEBAR_ITEMS = {"fn":[["extract_mito","Using a combination of GC% of the segments, relative coverage of the segments, and expected length of the mitochondrial genome, extract the putative mitochondrial subgraph."]]};

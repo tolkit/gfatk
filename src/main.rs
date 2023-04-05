@@ -1,13 +1,14 @@
 // Max Brown
 // Wellcome Sanger Institute 2022
 
+use std::path::PathBuf;
+
 use anyhow::Result;
-use clap::{crate_version, Arg, Command};
+use clap::{crate_version, value_parser, Arg, ArgAction, Command};
 use gfatk::{
-    dot, extract, extract_chloro, extract_mito, fasta, linear, overlap, path,
+    dot, extract, extract_chloro, extract_mito, fasta, linear, overlap, path, rename,
     stats::{self, GenomeType},
     trim,
-    rename,
 };
 
 fn main() -> Result<()> {
@@ -22,6 +23,7 @@ fn main() -> Result<()> {
                 .about("Extract overlaps from a GFA.")
                 .arg(
                     Arg::new("GFA")
+                        .value_parser(value_parser!(PathBuf))
                         .help("Input GFA file.")
                 )
                 .arg(
@@ -29,6 +31,7 @@ fn main() -> Result<()> {
                         .short('s')
                         .long("size")
                         .default_value("1000")
+                        .value_parser(value_parser!(usize))
                         .help("Region around overlap to extract."),
                 ),
         )
@@ -37,24 +40,24 @@ fn main() -> Result<()> {
                 .about("Extract subgraph from a GFA, given a segment name.")
                 .arg(
                     Arg::new("GFA")
+                        .value_parser(value_parser!(PathBuf))
                         .help("Input GFA file.")
                 )
                 .arg(
                     Arg::new("sequence-ids")
                         .short('s')
                         .long("sequence-ids")
-                        .takes_value(true)
                         .required(true)
-                        .multiple_values(true)
-                        .use_value_delimiter(true)
-                        .require_value_delimiter(true)
-                        .help("Extract subgraph of which this sequence is part of. Specifying multiple segments requires a delimiter, e.g. 1,2,3"),
+                        .value_delimiter(',')
+                        .value_parser(value_parser!(usize))
+                        .help("Extract subgraph of which this sequence is part of. Specifying multiple segments requires a delimiter, e.g. 1,2,3 - note there should be no spaces between delimited segments."),
                 )
                 .arg(
                     Arg::new("iterations")
                         .short('i')
                         .long("iterations")
                         .default_value("3")
+                        .value_parser(value_parser!(i32))
                         .help("Number of iterations to recursively search for connecting nodes."),
                 ),
         )
@@ -63,18 +66,21 @@ fn main() -> Result<()> {
                 .about("Force a linear representation of the graph.")
                 .arg(
                     Arg::new("GFA")
+                        .value_parser(value_parser!(PathBuf))
                         .help("Input GFA file.")
                 )
                 .arg(
                     Arg::new("include-node-coverage")
                         .short('i')
                         .long("include-node-coverage")
+                        .action(ArgAction::SetTrue)
                         .help("Should the coverage information of the segments be incorporated into linearisation?")
                 )
                 .arg(
                     Arg::new("evaluate-subgraphs")
                         .short('e')
                         .long("evaluate-subgraphs")
+                        .action(ArgAction::SetTrue)
                         .help("If there are multiple subgraphs within a GFA, evaluate linear on each of these.")
                 )
                 .arg(
@@ -82,8 +88,7 @@ fn main() -> Result<()> {
                         .short('n')
                         .long("node-threshold")
                         .default_value("60")
-                        .takes_value(true)
-                        .required(false)
+                        .value_parser(value_parser!(usize))
                         .help("If a (sub)graph contains too many nodes, `gfatk linear` will hang.")
                 )
         )
@@ -94,6 +99,7 @@ fn main() -> Result<()> {
                 )
                 .arg(
                     Arg::new("GFA")
+                        .value_parser(value_parser!(PathBuf))
                         .help("Input GFA file.")
                 ),
         )
@@ -104,12 +110,14 @@ fn main() -> Result<()> {
                 )
                 .arg(
                     Arg::new("GFA")
+                        .value_parser(value_parser!(PathBuf))
                         .help("Input GFA file.")
                 )
                 .arg(
                     Arg::new("tabular")
                         .short('t')
                         .long("tabular")
+                        .action(ArgAction::SetTrue)
                         .help("Output tabular stats.")
                 ),
         )
@@ -120,6 +128,7 @@ fn main() -> Result<()> {
                 )
                 .arg(
                     Arg::new("GFA")
+                        .value_parser(value_parser!(PathBuf))
                         .help("Input GFA file.")
                 )
                 .arg(
@@ -127,6 +136,7 @@ fn main() -> Result<()> {
                         .long("size-lower")
                         // 200,000 default
                         .default_value("200000")
+                        .value_parser(value_parser!(usize))
                         .help("Minimum size (bp) of expected mitochondria."),
                 )
                 .arg(
@@ -134,20 +144,31 @@ fn main() -> Result<()> {
                         .long("size-upper")
                         // 1 million is high enough for most species?
                         .default_value("1000000")
+                        .value_parser(value_parser!(usize))
                         .help("Maximum size (bp) of expected mitochondria."),
                 )
                 .arg(
                     Arg::new("gc-lower")
                         .long("gc-lower")
                         .default_value("0.42")
+                        .value_parser(value_parser!(f32))
                         .help("Minimum GC% of expected mitochondria."),
                 )
                 .arg(
                     Arg::new("gc-upper")
                         .long("gc-upper")
                         .default_value("0.50")
+                        .value_parser(value_parser!(f32))
                         .help("Maximum GC% of expected mitochondria."),
-                ),
+                )
+                .arg(
+                    Arg::new("tabular")
+                        .short('t')
+                        .long("tabular")
+                        .action(ArgAction::SetTrue)
+                        .help("Output tabular stats.")
+                )
+                ,
         )
         .subcommand(
             Command::new("extract-chloro")
@@ -156,31 +177,43 @@ fn main() -> Result<()> {
                 )
                 .arg(
                     Arg::new("GFA")
+                        .value_parser(value_parser!(PathBuf))
                         .help("Input GFA file.")
                 )
                 .arg(
                     Arg::new("size-lower")
                         .long("size-lower")
                         .default_value("126000")
+                        .value_parser(value_parser!(usize))
                         .help("Minimum size (bp) of expected plastid."),
                 )
                 .arg(
                     Arg::new("size-upper")
                         .long("size-upper")
                         .default_value("180000")
+                        .value_parser(value_parser!(usize))
                         .help("Maximum size (bp) of expected plastid."),
                 )
                 .arg(
                     Arg::new("gc-lower")
                         .long("gc-lower")
                         .default_value("0.35")
+                        .value_parser(value_parser!(f32))
                         .help("Minimum GC% of expected plastid."),
                 )
                 .arg(
                     Arg::new("gc-upper")
                         .long("gc-upper")
                         .default_value("0.39")
+                        .value_parser(value_parser!(f32))
                         .help("Maximum GC% of expected plastid."),
+                )
+                .arg(
+                    Arg::new("tabular")
+                        .short('t')
+                        .long("tabular")
+                        .action(ArgAction::SetTrue)
+                        .help("Output tabular stats.")
                 ),
         )
         .subcommand(
@@ -188,6 +221,7 @@ fn main() -> Result<()> {
                 .about("Return the dot representation of a GFA.")
                 .arg(
                     Arg::new("GFA")
+                        .value_parser(value_parser!(PathBuf))
                         .help("Input GFA file.")
                 ),
         )
@@ -196,6 +230,7 @@ fn main() -> Result<()> {
                 .about("Trim a GFA to remove nodes of degree < 4 (i.e. only has one neighbour).")
                 .arg(
                     Arg::new("GFA")
+                        .value_parser(value_parser!(PathBuf))
                         .help("Input GFA file.")
                 ),
         )
@@ -204,20 +239,29 @@ fn main() -> Result<()> {
                 .about("Supply an input path to evaluate a linear representation of. Input must be a text file of a single comma separated line with node ID's and orientations. E.g.:\n\t1+,2-,3+")
                 .arg(
                     Arg::new("GFA")
+                        .value_parser(value_parser!(PathBuf))
                         .index(1)
                         .help("Input GFA file.")
                 )
+                // TODO: this is broke
                 .arg(
                     Arg::new("path_cli")
                         .index(2)
+                        .value_parser(value_parser!(String))
                         .help("Input path from CLI.")
                 )
                 .arg(
                     Arg::new("path_file")
                         .short('p')
                         .long("path")
-                        .takes_value(true)
+                        .value_parser(value_parser!(PathBuf))
                         .help("Input path from file.")
+                )
+                .arg(
+                    Arg::new("all_paths")
+                        .short('a')
+                        .long("all")
+                        .help("If there are path (P) lines in the input, output all ")
                 ),
         )
         .subcommand(
@@ -225,6 +269,7 @@ fn main() -> Result<()> {
                 .about("Rename the segment ID's of a GFA.")
                 .arg(
                     Arg::new("GFA")
+                        .value_parser(value_parser!(PathBuf))
                         .help("Input GFA file.")
                 )
         )

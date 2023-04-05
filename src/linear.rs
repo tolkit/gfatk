@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use crate::gfa::gfa::GFAtk;
 use crate::gfa::graph::{segments_subgraph, GFAdigraph};
 use crate::load::{load_gfa, load_gfa_stdin};
@@ -21,18 +23,27 @@ use petgraph::algo::is_cyclic_directed;
 /// ```
 pub fn linear(matches: &clap::ArgMatches) -> Result<()> {
     // read in path and parse gfa
-    let gfa_file = matches.value_of("GFA");
-    let include_node_coverage = matches.is_present("include-node-coverage");
-    let evaluate_subgraphs = matches.is_present("evaluate-subgraphs");
+    let gfa_file = matches.get_one::<PathBuf>("GFA");
+    let include_node_coverage = matches.get_flag("include-node-coverage");
+    let evaluate_subgraphs = matches.get_flag("evaluate-subgraphs");
     // this unwrap_or is redundant.
-    let node_threshold: usize = matches.value_of_t("node-threshold").unwrap_or(60);
+    let node_threshold = *matches
+        .get_one::<usize>("node-threshold")
+        .expect("defaulted by clap");
 
     let gfa: GFAtk = match gfa_file {
         Some(f) => {
-            if !f.ends_with(".gfa") {
-                bail!("Input file is not a GFA.")
+            let ext = f.extension();
+            match ext {
+                Some(e) => {
+                    if e == "gfa" {
+                        GFAtk(load_gfa(f)?)
+                    } else {
+                        bail!("Input is not a GFA.")
+                    }
+                }
+                None => bail!("Could not read file."),
             }
-            GFAtk(load_gfa(f)?)
         }
         None => match utils::is_stdin() {
             true => GFAtk(load_gfa_stdin(std::io::stdin().lock())?),
@@ -160,21 +171,16 @@ fn linear_inner(
     if !segments_not_in_path.is_empty() {
         for segment in segments_not_in_path {
             for line in gfa.0.lines_iter() {
-                match line.some_segment() {
-                    Some(seg) => {
-                        if seg.name == segment {
-                            println!(
-                                ">{}{}\n{}",
-                                segment,
-                                subgraph_index_header.clone().unwrap_or("".into()),
-                                std::str::from_utf8(&seg.sequence).with_context(|| format!(
-                                    "Malformed UTF8: {:?}",
-                                    &seg.sequence
-                                ))?
-                            )
-                        }
+                if let Some(seg) = line.some_segment() {
+                    if seg.name == segment {
+                        println!(
+                            ">{}{}\n{}",
+                            segment,
+                            subgraph_index_header.clone().unwrap_or("".into()),
+                            std::str::from_utf8(&seg.sequence)
+                                .with_context(|| format!("Malformed UTF8: {:?}", &seg.sequence))?
+                        )
                     }
-                    None => {}
                 }
             }
         }

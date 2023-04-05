@@ -371,9 +371,8 @@ impl GFAdigraph {
                         path_orientations.push(node_2_orientation);
 
                         let coverage = pair_weight.2;
-                        match coverage {
-                            Some(c) => path_coverage += c,
-                            None => (),
+                        if let Some(c) = coverage {
+                            path_coverage += c;
                         }
                     } else {
                         // this might be wrong...
@@ -393,9 +392,8 @@ impl GFAdigraph {
                         path_orientations.push(node_2_orientation);
 
                         let coverage = pair_weight.unwrap().weight().2;
-                        match coverage {
-                            Some(c) => path_coverage += c,
-                            None => (),
+                        if let Some(c) = coverage {
+                            path_coverage += c;
                         }
                     }
 
@@ -913,10 +911,10 @@ mod tests {
             NodeIndex::new(2),
         ];
 
-        assert_eq!(paths.contains(&path1), true);
-        assert_eq!(paths.contains(&path2), true);
-        assert_eq!(paths.contains(&path3), true);
-        assert_eq!(paths.contains(&path4), true);
+        assert!(paths.contains(&path1));
+        assert!(paths.contains(&path2));
+        assert!(paths.contains(&path3));
+        assert!(paths.contains(&path4));
     }
 
     //

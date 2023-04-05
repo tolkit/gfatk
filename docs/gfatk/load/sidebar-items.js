@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["byte_lines_iter","Iterate over the byte lines of a file."],["load_gfa","Given a path, load the GFA into a `GFA` struct."],["load_gfa_stdin","If the file is coming from STDIN, this function reads a GFA in."]]});
+window.SIDEBAR_ITEMS = {"fn":[["byte_lines_iter","Iterate over the byte lines of a file."],["load_gfa","Given a path, load the GFA into a `GFA` struct."],["load_gfa_stdin","If the file is coming from STDIN, this function reads a GFA in."]]};

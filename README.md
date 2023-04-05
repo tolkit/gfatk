@@ -4,7 +4,7 @@
     <img width="300" height="132" src="https://www.darwintreeoflife.org/wp-content/themes/dtol/dist/assets/gfx/dtol-logo-round.png">
 </p>
 
-A command line utility to explore, extract, and linearise plant mitochondrial assemblies. The Graphical Fragment Assembly files (GFA's) used to refine the code in this repository are almost exclusively generated from the assembly program <a href="https://github.com/maickrau/MBG">MBG</a>. See the testing section below for caveats.
+A command line utility to explore, extract, and linearise plant mitochondrial assemblies. The Graphical Fragment Assembly files (GFA's) used to refine the code in this repository are almost exclusively generated from the assembly program `<a href="https://github.com/maickrau/MBG">`MBG`</a>`. See the testing section below for caveats.
 
 ## Install
 
@@ -37,7 +37,7 @@ cargo install --path .
 
 ## Features
 
-The features of the toolkit reflect only their usefulness in debugging, visualising, and linearising GFA's from (especially) plant mitochondrial genome assemblies output from <a href="https://github.com/maickrau/MBG">MBG</a>. These genomes are usually pretty small (up to 2Mb), and in many cases have circular or branching paths.
+The features of the toolkit reflect only their usefulness in debugging, visualising, and linearising GFA's from (especially) plant mitochondrial genome assemblies output from `<a href="https://github.com/maickrau/MBG">`MBG`</a>`. These genomes are usually pretty small (up to 2Mb), and in many cases have circular or branching paths.
 
 Current help:
 
@@ -72,7 +72,8 @@ SUBCOMMANDS:
 ```
 
 To explain each of these briefly:
-- `gfatk dot <GFA>` - generates a <a href="https://graphviz.org/doc/info/lang.html">DOT language</a> representation of the GFA.
+
+- `gfatk dot <GFA>` - generates a `<a href="https://graphviz.org/doc/info/lang.html">`DOT language`</a>` representation of the GFA.
 - `gfatk extract <GFA> -s <segment-ids> -i <iterations>` - extracts the subgraph from the GFA, given a segment name, or multiple (if multiple, these must be comma separated without space). Number of iterations may need to be increased for large graphs.
 - `gfatk extract-chloro <GFA>` - extracts the plastid from the GFA. It has default parameters which seem to work okay.
 - `gfatk extract-mito <GFA>` - extracts the mitochondria from the GFA. It has default parameters which seem to work okay.
@@ -126,6 +127,7 @@ L	13	-	11	-	3M <- simple overlap on the CIGAR string (overlap == 3)	ec:i:1
 ## Thanks
 
 Many thanks to the developers of MBG, and partners in the Tree of Life program, and beyond:
+
 - Marcela Uliano-Silva
 - Sergey Nurk
 - Alex Twyford

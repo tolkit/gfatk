@@ -16,15 +16,15 @@ categories = ["command-line-utilities"]
 license = "MIT"
 
 [dependencies]
-gfa = "0.10"
-bstr = "0.2"
-clap = { version = "3.1.5", features = ["cargo"] }
+bstr = "1.4.0"
 petgraph = "0.6.0"
 byteorder = "1.4.3"
 itertools = "0.10.2"
 anyhow = "1.0"
 atty = "0.2"
+gfa = "0.10.1"
+clap = { version = "4.2.1", features = ["cargo"] }
 
 [dev-dependencies]
 assert_cmd = "2.0.4"
-predicates = "2.1.1"
+predicates = "3.0.2"

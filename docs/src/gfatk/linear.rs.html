@@ -1,9 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/linear.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>linear.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script src="../../crates.js"></script><script defer src="../../main.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script>
-    <noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../gfatk/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../gfatk/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../gfatk/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><div class="theme-picker hidden"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="22" height="22" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/linear.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>linear.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../gfatk/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -187,183 +182,195 @@
 <span id="182">182</span>
 <span id="183">183</span>
 <span id="184">184</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::gfa::gfa::GFAtk</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::gfa::graph</span>::{<span class="ident">segments_subgraph</span>, <span class="ident">GFAdigraph</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::load</span>::{<span class="ident">load_gfa</span>, <span class="ident">load_gfa_stdin</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::path</span>::{<span class="ident">parse_path</span>, <span class="ident">CLIOpt</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils</span>::{<span class="self">self</span>, <span class="ident">GFAGraphLookups</span>};
-<span class="kw">use</span> <span class="ident">anyhow</span>::{<span class="ident">bail</span>, <span class="ident">Context</span>, <span class="prelude-ty">Result</span>};
-<span class="kw">use</span> <span class="ident">petgraph::algo::is_cyclic_directed</span>;
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+</pre><pre class="rust"><code><span class="kw">use </span>std::path::PathBuf;
 
-<span class="doccomment">/// Force a linear representation of the GFA.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// This function finds *all* legal paths through a GFA, and returns the longest path, with the highest cumulative edge coverage.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// If the `-i` option is included, node coverages are taken into account, and paths are created with nodes appearing in the final path the number of times they relatively occur according to coverage information.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// For example:</span>
-<span class="doccomment">/// ```bash</span>
-<span class="doccomment">/// # simple</span>
-<span class="doccomment">/// gfatk linear in.gfa &gt; out.fasta</span>
-<span class="doccomment">/// # account for node coverage</span>
-<span class="doccomment">/// gfatk -i linear in.gfa &gt; out.fasta</span>
-<span class="doccomment">/// ```</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">linear</span>(<span class="ident">matches</span>: <span class="kw-2">&amp;</span><span class="ident">clap::ArgMatches</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="comment">// read in path and parse gfa</span>
-    <span class="kw">let</span> <span class="ident">gfa_file</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">value_of</span>(<span class="string">&quot;GFA&quot;</span>);
-    <span class="kw">let</span> <span class="ident">include_node_coverage</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">is_present</span>(<span class="string">&quot;include-node-coverage&quot;</span>);
-    <span class="kw">let</span> <span class="ident">evaluate_subgraphs</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">is_present</span>(<span class="string">&quot;evaluate-subgraphs&quot;</span>);
-    <span class="comment">// this unwrap_or is redundant.</span>
-    <span class="kw">let</span> <span class="ident">node_threshold</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">value_of_t</span>(<span class="string">&quot;node-threshold&quot;</span>).<span class="ident">unwrap_or</span>(<span class="number">60</span>);
+<span class="kw">use </span><span class="kw">crate</span>::gfa::gfa::GFAtk;
+<span class="kw">use </span><span class="kw">crate</span>::gfa::graph::{segments_subgraph, GFAdigraph};
+<span class="kw">use </span><span class="kw">crate</span>::load::{load_gfa, load_gfa_stdin};
+<span class="kw">use </span><span class="kw">crate</span>::path::{parse_path, CLIOpt};
+<span class="kw">use </span><span class="kw">crate</span>::utils::{<span class="self">self</span>, GFAGraphLookups};
+<span class="kw">use </span>anyhow::{bail, Context, <span class="prelude-ty">Result</span>};
+<span class="kw">use </span>petgraph::algo::is_cyclic_directed;
 
-    <span class="kw">let</span> <span class="ident">gfa</span>: <span class="ident">GFAtk</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">gfa_file</span> {
-        <span class="prelude-val">Some</span>(<span class="ident">f</span>) =&gt; {
-            <span class="kw">if</span> <span class="op">!</span><span class="ident">f</span>.<span class="ident">ends_with</span>(<span class="string">&quot;.gfa&quot;</span>) {
-                <span class="macro">bail!</span>(<span class="string">&quot;Input file is not a GFA.&quot;</span>)
+<span class="doccomment">/// Force a linear representation of the GFA.
+///
+/// This function finds *all* legal paths through a GFA, and returns the longest path, with the highest cumulative edge coverage.
+///
+/// If the `-i` option is included, node coverages are taken into account, and paths are created with nodes appearing in the final path the number of times they relatively occur according to coverage information.
+///
+/// For example:
+/// ```bash
+/// # simple
+/// gfatk linear in.gfa &gt; out.fasta
+/// # account for node coverage
+/// gfatk -i linear in.gfa &gt; out.fasta
+/// ```
+</span><span class="kw">pub fn </span>linear(matches: <span class="kw-2">&amp;</span>clap::ArgMatches) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="comment">// read in path and parse gfa
+    </span><span class="kw">let </span>gfa_file = matches.get_one::&lt;PathBuf&gt;(<span class="string">&quot;GFA&quot;</span>);
+    <span class="kw">let </span>include_node_coverage = matches.get_flag(<span class="string">&quot;include-node-coverage&quot;</span>);
+    <span class="kw">let </span>evaluate_subgraphs = matches.get_flag(<span class="string">&quot;evaluate-subgraphs&quot;</span>);
+    <span class="comment">// this unwrap_or is redundant.
+    </span><span class="kw">let </span>node_threshold = <span class="kw-2">*</span>matches
+        .get_one::&lt;usize&gt;(<span class="string">&quot;node-threshold&quot;</span>)
+        .expect(<span class="string">&quot;defaulted by clap&quot;</span>);
+
+    <span class="kw">let </span>gfa: GFAtk = <span class="kw">match </span>gfa_file {
+        <span class="prelude-val">Some</span>(f) =&gt; {
+            <span class="kw">let </span>ext = f.extension();
+            <span class="kw">match </span>ext {
+                <span class="prelude-val">Some</span>(e) =&gt; {
+                    <span class="kw">if </span>e == <span class="string">&quot;gfa&quot; </span>{
+                        GFAtk(load_gfa(f)<span class="question-mark">?</span>)
+                    } <span class="kw">else </span>{
+                        <span class="macro">bail!</span>(<span class="string">&quot;Input is not a GFA.&quot;</span>)
+                    }
+                }
+                <span class="prelude-val">None </span>=&gt; <span class="macro">bail!</span>(<span class="string">&quot;Could not read file.&quot;</span>),
             }
-            <span class="ident">GFAtk</span>(<span class="ident">load_gfa</span>(<span class="ident">f</span>)<span class="question-mark">?</span>)
         }
-        <span class="prelude-val">None</span> =&gt; <span class="kw">match</span> <span class="ident">utils::is_stdin</span>() {
-            <span class="bool-val">true</span> =&gt; <span class="ident">GFAtk</span>(<span class="ident">load_gfa_stdin</span>(<span class="ident">std::io::stdin</span>().<span class="ident">lock</span>())<span class="question-mark">?</span>),
-            <span class="bool-val">false</span> =&gt; <span class="macro">bail!</span>(<span class="string">&quot;No input from STDIN. Run `gfatk linear -h` for help.&quot;</span>),
+        <span class="prelude-val">None </span>=&gt; <span class="kw">match </span>utils::is_stdin() {
+            <span class="bool-val">true </span>=&gt; GFAtk(load_gfa_stdin(std::io::stdin().lock())<span class="question-mark">?</span>),
+            <span class="bool-val">false </span>=&gt; <span class="macro">bail!</span>(<span class="string">&quot;No input from STDIN. Run `gfatk linear -h` for help.&quot;</span>),
         },
     };
 
-    <span class="comment">// load gfa into graph structure</span>
-    <span class="kw">let</span> (<span class="ident">graph_indices</span>, <span class="ident">gfa_graph</span>) <span class="op">=</span> <span class="ident">gfa</span>.<span class="ident">into_digraph</span>()<span class="question-mark">?</span>;
+    <span class="comment">// load gfa into graph structure
+    </span><span class="kw">let </span>(graph_indices, gfa_graph) = gfa.into_digraph()<span class="question-mark">?</span>;
 
-    <span class="comment">// if we have only one node (segment) then all we can do</span>
-    <span class="comment">// is print the sequence</span>
-    <span class="comment">// otherwise we hit this error: `Error: There was no highest coverage path.`</span>
-    <span class="comment">// makes sense as you can&#39;t have a path of length 1.</span>
-    <span class="kw">if</span> <span class="ident">gfa_graph</span>.<span class="ident">node_count</span>() <span class="op">==</span> <span class="number">1</span> {
-        <span class="comment">// as we would in `gfatk fasta`</span>
-        <span class="macro">eprintln!</span>(<span class="string">&quot;[+]\tOnly a single segment detected. Printing sequence and exiting.&quot;</span>);
-        <span class="ident">gfa</span>.<span class="ident">print_sequences</span>(<span class="prelude-val">None</span>)<span class="question-mark">?</span>;
-        <span class="kw">return</span> <span class="prelude-val">Ok</span>(());
+    <span class="comment">// if we have only one node (segment) then all we can do
+    // is print the sequence
+    // otherwise we hit this error: `Error: There was no highest coverage path.`
+    // makes sense as you can&#39;t have a path of length 1.
+    </span><span class="kw">if </span>gfa_graph.node_count() == <span class="number">1 </span>{
+        <span class="comment">// as we would in `gfatk fasta`
+        </span><span class="macro">eprintln!</span>(<span class="string">&quot;[+]\tOnly a single segment detected. Printing sequence and exiting.&quot;</span>);
+        gfa.print_sequences(<span class="prelude-val">None</span>)<span class="question-mark">?</span>;
+        <span class="kw">return </span><span class="prelude-val">Ok</span>(());
     }
 
-    <span class="comment">// check how many subgraphs there are</span>
-    <span class="kw">let</span> <span class="ident">subgraphs</span> <span class="op">=</span> <span class="ident">gfa_graph</span>.<span class="ident">weakly_connected_components</span>(<span class="ident">graph_indices</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
+    <span class="comment">// check how many subgraphs there are
+    </span><span class="kw">let </span>subgraphs = gfa_graph.weakly_connected_components(graph_indices.clone())<span class="question-mark">?</span>;
 
-    <span class="comment">// Warn user if there is more than one subgraph</span>
-    <span class="kw">if</span> <span class="ident">subgraphs</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="number">1</span> {
+    <span class="comment">// Warn user if there is more than one subgraph
+    </span><span class="kw">if </span>subgraphs.len() &gt; <span class="number">1 </span>{
         <span class="macro">eprintln!</span>(
             <span class="string">&quot;[-]\tThe input GFA has multiple subgraphs ({}).&quot;</span>,
-            <span class="ident">subgraphs</span>.<span class="ident">len</span>()
+            subgraphs.len()
         );
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">evaluate_subgraphs</span> {
+        <span class="kw">if </span>!evaluate_subgraphs {
             <span class="macro">eprintln!</span>(<span class="string">&quot;[-]\tYou did not specify the `-e` option, so only the first subgraph will be linearised.&quot;</span>);
         }
     }
 
-    <span class="kw">match</span> <span class="ident">evaluate_subgraphs</span> {
-        <span class="bool-val">true</span> =&gt; {
-            <span class="kw">for</span> (<span class="kw-2">mut</span> <span class="ident">index</span>, <span class="ident">id_set</span>) <span class="kw">in</span> <span class="ident">subgraphs</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-                <span class="comment">// so we don&#39;t zero index on the fasta headers</span>
-                <span class="ident">index</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-                <span class="comment">// have to make the extra allocation here.</span>
-                <span class="kw">let</span> <span class="ident">gfa</span> <span class="op">=</span> <span class="ident">gfa</span>.<span class="ident">clone</span>();
-                <span class="comment">// make the new GFA</span>
-                <span class="kw">let</span> <span class="ident">subgraph_gfa</span> <span class="op">=</span> <span class="ident">GFAtk</span>(<span class="ident">segments_subgraph</span>(<span class="kw-2">&amp;</span><span class="ident">gfa</span>.<span class="number">0</span>, <span class="ident">id_set</span>.<span class="ident">to_vec</span>()));
-                <span class="kw">let</span> (<span class="ident">graph_indices_subgraph</span>, <span class="ident">subgraph</span>) <span class="op">=</span> <span class="ident">subgraph_gfa</span>.<span class="ident">into_digraph</span>()<span class="question-mark">?</span>;
+    <span class="kw">match </span>evaluate_subgraphs {
+        <span class="bool-val">true </span>=&gt; {
+            <span class="kw">for </span>(<span class="kw-2">mut </span>index, id_set) <span class="kw">in </span>subgraphs.iter().enumerate() {
+                <span class="comment">// so we don&#39;t zero index on the fasta headers
+                </span>index += <span class="number">1</span>;
+                <span class="comment">// have to make the extra allocation here.
+                </span><span class="kw">let </span>gfa = gfa.clone();
+                <span class="comment">// make the new GFA
+                </span><span class="kw">let </span>subgraph_gfa = GFAtk(segments_subgraph(<span class="kw-2">&amp;</span>gfa.<span class="number">0</span>, id_set.to_vec()));
+                <span class="kw">let </span>(graph_indices_subgraph, subgraph) = subgraph_gfa.into_digraph()<span class="question-mark">?</span>;
 
-                <span class="comment">// it can be useful to see here whether the subgraph is cyclic</span>
-                <span class="kw">let</span> <span class="ident">is_circular</span> <span class="op">=</span> <span class="ident">is_cyclic_directed</span>(<span class="kw-2">&amp;</span><span class="ident">subgraph</span>.<span class="number">0</span>);
-                <span class="comment">// check the node count here. If there&#39;s one segment, then we can just print the sequence.</span>
-                <span class="comment">// otherwise we go ahead and linearise the subgraph.</span>
+                <span class="comment">// it can be useful to see here whether the subgraph is cyclic
+                </span><span class="kw">let </span>is_circular = is_cyclic_directed(<span class="kw-2">&amp;</span>subgraph.<span class="number">0</span>);
+                <span class="comment">// check the node count here. If there&#39;s one segment, then we can just print the sequence.
+                // otherwise we go ahead and linearise the subgraph.
 
-                <span class="kw">if</span> <span class="ident">subgraph</span>.<span class="ident">node_count</span>() <span class="op">==</span> <span class="number">1</span> {
-                    <span class="kw">let</span> <span class="ident">subgraph_index_header</span> <span class="op">=</span>
-                        <span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">&quot; subgraph-{}:is_circular-{}&quot;</span>, <span class="ident">index</span>, <span class="ident">is_circular</span>));
-                    <span class="ident">subgraph_gfa</span>.<span class="ident">print_sequences</span>(<span class="ident">subgraph_index_header</span>)<span class="question-mark">?</span>;
-                } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">subgraph</span>.<span class="ident">node_count</span>() <span class="op">&gt;</span> <span class="ident">node_threshold</span> {
+                </span><span class="kw">if </span>subgraph.node_count() == <span class="number">1 </span>{
+                    <span class="kw">let </span>subgraph_index_header =
+                        <span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">&quot; subgraph-{}:is_circular-{}&quot;</span>, index, is_circular));
+                    subgraph_gfa.print_sequences(subgraph_index_header)<span class="question-mark">?</span>;
+                } <span class="kw">else if </span>subgraph.node_count() &gt; node_threshold {
                     <span class="macro">eprintln!</span>(
                         <span class="string">&quot;[-]\tDetected {} nodes in a subgraph. Skipping.&quot;</span>,
-                        <span class="ident">subgraph</span>.<span class="ident">node_count</span>()
+                        subgraph.node_count()
                     );
                     <span class="kw">continue</span>;
-                } <span class="kw">else</span> {
-                    <span class="comment">// add a subgraph index to the fasta header</span>
-                    <span class="kw">let</span> <span class="ident">subgraph_index_header</span> <span class="op">=</span>
-                        <span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">&quot; subgraph-{}:is_circular-{}&quot;</span>, <span class="ident">index</span>, <span class="ident">is_circular</span>));
-                    <span class="ident">linear_inner</span>(
-                        <span class="ident">subgraph_gfa</span>,
-                        <span class="ident">include_node_coverage</span>,
-                        <span class="ident">graph_indices_subgraph</span>,
-                        <span class="ident">subgraph</span>,
-                        <span class="ident">subgraph_index_header</span>,
+                } <span class="kw">else </span>{
+                    <span class="comment">// add a subgraph index to the fasta header
+                    </span><span class="kw">let </span>subgraph_index_header =
+                        <span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">&quot; subgraph-{}:is_circular-{}&quot;</span>, index, is_circular));
+                    linear_inner(
+                        subgraph_gfa,
+                        include_node_coverage,
+                        graph_indices_subgraph,
+                        subgraph,
+                        subgraph_index_header,
                     )<span class="question-mark">?</span>;
                 }
             }
         }
-        <span class="bool-val">false</span> =&gt; {
-            <span class="kw">if</span> <span class="ident">gfa_graph</span>.<span class="ident">node_count</span>() <span class="op">&gt;</span> <span class="ident">node_threshold</span> {
+        <span class="bool-val">false </span>=&gt; {
+            <span class="kw">if </span>gfa_graph.node_count() &gt; node_threshold {
                 <span class="macro">bail!</span>(
                     <span class="string">&quot;Detected {} nodes in this graph! It may be possible to linearise some subgraphs (if present) with the `-e` flag. Exiting.&quot;</span>,
-                    <span class="ident">gfa_graph</span>.<span class="ident">node_count</span>()
+                    gfa_graph.node_count()
                 );
             }
-            <span class="ident">linear_inner</span>(<span class="ident">gfa</span>, <span class="ident">include_node_coverage</span>, <span class="ident">graph_indices</span>, <span class="ident">gfa_graph</span>, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
+            linear_inner(gfa, include_node_coverage, graph_indices, gfa_graph, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
         }
     }
 
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="doccomment">/// Reusable function to call on subgraphs in a GFA if necessary.</span>
-<span class="kw">fn</span> <span class="ident">linear_inner</span>(
-    <span class="ident">gfa</span>: <span class="ident">GFAtk</span>,
-    <span class="ident">include_node_coverage</span>: <span class="ident">bool</span>,
-    <span class="ident">graph_indices</span>: <span class="ident">GFAGraphLookups</span>,
-    <span class="ident">gfa_graph</span>: <span class="ident">GFAdigraph</span>,
-    <span class="ident">subgraph_index_header</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="comment">// don&#39;t evaluate the coverage if we don&#39;t care about it</span>
-    <span class="kw">let</span> <span class="ident">rel_coverage_map</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">include_node_coverage</span> {
-        <span class="bool-val">true</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident">gfa</span>.<span class="ident">gen_cov_hash</span>(<span class="kw-2">&amp;</span><span class="ident">graph_indices</span>)<span class="question-mark">?</span>),
-        <span class="bool-val">false</span> =&gt; <span class="prelude-val">None</span>,
+<span class="doccomment">/// Reusable function to call on subgraphs in a GFA if necessary.
+</span><span class="kw">fn </span>linear_inner(
+    gfa: GFAtk,
+    include_node_coverage: bool,
+    graph_indices: GFAGraphLookups,
+    gfa_graph: GFAdigraph,
+    subgraph_index_header: <span class="prelude-ty">Option</span>&lt;String&gt;,
+) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="comment">// don&#39;t evaluate the coverage if we don&#39;t care about it
+    </span><span class="kw">let </span>rel_coverage_map = <span class="kw">match </span>include_node_coverage {
+        <span class="bool-val">true </span>=&gt; <span class="prelude-val">Some</span>(gfa.gen_cov_hash(<span class="kw-2">&amp;</span>graph_indices)<span class="question-mark">?</span>),
+        <span class="bool-val">false </span>=&gt; <span class="prelude-val">None</span>,
     };
 
-    <span class="kw">let</span> (<span class="ident">chosen_path</span>, <span class="ident">segments_not_in_path</span>, <span class="kw-2">mut</span> <span class="ident">fasta_header</span>) <span class="op">=</span>
-        <span class="ident">gfa_graph</span>.<span class="ident">all_paths_all_node_pairs</span>(<span class="kw-2">&amp;</span><span class="ident">graph_indices</span>, <span class="ident">rel_coverage_map</span>.<span class="ident">as_ref</span>())<span class="question-mark">?</span>;
+    <span class="kw">let </span>(chosen_path, segments_not_in_path, <span class="kw-2">mut </span>fasta_header) =
+        gfa_graph.all_paths_all_node_pairs(<span class="kw-2">&amp;</span>graph_indices, rel_coverage_map.as_ref())<span class="question-mark">?</span>;
 
-    <span class="comment">// add in subgraph index header</span>
-    <span class="ident">fasta_header</span> <span class="op">+</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">subgraph_index_header</span>.<span class="ident">clone</span>().<span class="ident">unwrap_or</span>(<span class="string">&quot;&quot;</span>.<span class="ident">to_string</span>());
+    <span class="comment">// add in subgraph index header
+    </span>fasta_header += <span class="kw-2">&amp;</span>subgraph_index_header.clone().unwrap_or(<span class="string">&quot;&quot;</span>.to_string());
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">chosen_path_as_string</span> <span class="op">=</span> <span class="ident">String::new</span>();
+    <span class="kw">let </span><span class="kw-2">mut </span>chosen_path_as_string = String::new();
 
-    <span class="kw">for</span> (<span class="ident">node</span>, <span class="ident">orientation</span>) <span class="kw">in</span> <span class="ident">chosen_path</span> {
-        <span class="kw">let</span> <span class="ident">node_id</span> <span class="op">=</span> <span class="ident">graph_indices</span>.<span class="ident">node_index_to_seg_id</span>(<span class="ident">node</span>)<span class="question-mark">?</span>;
-        <span class="ident">chosen_path_as_string</span> <span class="op">+</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;{}{},&quot;</span>, <span class="ident">node_id</span>, <span class="ident">orientation</span>);
+    <span class="kw">for </span>(node, orientation) <span class="kw">in </span>chosen_path {
+        <span class="kw">let </span>node_id = graph_indices.node_index_to_seg_id(node)<span class="question-mark">?</span>;
+        chosen_path_as_string += <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;{}{},&quot;</span>, node_id, orientation);
     }
-    <span class="comment">// remove last comma</span>
-    <span class="ident">chosen_path_as_string</span>.<span class="ident">pop</span>();
+    <span class="comment">// remove last comma
+    </span>chosen_path_as_string.pop();
 
-    <span class="kw">let</span> (<span class="ident">path</span>, <span class="ident">link_map</span>) <span class="op">=</span> <span class="ident">parse_path</span>(<span class="kw-2">&amp;</span><span class="ident">chosen_path_as_string</span>, <span class="ident">CLIOpt::String</span>, <span class="kw-2">&amp;</span><span class="ident">gfa</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>(path, link_map) = parse_path(<span class="kw-2">&amp;</span>chosen_path_as_string, CLIOpt::String, <span class="kw-2">&amp;</span>gfa)<span class="question-mark">?</span>;
 
-    <span class="ident">gfa</span>.<span class="ident">from_path_cli</span>(<span class="ident">path</span>, <span class="ident">link_map</span>, <span class="string">&quot;linear&quot;</span>, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">fasta_header</span>))<span class="question-mark">?</span>;
+    gfa.from_path_cli(path, link_map, <span class="string">&quot;linear&quot;</span>, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>fasta_header))<span class="question-mark">?</span>;
 
-    <span class="comment">// print the rest of the fasta headers</span>
-    <span class="comment">// print the rest of the segments</span>
-    <span class="kw">if</span> <span class="op">!</span><span class="ident">segments_not_in_path</span>.<span class="ident">is_empty</span>() {
-        <span class="kw">for</span> <span class="ident">segment</span> <span class="kw">in</span> <span class="ident">segments_not_in_path</span> {
-            <span class="kw">for</span> <span class="ident">line</span> <span class="kw">in</span> <span class="ident">gfa</span>.<span class="number">0</span>.<span class="ident">lines_iter</span>() {
-                <span class="kw">match</span> <span class="ident">line</span>.<span class="ident">some_segment</span>() {
-                    <span class="prelude-val">Some</span>(<span class="ident">seg</span>) =&gt; {
-                        <span class="kw">if</span> <span class="ident">seg</span>.<span class="ident">name</span> <span class="op">==</span> <span class="ident">segment</span> {
-                            <span class="macro">println!</span>(
-                                <span class="string">&quot;&gt;{}{}\n{}&quot;</span>,
-                                <span class="ident">segment</span>,
-                                <span class="ident">subgraph_index_header</span>.<span class="ident">clone</span>().<span class="ident">unwrap_or</span>(<span class="string">&quot;&quot;</span>.<span class="ident">into</span>()),
-                                <span class="ident">std::str::from_utf8</span>(<span class="kw-2">&amp;</span><span class="ident">seg</span>.<span class="ident">sequence</span>).<span class="ident">with_context</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">format!</span>(
-                                    <span class="string">&quot;Malformed UTF8: {:?}&quot;</span>,
-                                    <span class="kw-2">&amp;</span><span class="ident">seg</span>.<span class="ident">sequence</span>
-                                ))<span class="question-mark">?</span>
-                            )
-                        }
+    <span class="comment">// print the rest of the fasta headers
+    // print the rest of the segments
+    </span><span class="kw">if </span>!segments_not_in_path.is_empty() {
+        <span class="kw">for </span>segment <span class="kw">in </span>segments_not_in_path {
+            <span class="kw">for </span>line <span class="kw">in </span>gfa.<span class="number">0</span>.lines_iter() {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(seg) = line.some_segment() {
+                    <span class="kw">if </span>seg.name == segment {
+                        <span class="macro">println!</span>(
+                            <span class="string">&quot;&gt;{}{}\n{}&quot;</span>,
+                            segment,
+                            subgraph_index_header.clone().unwrap_or(<span class="string">&quot;&quot;</span>.into()),
+                            std::str::from_utf8(<span class="kw-2">&amp;</span>seg.sequence)
+                                .with_context(|| <span class="macro">format!</span>(<span class="string">&quot;Malformed UTF8: {:?}&quot;</span>, <span class="kw-2">&amp;</span>seg.sequence))<span class="question-mark">?
+                        </span>)
                     }
-                    <span class="prelude-val">None</span> =&gt; {}
                 }
             }
         }
@@ -372,5 +379,4 @@
     <span class="prelude-val">Ok</span>(())
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="gfatk" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.62.0 (a8314ef7d 2022-06-27)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="gfatk" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0 (69f9c33d7 2022-12-12)" ></div></body></html>

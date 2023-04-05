@@ -1,9 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/stats.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>stats.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script src="../../crates.js"></script><script defer src="../../main.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script>
-    <noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../gfatk/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../gfatk/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../gfatk/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><div class="theme-picker hidden"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="22" height="22" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/stats.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>stats.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../gfatk/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -311,60 +306,88 @@
 <span id="306">306</span>
 <span id="307">307</span>
 <span id="308">308</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::load::load_gfa</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils</span>::{<span class="self">self</span>, <span class="ident">GFAGraphLookups</span>};
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">gfa::gfa::GFAtk</span>, <span class="ident">gfa::graph::segments_subgraph</span>, <span class="ident">load::load_gfa_stdin</span>};
-<span class="kw">use</span> <span class="ident">anyhow</span>::{<span class="ident">bail</span>, <span class="ident">Context</span>, <span class="prelude-ty">Result</span>};
-<span class="kw">use</span> <span class="ident">petgraph::algo::is_cyclic_directed</span>;
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
+<span id="334">334</span>
+</pre><pre class="rust"><code><span class="kw">use </span>std::path::PathBuf;
 
-<span class="doccomment">/// Enumeration of the genomes we are interested in.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">GenomeType</span> {
-    <span class="doccomment">/// The mitochondrial genome</span>
-    <span class="ident">Mitochondria</span>,
-    <span class="doccomment">/// The chloroplast/plastid genome</span>
-    <span class="ident">Chloroplast</span>,
-    <span class="doccomment">/// This will process the stats and return nothing</span>
-    <span class="prelude-val">None</span>,
+<span class="kw">use </span><span class="kw">crate</span>::load::load_gfa;
+<span class="kw">use </span><span class="kw">crate</span>::utils::{<span class="self">self</span>, GFAGraphLookups};
+<span class="kw">use crate</span>::{gfa::gfa::GFAtk, gfa::graph::segments_subgraph, load::load_gfa_stdin};
+<span class="kw">use </span>anyhow::{bail, <span class="prelude-ty">Result</span>};
+<span class="kw">use </span>petgraph::algo::is_cyclic_directed;
+
+<span class="doccomment">/// Enumeration of the genomes we are interested in.
+</span><span class="attribute">#[derive(PartialEq, Clone, Copy)]
+</span><span class="kw">pub enum </span>GenomeType {
+    <span class="doccomment">/// The mitochondrial genome
+    </span>Mitochondria,
+    <span class="doccomment">/// The chloroplast/plastid genome
+    </span>Chloroplast,
+    <span class="doccomment">/// This will process the stats and return nothing
+    </span><span class="prelude-val">None</span>,
 }
 
-<span class="doccomment">/// The statistics associated with a subgraph in a GFA.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Stat</span> {
-    <span class="doccomment">/// Arbitrary index of the subgraph(s).</span>
-    <span class="kw">pub</span> <span class="ident">index</span>: <span class="ident">usize</span>,
-    <span class="doccomment">/// The average GC% across a subgraph.</span>
-    <span class="kw">pub</span> <span class="ident">gc</span>: <span class="ident">f32</span>,
-    <span class="doccomment">/// The node count of the graph.</span>
-    <span class="kw">pub</span> <span class="ident">node_count</span>: <span class="ident">usize</span>,
-    <span class="doccomment">/// The edge count of the graph.</span>
-    <span class="kw">pub</span> <span class="ident">edge_count</span>: <span class="ident">usize</span>,
-    <span class="doccomment">/// The segments of the (sub)graph.</span>
-    <span class="kw">pub</span> <span class="ident">graph_indices_subgraph</span>: <span class="ident">GFAGraphLookups</span>,
-    <span class="doccomment">/// The average coverage across a subgraph.</span>
-    <span class="kw">pub</span> <span class="ident">cov</span>: <span class="ident">f32</span>,
-    <span class="doccomment">/// Names of the segments.</span>
-    <span class="kw">pub</span> <span class="ident">segments</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// Total sequence length of all the segments.</span>
-    <span class="kw">pub</span> <span class="ident">total_sequence_length</span>: <span class="ident">usize</span>,
-    <span class="doccomment">/// Whether the subgraph is circular</span>
-    <span class="doccomment">/// (only applies to mitochondrial genomes).</span>
-    <span class="kw">pub</span> <span class="ident">is_circular</span>: <span class="ident">bool</span>,
+<span class="doccomment">/// The statistics associated with a subgraph in a GFA.
+</span><span class="attribute">#[derive(Clone, Debug)]
+</span><span class="kw">pub struct </span>Stat {
+    <span class="doccomment">/// Arbitrary index of the subgraph(s).
+    </span><span class="kw">pub </span>index: usize,
+    <span class="doccomment">/// The average GC% across a subgraph.
+    </span><span class="kw">pub </span>gc: f32,
+    <span class="doccomment">/// The node count of the graph.
+    </span><span class="kw">pub </span>node_count: usize,
+    <span class="doccomment">/// The edge count of the graph.
+    </span><span class="kw">pub </span>edge_count: usize,
+    <span class="doccomment">/// The segments of the (sub)graph.
+    </span><span class="kw">pub </span>graph_indices_subgraph: GFAGraphLookups,
+    <span class="doccomment">/// The average coverage across a subgraph.
+    </span><span class="kw">pub </span>cov: f32,
+    <span class="doccomment">/// Names of the segments.
+    </span><span class="kw">pub </span>segments: Vec&lt;usize&gt;,
+    <span class="doccomment">/// Total sequence length of all the segments.
+    </span><span class="kw">pub </span>total_sequence_length: usize,
+    <span class="doccomment">/// Whether the subgraph is circular
+    /// (only applies to mitochondrial genomes).
+    </span><span class="kw">pub </span>is_circular: bool,
 }
 
-<span class="doccomment">/// A vector of `Stat`.</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Stats</span>(<span class="kw">pub</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Stat</span><span class="op">&gt;</span>);
+<span class="doccomment">/// A vector of `Stat`.
+</span><span class="kw">pub struct </span>Stats(<span class="kw">pub </span>Vec&lt;Stat&gt;);
 
-<span class="kw">impl</span> <span class="ident">Stats</span> {
-    <span class="doccomment">/// Add a new `Stat` to `Stats`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">push</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">stat</span>: <span class="ident">Stat</span>) {
-        <span class="kw">let</span> <span class="ident">stats</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="number">0</span>;
-        <span class="ident">stats</span>.<span class="ident">push</span>(<span class="ident">stat</span>);
+<span class="kw">impl </span>Stats {
+    <span class="doccomment">/// Add a new `Stat` to `Stats`.
+    </span><span class="kw">pub fn </span>push(<span class="kw-2">&amp;mut </span><span class="self">self</span>, stat: Stat) {
+        <span class="kw">let </span>stats = <span class="kw-2">&amp;mut </span><span class="self">self</span>.<span class="number">0</span>;
+        stats.push(stat);
     }
 
-    <span class="doccomment">/// Print tabular form of [`Stats`] to STDOUT.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">print_tabular</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="kw">let</span> <span class="ident">headers</span> <span class="op">=</span> [
+    <span class="doccomment">/// Print tabular form of [`Stats`] to STDOUT.
+    </span><span class="kw">pub fn </span>print_tabular(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="kw">let </span>headers = [
             <span class="string">&quot;subgraph_index&quot;</span>,
             <span class="string">&quot;gc&quot;</span>,
             <span class="string">&quot;node_count&quot;</span>,
@@ -374,245 +397,269 @@
             <span class="string">&quot;total_seq_len&quot;</span>,
             <span class="string">&quot;is_circular&quot;</span>,
         ];
-        <span class="comment">// print headers</span>
-        <span class="macro">println!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">headers</span>.<span class="ident">join</span>(<span class="string">&quot;\t&quot;</span>));
-        <span class="comment">// fill the rows</span>
-        <span class="kw">for</span> <span class="ident">Stat</span> {
-            <span class="ident">index</span>,
-            <span class="ident">gc</span>,
-            <span class="ident">node_count</span>,
-            <span class="ident">edge_count</span>,
-            <span class="ident">graph_indices_subgraph</span>: <span class="kw">_</span>,
-            <span class="ident">cov</span>,
-            <span class="ident">segments</span>,
-            <span class="ident">total_sequence_length</span>,
-            <span class="ident">is_circular</span>,
-        } <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>
-        {
-            <span class="kw">let</span> <span class="ident">segment_string</span> <span class="op">=</span> <span class="ident">segments</span>
-                .<span class="ident">iter</span>()
-                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">s</span>.<span class="ident">to_string</span>())
-                .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>()
-                .<span class="ident">join</span>(<span class="string">&quot;,&quot;</span>);
+        <span class="comment">// print headers
+        </span><span class="macro">println!</span>(<span class="string">&quot;{}&quot;</span>, headers.join(<span class="string">&quot;\t&quot;</span>));
+        <span class="comment">// fill the rows
+        </span><span class="kw">for </span>Stat {
+            index,
+            gc,
+            node_count,
+            edge_count,
+            graph_indices_subgraph: <span class="kw">_</span>,
+            cov,
+            segments,
+            total_sequence_length,
+            is_circular,
+        } <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0
+        </span>{
+            <span class="kw">let </span>segment_string = segments
+                .iter()
+                .map(|s| s.to_string())
+                .collect::&lt;Vec&lt;String&gt;&gt;()
+                .join(<span class="string">&quot;,&quot;</span>);
 
             <span class="macro">println!</span>(
                 <span class="string">&quot;{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}&quot;</span>,
-                <span class="ident">index</span>,
-                <span class="ident">gc</span>,
-                <span class="ident">node_count</span>,
-                <span class="ident">edge_count</span>,
-                <span class="ident">cov</span>,
-                <span class="ident">segment_string</span>,
-                <span class="ident">total_sequence_length</span>,
-                <span class="ident">is_circular</span>
+                index,
+                gc,
+                node_count,
+                edge_count,
+                cov,
+                segment_string,
+                total_sequence_length,
+                is_circular
             );
         }
     }
 
-    <span class="doccomment">/// Extract the putative mitochondrial/chloroplast genome from a GFA</span>
-    <span class="doccomment">/// file.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The upper and lower limits of genome size and GC content are supplied through the</span>
-    <span class="doccomment">/// CLI. As the defaults will be different, the same function is accessed entry points</span>
-    <span class="doccomment">/// in the CLI.</span>
+    <span class="doccomment">/// Extract the putative mitochondrial/chloroplast genome from a GFA
+    /// file.
+    ///
+    /// The upper and lower limits of genome size and GC content are supplied through the
+    /// CLI. As the defaults will be different, the same function is accessed entry points
+    /// in the CLI.
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">extract_organelle</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">size_lower</span>: <span class="ident">usize</span>,
-        <span class="kw-2">mut</span> <span class="ident">size_upper</span>: <span class="ident">usize</span>,
-        <span class="ident">gc_lower</span>: <span class="ident">f32</span>,
-        <span class="ident">gc_upper</span>: <span class="ident">f32</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="comment">// just going to hard code these for the moment</span>
-        <span class="comment">// these values are taken from GoaT</span>
-        <span class="comment">// these values are within 2 stddevs of the mean,</span>
-        <span class="comment">// so most chloroplasts should pop out</span>
+    </span><span class="kw">pub fn </span>extract_organelle(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        size_lower: usize,
+        <span class="kw-2">mut </span>size_upper: usize,
+        gc_lower: f32,
+        gc_upper: f32,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;usize&gt;&gt; {
+        <span class="comment">// just going to hard code these for the moment
+        // these values are taken from GoaT
+        // these values are within 2 stddevs of the mean,
+        // so most chloroplasts should pop out
 
-        <span class="comment">// adjust because of overlaps between segments</span>
-        <span class="comment">// kind of arbitrary...</span>
-        <span class="kw">let</span> <span class="ident">seq_len_adj</span> <span class="op">=</span> <span class="number">20000</span>;
-        <span class="ident">size_upper</span> <span class="op">+</span><span class="op">=</span> <span class="ident">seq_len_adj</span>;
+        // adjust because of overlaps between segments
+        // kind of arbitrary...
+        </span><span class="kw">let </span>seq_len_adj = <span class="number">20000</span>;
+        size_upper += seq_len_adj;
 
-        <span class="kw">let</span> <span class="ident">stat_vec</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="number">0</span>;
-        <span class="kw">let</span> <span class="ident">stat_vec_len</span> <span class="op">=</span> <span class="ident">stat_vec</span>.<span class="ident">len</span>();
-        <span class="comment">// filter this vector to have stats in line with the span/gc</span>
+        <span class="kw">let </span>stat_vec = <span class="kw-2">&amp;mut </span><span class="self">self</span>.<span class="number">0</span>;
+        <span class="kw">let </span>stat_vec_len = stat_vec.len();
+        <span class="comment">// filter this vector to have stats in line with the span/gc
 
-        <span class="kw">if</span> <span class="ident">stat_vec_len</span> <span class="op">&gt;</span> <span class="number">0</span> {
-            <span class="comment">// apply the filter</span>
-            <span class="kw">let</span> <span class="ident">stat_vec</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Stat</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">stat_vec</span>
-                .<span class="ident">iter</span>()
-                .<span class="ident">filter</span>(
-                    <span class="op">|</span><span class="ident">Stat</span> {
-                         <span class="ident">index</span>: <span class="kw">_</span>,
-                         <span class="ident">gc</span>,
-                         <span class="ident">cov</span>: <span class="kw">_</span>,
-                         <span class="ident">segments</span>: <span class="kw">_</span>,
-                         <span class="ident">total_sequence_length</span>,
-                         <span class="ident">is_circular</span>: <span class="kw">_</span>,
-                         <span class="ident">node_count</span>: <span class="kw">_</span>,
-                         <span class="ident">edge_count</span>: <span class="kw">_</span>,
-                         <span class="ident">graph_indices_subgraph</span>: <span class="kw">_</span>,
-                     }<span class="op">|</span> {
-                        (<span class="ident">gc</span> <span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">gc_lower</span> <span class="op">&amp;&amp;</span> <span class="ident">gc</span> <span class="op">&lt;</span> <span class="kw-2">&amp;</span><span class="ident">gc_upper</span>)
-                            <span class="op">&amp;&amp;</span> (<span class="ident">total_sequence_length</span> <span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">size_lower</span>
-                                <span class="op">&amp;&amp;</span> <span class="ident">total_sequence_length</span> <span class="op">&lt;</span> <span class="kw-2">&amp;</span><span class="ident">size_upper</span>)
+        </span><span class="kw">if </span>stat_vec_len &gt; <span class="number">0 </span>{
+            <span class="comment">// apply the filter
+            </span><span class="kw">let </span>stat_vec: Vec&lt;<span class="kw-2">&amp;</span>Stat&gt; = stat_vec
+                .iter()
+                .filter(
+                    |Stat {
+                         index: <span class="kw">_</span>,
+                         gc,
+                         cov: <span class="kw">_</span>,
+                         segments: <span class="kw">_</span>,
+                         total_sequence_length,
+                         is_circular: <span class="kw">_</span>,
+                         node_count: <span class="kw">_</span>,
+                         edge_count: <span class="kw">_</span>,
+                         graph_indices_subgraph: <span class="kw">_</span>,
+                     }| {
+                        (gc &gt; <span class="kw-2">&amp;</span>gc_lower &amp;&amp; gc &lt; <span class="kw-2">&amp;</span>gc_upper)
+                            &amp;&amp; (total_sequence_length &gt; <span class="kw-2">&amp;</span>size_lower
+                                &amp;&amp; total_sequence_length &lt; <span class="kw-2">&amp;</span>size_upper)
                     },
                 )
-                .<span class="ident">collect</span>();
-            <span class="comment">// let&#39;s return all the filtered segments</span>
-            <span class="comment">// and see if it works for now</span>
-            <span class="kw">match</span> <span class="ident">stat_vec</span>.<span class="ident">len</span>() {
-                <span class="number">0</span> =&gt; <span class="macro">bail!</span>(<span class="string">&quot;No subgraphs within the bounds:\nsize_upper: {size_upper}\nsize_lower: {size_lower}\ngc_upper: {gc_upper}\ngc_lower: {gc_lower}\nTry changing limits?&quot;</span>),
+                .collect();
+            <span class="comment">// let&#39;s return all the filtered segments
+            // and see if it works for now
+            </span><span class="kw">match </span>stat_vec.len() {
+                <span class="number">0 </span>=&gt; <span class="macro">bail!</span>(<span class="string">&quot;No subgraphs within the bounds:\nsize_upper: {size_upper}\nsize_lower: {size_lower}\ngc_upper: {gc_upper}\ngc_lower: {gc_lower}\nTry changing limits?&quot;</span>),
                 <span class="number">1</span>.. =&gt; {
-                    <span class="comment">// extract all segments</span>
-                    <span class="kw">let</span> <span class="ident">segments</span> <span class="op">=</span> <span class="ident">stat_vec</span>.<span class="ident">iter</span>().<span class="ident">flat_map</span>(<span class="op">|</span><span class="ident">Stat</span> { <span class="ident">segments</span>, .. }<span class="op">|</span> <span class="ident">segments</span>.<span class="ident">clone</span>()).<span class="ident">collect</span>();
-                    <span class="prelude-val">Ok</span>(<span class="ident">segments</span>)
+                    <span class="comment">// extract all segments
+                    </span><span class="kw">let </span>segments = stat_vec.iter().flat_map(|Stat { segments, .. }| segments.clone()).collect();
+                    <span class="prelude-val">Ok</span>(segments)
                 },
-                <span class="kw">_</span> =&gt; <span class="macro">unreachable!</span>()
+                <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>()
             }
-        } <span class="kw">else</span> {
+        } <span class="kw">else </span>{
             <span class="macro">bail!</span>(<span class="string">&quot;There were no segments to be extracted. Check input GFA file.&quot;</span>);
         }
     }
 }
 
-<span class="comment">// I&#39;ve handled &#39;further&#39; here really badly...</span>
-<span class="comment">// I want node indices &amp; segment names printed too (maybe optionally.)</span>
+<span class="comment">// I&#39;ve handled &#39;further&#39; here really badly...
+// I want node indices &amp; segment names printed too (maybe optionally.)
 
-<span class="doccomment">/// Internal function called in `gfatk stats`.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Used in `gfatk stats`, `gfatk extract-mito`, and `gfatk extract-chloro`.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// For example:</span>
-<span class="doccomment">/// ```bash</span>
-<span class="doccomment">/// gfatk stats in.gfa</span>
-<span class="doccomment">/// ```</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">stats</span>(
-    <span class="ident">matches</span>: <span class="kw-2">&amp;</span><span class="ident">clap::ArgMatches</span>,
-    <span class="ident">genome_type</span>: <span class="ident">GenomeType</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">GFAtk</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>)<span class="op">&gt;</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">gfa_file</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">value_of</span>(<span class="string">&quot;GFA&quot;</span>);
-    <span class="kw">let</span> <span class="ident">tabular</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">is_present</span>(<span class="string">&quot;tabular&quot;</span>);
-    <span class="comment">// only passed through extract_mito</span>
-    <span class="kw">let</span> <span class="ident">mito_args</span> <span class="op">=</span> <span class="kw">if</span> <span class="macro">matches!</span>(<span class="ident">genome_type</span>, <span class="ident">GenomeType::Mitochondria</span>) {
-        <span class="kw">let</span> <span class="ident">size_lower</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">value_of_t</span>(<span class="string">&quot;size-lower&quot;</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">size_upper</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">value_of_t</span>(<span class="string">&quot;size-upper&quot;</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">gc_lower</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">value_of_t</span>(<span class="string">&quot;gc-lower&quot;</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">gc_upper</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">value_of_t</span>(<span class="string">&quot;gc-upper&quot;</span>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Some</span>((<span class="ident">size_lower</span>, <span class="ident">size_upper</span>, <span class="ident">gc_lower</span>, <span class="ident">gc_upper</span>))
-    } <span class="kw">else</span> {
-        <span class="prelude-val">None</span>
-    };
-    <span class="comment">// only required for extract_chloro</span>
-    <span class="kw">let</span> <span class="ident">chloro_args</span> <span class="op">=</span> <span class="kw">if</span> <span class="macro">matches!</span>(<span class="ident">genome_type</span>, <span class="ident">GenomeType::Chloroplast</span>) {
-        <span class="kw">let</span> <span class="ident">size_lower</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">value_of_t</span>(<span class="string">&quot;size-lower&quot;</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">size_upper</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">value_of_t</span>(<span class="string">&quot;size-upper&quot;</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">gc_lower</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">value_of_t</span>(<span class="string">&quot;gc-lower&quot;</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">gc_upper</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="ident">matches</span>.<span class="ident">value_of_t</span>(<span class="string">&quot;gc-upper&quot;</span>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Some</span>((<span class="ident">size_lower</span>, <span class="ident">size_upper</span>, <span class="ident">gc_lower</span>, <span class="ident">gc_upper</span>))
-    } <span class="kw">else</span> {
-        <span class="prelude-val">None</span>
-    };
+</span><span class="doccomment">/// Internal function called in `gfatk stats`.
+///
+/// Used in `gfatk stats`, `gfatk extract-mito`, and `gfatk extract-chloro`.
+///
+/// For example:
+/// ```bash
+/// gfatk stats in.gfa
+/// ```
+</span><span class="kw">pub fn </span>stats(
+    matches: <span class="kw-2">&amp;</span>clap::ArgMatches,
+    genome_type: GenomeType,
+) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;(GFAtk, Vec&lt;usize&gt;)&gt;&gt; {
+    <span class="kw">let </span>gfa_file = matches.get_one::&lt;PathBuf&gt;(<span class="string">&quot;GFA&quot;</span>);
+    <span class="kw">let </span>tabular = matches.get_flag(<span class="string">&quot;tabular&quot;</span>);
+    <span class="comment">// only passed through extract_mito
+    </span><span class="kw">let </span>mito_args = <span class="kw">if </span><span class="macro">matches!</span>(genome_type, GenomeType::Mitochondria) {
+        <span class="kw">let </span>size_lower = <span class="kw-2">*</span>matches
+            .get_one::&lt;usize&gt;(<span class="string">&quot;size-lower&quot;</span>)
+            .expect(<span class="string">&quot;defaulted by clap&quot;</span>);
+        <span class="kw">let </span>size_upper = <span class="kw-2">*</span>matches
+            .get_one::&lt;usize&gt;(<span class="string">&quot;size-upper&quot;</span>)
+            .expect(<span class="string">&quot;defaulted by clap&quot;</span>);
+        <span class="kw">let </span>gc_lower = <span class="kw-2">*</span>matches
+            .get_one::&lt;f32&gt;(<span class="string">&quot;gc-lower&quot;</span>)
+            .expect(<span class="string">&quot;defaulted by clap&quot;</span>);
+        <span class="kw">let </span>gc_upper = <span class="kw-2">*</span>matches
+            .get_one::&lt;f32&gt;(<span class="string">&quot;gc-upper&quot;</span>)
+            .expect(<span class="string">&quot;defaulted by clap&quot;</span>);
+        <span class="prelude-val">Some</span>((size_lower, size_upper, gc_lower, gc_upper))
+    } <span class="kw">else </span>{
+        <span class="prelude-val">None
+    </span>};
+    <span class="comment">// only required for extract_chloro
+    </span><span class="kw">let </span>chloro_args = <span class="kw">if </span><span class="macro">matches!</span>(genome_type, GenomeType::Chloroplast) {
+        <span class="kw">let </span>size_lower = <span class="kw-2">*</span>matches
+            .get_one::&lt;usize&gt;(<span class="string">&quot;size-lower&quot;</span>)
+            .expect(<span class="string">&quot;defaulted by clap&quot;</span>);
+        <span class="kw">let </span>size_upper = <span class="kw-2">*</span>matches
+            .get_one::&lt;usize&gt;(<span class="string">&quot;size-upper&quot;</span>)
+            .expect(<span class="string">&quot;defaulted by clap&quot;</span>);
+        <span class="kw">let </span>gc_lower = <span class="kw-2">*</span>matches
+            .get_one::&lt;f32&gt;(<span class="string">&quot;gc-lower&quot;</span>)
+            .expect(<span class="string">&quot;defaulted by clap&quot;</span>);
+        <span class="kw">let </span>gc_upper = <span class="kw-2">*</span>matches
+            .get_one::&lt;f32&gt;(<span class="string">&quot;gc-upper&quot;</span>)
+            .expect(<span class="string">&quot;defaulted by clap&quot;</span>);
+        <span class="prelude-val">Some</span>((size_lower, size_upper, gc_lower, gc_upper))
+    } <span class="kw">else </span>{
+        <span class="prelude-val">None
+    </span>};
 
-    <span class="kw">let</span> <span class="ident">gfa</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">gfa_file</span> {
-        <span class="prelude-val">Some</span>(<span class="ident">f</span>) =&gt; {
-            <span class="kw">if</span> <span class="op">!</span><span class="ident">f</span>.<span class="ident">ends_with</span>(<span class="string">&quot;.gfa&quot;</span>) {
-                <span class="macro">bail!</span>(<span class="string">&quot;Input file is not a GFA.&quot;</span>)
+    <span class="kw">let </span>gfa = <span class="kw">match </span>gfa_file {
+        <span class="prelude-val">Some</span>(f) =&gt; {
+            <span class="kw">let </span>ext = f.extension();
+            <span class="kw">match </span>ext {
+                <span class="prelude-val">Some</span>(e) =&gt; {
+                    <span class="kw">if </span>e == <span class="string">&quot;gfa&quot; </span>{
+                        GFAtk(load_gfa(f)<span class="question-mark">?</span>)
+                    } <span class="kw">else </span>{
+                        <span class="macro">bail!</span>(<span class="string">&quot;Input is not a GFA.&quot;</span>)
+                    }
+                }
+                <span class="prelude-val">None </span>=&gt; <span class="macro">bail!</span>(<span class="string">&quot;Could not read file.&quot;</span>),
             }
-
-            <span class="ident">GFAtk</span>(<span class="ident">load_gfa</span>(<span class="ident">f</span>)<span class="question-mark">?</span>)
         }
-        <span class="prelude-val">None</span> =&gt; <span class="kw">match</span> <span class="ident">utils::is_stdin</span>() {
-            <span class="bool-val">true</span> =&gt; <span class="ident">GFAtk</span>(<span class="ident">load_gfa_stdin</span>(<span class="ident">std::io::stdin</span>().<span class="ident">lock</span>())<span class="question-mark">?</span>),
-            <span class="bool-val">false</span> =&gt; <span class="macro">bail!</span>(
+        <span class="prelude-val">None </span>=&gt; <span class="kw">match </span>utils::is_stdin() {
+            <span class="bool-val">true </span>=&gt; GFAtk(load_gfa_stdin(std::io::stdin().lock())<span class="question-mark">?</span>),
+            <span class="bool-val">false </span>=&gt; <span class="macro">bail!</span>(
                 <span class="string">&quot;No input from STDIN. Run `gfatk {} -h` for help.&quot;</span>,
-                <span class="kw">match</span> <span class="ident">genome_type</span> {
-                    <span class="ident">GenomeType::Chloroplast</span> =&gt; <span class="string">&quot;extract-chloro&quot;</span>,
-                    <span class="ident">GenomeType::Mitochondria</span> =&gt; <span class="string">&quot;extract-mito&quot;</span>,
-                    <span class="ident">GenomeType::None</span> =&gt; <span class="string">&quot;stats&quot;</span>,
+                <span class="kw">match </span>genome_type {
+                    GenomeType::Chloroplast =&gt; <span class="string">&quot;extract-chloro&quot;</span>,
+                    GenomeType::Mitochondria =&gt; <span class="string">&quot;extract-mito&quot;</span>,
+                    GenomeType::None =&gt; <span class="string">&quot;stats&quot;</span>,
                 }
             ),
         },
     };
 
-    <span class="comment">// load gfa into graph structure</span>
-    <span class="kw">let</span> (<span class="ident">graph_indices</span>, <span class="ident">gfa_graph</span>) <span class="op">=</span> <span class="ident">gfa</span>.<span class="ident">into_digraph</span>()<span class="question-mark">?</span>;
+    <span class="comment">// load gfa into graph structure
+    </span><span class="kw">let </span>(graph_indices, gfa_graph) = gfa.into_digraph()<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="ident">subgraphs</span> <span class="op">=</span> <span class="ident">gfa_graph</span>.<span class="ident">weakly_connected_components</span>(<span class="ident">graph_indices</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>subgraphs = gfa_graph.weakly_connected_components(graph_indices)<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">no_subgraphs</span> <span class="op">=</span> <span class="number">0</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">store_stats</span> <span class="op">=</span> <span class="ident">Stats</span>(<span class="ident">Vec::new</span>());
+    <span class="kw">let </span><span class="kw-2">mut </span>no_subgraphs = <span class="number">0</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>store_stats = Stats(Vec::new());
 
-    <span class="kw">for</span> <span class="ident">id_set</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">subgraphs</span> {
-        <span class="kw">let</span> <span class="ident">subgraph_gfa</span> <span class="op">=</span> <span class="ident">GFAtk</span>(<span class="ident">segments_subgraph</span>(<span class="kw-2">&amp;</span><span class="ident">gfa</span>.<span class="number">0</span>, <span class="ident">id_set</span>.<span class="ident">to_vec</span>()));
+    <span class="kw">for </span>id_set <span class="kw">in </span><span class="kw-2">&amp;</span>subgraphs {
+        <span class="kw">let </span>subgraph_gfa = GFAtk(segments_subgraph(<span class="kw-2">&amp;</span>gfa.<span class="number">0</span>, id_set.to_vec()));
 
-        <span class="kw">let</span> (<span class="ident">graph_indices_subgraph</span>, <span class="ident">subgraph</span>) <span class="op">=</span> <span class="ident">subgraph_gfa</span>.<span class="ident">into_digraph</span>()<span class="question-mark">?</span>;
+        <span class="kw">let </span>(graph_indices_subgraph, subgraph) = subgraph_gfa.into_digraph()<span class="question-mark">?</span>;
 
-        <span class="comment">// we want to see if the subgraph is circular.</span>
-        <span class="kw">let</span> <span class="ident">is_circular</span> <span class="op">=</span> <span class="ident">is_cyclic_directed</span>(<span class="kw-2">&amp;</span><span class="ident">subgraph</span>.<span class="number">0</span>);
+        <span class="comment">// we want to see if the subgraph is circular.
+        </span><span class="kw">let </span>is_circular = is_cyclic_directed(<span class="kw-2">&amp;</span>subgraph.<span class="number">0</span>);
 
-        <span class="comment">// print stats</span>
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">tabular</span> <span class="op">&amp;&amp;</span> <span class="ident">genome_type</span> <span class="op">==</span> <span class="ident">GenomeType::None</span> {
-            <span class="macro">println!</span>(<span class="string">&quot;Subgraph {}:&quot;</span>, <span class="ident">no_subgraphs</span> <span class="op">+</span> <span class="number">1</span>);
-            <span class="macro">println!</span>(<span class="string">&quot;\tNumber of nodes/segments: {}&quot;</span>, <span class="ident">subgraph</span>.<span class="ident">node_count</span>());
-            <span class="macro">println!</span>(<span class="string">&quot;\tNumber of edges/links: {}&quot;</span>, <span class="ident">subgraph</span>.<span class="ident">edge_count</span>());
-            <span class="macro">println!</span>(<span class="string">&quot;\tCircular: {}&quot;</span>, <span class="ident">is_circular</span>);
-            <span class="comment">// equivalent to id_set</span>
-            <span class="macro">println!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">graph_indices_subgraph</span>);
+        <span class="comment">// print stats
+        </span><span class="kw">if </span>!tabular &amp;&amp; genome_type == GenomeType::None {
+            <span class="macro">println!</span>(<span class="string">&quot;Subgraph {}:&quot;</span>, no_subgraphs + <span class="number">1</span>);
+            <span class="macro">println!</span>(<span class="string">&quot;\tNumber of nodes/segments: {}&quot;</span>, subgraph.node_count());
+            <span class="macro">println!</span>(<span class="string">&quot;\tNumber of edges/links: {}&quot;</span>, subgraph.edge_count());
+            <span class="macro">println!</span>(<span class="string">&quot;\tCircular: {}&quot;</span>, is_circular);
+            <span class="comment">// equivalent to id_set
+            </span><span class="macro">println!</span>(<span class="string">&quot;{}&quot;</span>, graph_indices_subgraph);
         }
 
-        <span class="kw">let</span> (<span class="ident">avg_gc</span>, <span class="ident">cov</span>, <span class="ident">total_sequence_length</span>) <span class="op">=</span>
-            <span class="ident">subgraph_gfa</span>.<span class="ident">sequence_stats</span>(<span class="ident">genome_type</span>, <span class="ident">tabular</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>(avg_gc, cov, total_sequence_length) =
+            subgraph_gfa.sequence_stats(genome_type, tabular)<span class="question-mark">?</span>;
 
-        <span class="ident">store_stats</span>.<span class="ident">push</span>(<span class="ident">Stat</span> {
-            <span class="ident">index</span>: <span class="ident">no_subgraphs</span>,
-            <span class="ident">node_count</span>: <span class="ident">subgraph</span>.<span class="ident">node_count</span>(),
-            <span class="ident">edge_count</span>: <span class="ident">subgraph</span>.<span class="ident">edge_count</span>(),
-            <span class="ident">graph_indices_subgraph</span>,
-            <span class="ident">gc</span>: <span class="ident">avg_gc</span>,
-            <span class="ident">cov</span>,
-            <span class="ident">segments</span>: <span class="ident">id_set</span>.<span class="ident">clone</span>(),
-            <span class="ident">total_sequence_length</span>,
-            <span class="ident">is_circular</span>,
+        store_stats.push(Stat {
+            index: no_subgraphs,
+            node_count: subgraph.node_count(),
+            edge_count: subgraph.edge_count(),
+            graph_indices_subgraph,
+            gc: avg_gc,
+            cov,
+            segments: id_set.clone(),
+            total_sequence_length,
+            is_circular,
         });
 
-        <span class="ident">no_subgraphs</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+        no_subgraphs += <span class="number">1</span>;
     }
 
-    <span class="kw">if</span> <span class="ident">tabular</span> {
-        <span class="comment">// print tabular data</span>
-        <span class="ident">store_stats</span>.<span class="ident">print_tabular</span>();
+    <span class="kw">if </span>tabular {
+        <span class="comment">// print tabular data
+        </span>store_stats.print_tabular();
     }
 
-    <span class="comment">// if we want to do more stat things</span>
-    <span class="kw">match</span> <span class="ident">genome_type</span> {
-        <span class="ident">GenomeType::Mitochondria</span> =&gt; {
-            <span class="kw">let</span> <span class="ident">mito_args</span> <span class="op">=</span> <span class="ident">mito_args</span>.<span class="ident">context</span>(<span class="string">&quot;There were no `extract-mito` arguments.&quot;</span>)<span class="question-mark">?</span>;
-            <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>((
-                <span class="ident">gfa</span>,
-                <span class="ident">store_stats</span>.<span class="ident">extract_organelle</span>(
-                    <span class="ident">mito_args</span>.<span class="number">0</span>,
-                    <span class="ident">mito_args</span>.<span class="number">1</span>,
-                    <span class="ident">mito_args</span>.<span class="number">2</span>,
-                    <span class="ident">mito_args</span>.<span class="number">3</span>,
+    <span class="comment">// if we want to do more stat things
+    </span><span class="kw">match </span>genome_type {
+        GenomeType::Mitochondria =&gt; {
+            <span class="comment">// should be safe to unwrap?
+            </span><span class="kw">let </span>mito_args = mito_args.unwrap();
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>((
+                gfa,
+                store_stats.extract_organelle(
+                    mito_args.<span class="number">0</span>,
+                    mito_args.<span class="number">1</span>,
+                    mito_args.<span class="number">2</span>,
+                    mito_args.<span class="number">3</span>,
                 )<span class="question-mark">?</span>,
             )));
         }
-        <span class="ident">GenomeType::Chloroplast</span> =&gt; {
-            <span class="kw">let</span> <span class="ident">chloro_args</span> <span class="op">=</span> <span class="ident">chloro_args</span>.<span class="ident">context</span>(<span class="string">&quot;There were no `extract-chloro` arguments.&quot;</span>)<span class="question-mark">?</span>;
-            <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>((
-                <span class="ident">gfa</span>,
-                <span class="ident">store_stats</span>.<span class="ident">extract_organelle</span>(
-                    <span class="ident">chloro_args</span>.<span class="number">0</span>,
-                    <span class="ident">chloro_args</span>.<span class="number">1</span>,
-                    <span class="ident">chloro_args</span>.<span class="number">2</span>,
-                    <span class="ident">chloro_args</span>.<span class="number">3</span>,
+        GenomeType::Chloroplast =&gt; {
+            <span class="comment">// safe to unwrap here too.
+            </span><span class="kw">let </span>chloro_args = chloro_args.unwrap();
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>((
+                gfa,
+                store_stats.extract_organelle(
+                    chloro_args.<span class="number">0</span>,
+                    chloro_args.<span class="number">1</span>,
+                    chloro_args.<span class="number">2</span>,
+                    chloro_args.<span class="number">3</span>,
                 )<span class="question-mark">?</span>,
             )));
         }
-        <span class="ident">GenomeType::None</span> =&gt; {
-            <span class="kw">if</span> <span class="op">!</span><span class="ident">tabular</span> {
-                <span class="macro">println!</span>(<span class="string">&quot;Total number of subgraphs: {}&quot;</span>, <span class="ident">no_subgraphs</span>)
+        GenomeType::None =&gt; {
+            <span class="kw">if </span>!tabular {
+                <span class="macro">println!</span>(<span class="string">&quot;Total number of subgraphs: {}&quot;</span>, no_subgraphs)
             }
         }
     }
@@ -620,5 +667,4 @@
     <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="gfatk" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.62.0 (a8314ef7d 2022-06-27)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="gfatk" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0 (69f9c33d7 2022-12-12)" ></div></body></html>

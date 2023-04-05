@@ -1,9 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/gfa/gfa.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>gfa.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><script defer src="../../../main.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script>
-    <noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../gfatk/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../gfatk/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../gfatk/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><div class="theme-picker hidden"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="22" height="22" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/gfa/gfa.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>gfa.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../../gfatk/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -637,310 +632,306 @@
 <span id="632">632</span>
 <span id="633">633</span>
 <span id="634">634</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::gfa</span>::{
-    <span class="ident">gfa_string</span>,
-    <span class="ident">graph</span>::{<span class="ident">segments_subgraph</span>, <span class="ident">GFAdigraph</span>, <span class="ident">GFAungraph</span>},
+<span id="635">635</span>
+</pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::gfa::{
+    gfa_string,
+    graph::{segments_subgraph, GFAdigraph, GFAungraph},
 };
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::path::GFAPath</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::stats::GenomeType</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils</span>::{
-    <span class="self">self</span>, <span class="ident">get_edge_coverage</span>, <span class="ident">parse_cigar</span>, <span class="ident">reverse_complement</span>, <span class="ident">GFAGraphLookups</span>, <span class="ident">GFAGraphPair</span>,
+<span class="kw">use </span><span class="kw">crate</span>::path::GFAPath;
+<span class="kw">use </span><span class="kw">crate</span>::stats::GenomeType;
+<span class="kw">use </span><span class="kw">crate</span>::utils::{
+    <span class="self">self</span>, get_edge_coverage, parse_cigar, reverse_complement, GFAGraphLookups, GFAGraphPair,
 };
-<span class="kw">use</span> <span class="ident">anyhow</span>::{<span class="ident">bail</span>, <span class="ident">Context</span>, <span class="prelude-ty">Result</span>};
-<span class="kw">use</span> <span class="ident">gfa::gfa</span>::{<span class="ident">Orientation</span>, <span class="ident">GFA</span>};
-<span class="kw">use</span> <span class="ident">gfa::optfields</span>::{<span class="ident">OptFieldVal</span>, <span class="ident">OptionalFields</span>};
-<span class="kw">use</span> <span class="ident">petgraph::graph</span>::{<span class="ident">Graph</span>, <span class="ident">NodeIndex</span>, <span class="ident">UnGraph</span>};
-<span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
+<span class="kw">use </span>anyhow::{bail, Context, <span class="prelude-ty">Result</span>};
+<span class="kw">use </span>gfa::gfa::{Orientation, GFA};
+<span class="kw">use </span>gfa::optfields::{OptFieldVal, OptionalFields};
+<span class="kw">use </span>petgraph::graph::{Graph, NodeIndex, UnGraph};
+<span class="kw">use </span>std::collections::HashMap;
 
-<span class="doccomment">/// A wrapper around GFA from the gfa crate</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">GFAtk</span>(<span class="kw">pub</span> <span class="ident">GFA</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">OptionalFields</span><span class="op">&gt;</span>);
+<span class="doccomment">/// A wrapper around GFA from the gfa crate
+/// TODO: make GFAtk generic for any segment name, not just usize.
+</span><span class="attribute">#[derive(Clone)]
+</span><span class="kw">pub struct </span>GFAtk(<span class="kw">pub </span>GFA&lt;usize, OptionalFields&gt;);
 
-<span class="kw">impl</span> <span class="ident">GFAtk</span> {
-    <span class="doccomment">/// Returns a tuple of GFAGraphLookups (a struct of indices/node names)</span>
-    <span class="doccomment">/// and an undirected GFA graph structure.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">into_ungraph</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">GFAGraphLookups</span>, <span class="ident">GFAungraph</span>)<span class="op">&gt;</span> {
-        <span class="comment">// alias to get GFA out</span>
-        <span class="kw">let</span> <span class="ident">gfa</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
-        <span class="comment">// we&#39;re reading in now</span>
-        <span class="macro">eprintln!</span>(<span class="string">&quot;[+]\tReading GFA into an undirected graph.&quot;</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">gfa_graph</span>: <span class="ident">UnGraph</span><span class="op">&lt;</span><span class="ident">usize</span>, ()<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Graph::new_undirected</span>();
+<span class="kw">impl </span>GFAtk {
+    <span class="doccomment">/// Returns a tuple of GFAGraphLookups (a struct of indices/node names)
+    /// and an undirected GFA graph structure.
+    </span><span class="kw">pub fn </span>into_ungraph(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(GFAGraphLookups, GFAungraph)&gt; {
+        <span class="comment">// alias to get GFA out
+        </span><span class="kw">let </span>gfa = <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
+        <span class="comment">// we&#39;re reading in now
+        </span><span class="macro">eprintln!</span>(<span class="string">&quot;[+]\tReading GFA into an undirected graph.&quot;</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>gfa_graph: UnGraph&lt;usize, ()&gt; = Graph::new_undirected();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">graph_indices</span> <span class="op">=</span> <span class="ident">GFAGraphLookups::new</span>();
-        <span class="comment">// read the segments into graph nodes</span>
-        <span class="comment">// save the indexes for populating the edges</span>
-        <span class="kw">for</span> <span class="ident">node</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">gfa</span>.<span class="ident">segments</span> {
-            <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">gfa_graph</span>.<span class="ident">add_node</span>(<span class="ident">node</span>.<span class="ident">name</span>);
-            <span class="ident">graph_indices</span>.<span class="ident">push</span>(<span class="ident">GFAGraphPair</span> {
-                <span class="ident">node_index</span>: <span class="ident">index</span>,
-                <span class="ident">seg_id</span>: <span class="ident">node</span>.<span class="ident">name</span>,
+        <span class="kw">let </span><span class="kw-2">mut </span>graph_indices = GFAGraphLookups::new();
+        <span class="comment">// read the segments into graph nodes
+        // save the indexes for populating the edges
+        </span><span class="kw">for </span>node <span class="kw">in </span><span class="kw-2">&amp;</span>gfa.segments {
+            <span class="kw">let </span>index = gfa_graph.add_node(node.name);
+            graph_indices.push(GFAGraphPair {
+                node_index: index,
+                seg_id: node.name,
             });
         }
 
-        <span class="comment">// populate the edges</span>
-        <span class="kw">for</span> <span class="ident">edge</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">gfa</span>.<span class="ident">links</span> {
-            <span class="kw">let</span> <span class="ident">from</span> <span class="op">=</span> <span class="ident">edge</span>.<span class="ident">from_segment</span>;
-            <span class="kw">let</span> <span class="ident">to</span> <span class="op">=</span> <span class="ident">edge</span>.<span class="ident">to_segment</span>;
+        <span class="comment">// populate the edges
+        </span><span class="kw">for </span>edge <span class="kw">in </span><span class="kw-2">&amp;</span>gfa.links {
+            <span class="kw">let </span>from = edge.from_segment;
+            <span class="kw">let </span>to = edge.to_segment;
 
-            <span class="comment">// get the node index for a given edge (like a map)</span>
-            <span class="kw">let</span> <span class="ident">from_index</span> <span class="op">=</span> <span class="ident">graph_indices</span>.<span class="ident">seg_id_to_node_index</span>(<span class="ident">from</span>)<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">to_index</span> <span class="op">=</span> <span class="ident">graph_indices</span>.<span class="ident">seg_id_to_node_index</span>(<span class="ident">to</span>)<span class="question-mark">?</span>;
+            <span class="comment">// get the node index for a given edge (like a map)
+            </span><span class="kw">let </span>from_index = graph_indices.seg_id_to_node_index(from)<span class="question-mark">?</span>;
+            <span class="kw">let </span>to_index = graph_indices.seg_id_to_node_index(to)<span class="question-mark">?</span>;
 
-            <span class="comment">// add the edges</span>
-            <span class="ident">gfa_graph</span>.<span class="ident">add_edge</span>(<span class="ident">from_index</span>, <span class="ident">to_index</span>, ());
+            <span class="comment">// add the edges
+            </span>gfa_graph.add_edge(from_index, to_index, ());
         }
 
-        <span class="prelude-val">Ok</span>((<span class="ident">graph_indices</span>, <span class="ident">GFAungraph</span>(<span class="ident">gfa_graph</span>)))
+        <span class="prelude-val">Ok</span>((graph_indices, GFAungraph(gfa_graph)))
     }
 
-    <span class="doccomment">/// Returns a tuple of GFAGraphLookups (a struct of indices/node names) and an directed GFA graph structure.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Most functionality of this binary is on directed graph structures</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">into_digraph</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">GFAGraphLookups</span>, <span class="ident">GFAdigraph</span>)<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">gfa</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
-        <span class="comment">// eprintln!(&quot;[+]\tReading GFA into a directed graph.&quot;);</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">gfa_graph</span>: <span class="ident">Graph</span><span class="op">&lt;</span><span class="ident">usize</span>, (<span class="ident">Orientation</span>, <span class="ident">Orientation</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span>)<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Graph::new</span>();
+    <span class="doccomment">/// Returns a tuple of GFAGraphLookups (a struct of indices/node names) and an directed GFA graph structure.
+    ///
+    /// Most functionality of this binary is on directed graph structures
+    </span><span class="kw">pub fn </span>into_digraph(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(GFAGraphLookups, GFAdigraph)&gt; {
+        <span class="kw">let </span>gfa = <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
+        <span class="comment">// eprintln!(&quot;[+]\tReading GFA into a directed graph.&quot;);
+        </span><span class="kw">let </span><span class="kw-2">mut </span>gfa_graph: Graph&lt;usize, (Orientation, Orientation, <span class="prelude-ty">Option</span>&lt;i64&gt;)&gt; = Graph::new();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">graph_indices</span> <span class="op">=</span> <span class="ident">GFAGraphLookups::new</span>();
-        <span class="comment">// read the segments into graph nodes</span>
-        <span class="comment">// save the indexes for populating the edges</span>
-        <span class="kw">for</span> <span class="ident">node</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">gfa</span>.<span class="ident">segments</span> {
-            <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">gfa_graph</span>.<span class="ident">add_node</span>(<span class="ident">node</span>.<span class="ident">name</span>);
-            <span class="ident">graph_indices</span>.<span class="ident">push</span>(<span class="ident">GFAGraphPair</span> {
-                <span class="ident">node_index</span>: <span class="ident">index</span>,
-                <span class="ident">seg_id</span>: <span class="ident">node</span>.<span class="ident">name</span>,
+        <span class="kw">let </span><span class="kw-2">mut </span>graph_indices = GFAGraphLookups::new();
+        <span class="comment">// read the segments into graph nodes
+        // save the indexes for populating the edges
+        </span><span class="kw">for </span>node <span class="kw">in </span><span class="kw-2">&amp;</span>gfa.segments {
+            <span class="kw">let </span>index = gfa_graph.add_node(node.name);
+            graph_indices.push(GFAGraphPair {
+                node_index: index,
+                seg_id: node.name,
             });
         }
 
-        <span class="comment">// populate the edges</span>
-        <span class="kw">for</span> <span class="ident">edge</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">gfa</span>.<span class="ident">links</span> {
-            <span class="kw">let</span> <span class="ident">from</span> <span class="op">=</span> <span class="ident">edge</span>.<span class="ident">from_segment</span>;
-            <span class="kw">let</span> <span class="ident">to</span> <span class="op">=</span> <span class="ident">edge</span>.<span class="ident">to_segment</span>;
-            <span class="kw">let</span> <span class="ident">from_orient</span> <span class="op">=</span> <span class="ident">edge</span>.<span class="ident">from_orient</span>;
-            <span class="kw">let</span> <span class="ident">to_orient</span> <span class="op">=</span> <span class="ident">edge</span>.<span class="ident">to_orient</span>;
+        <span class="comment">// populate the edges
+        </span><span class="kw">for </span>edge <span class="kw">in </span><span class="kw-2">&amp;</span>gfa.links {
+            <span class="kw">let </span>from = edge.from_segment;
+            <span class="kw">let </span>to = edge.to_segment;
+            <span class="kw">let </span>from_orient = edge.from_orient;
+            <span class="kw">let </span>to_orient = edge.to_orient;
 
-            <span class="kw">let</span> <span class="ident">ec</span> <span class="op">=</span> <span class="ident">get_edge_coverage</span>(<span class="kw-2">&amp;</span><span class="ident">edge</span>.<span class="ident">optional</span>)<span class="question-mark">?</span>;
+            <span class="kw">let </span>ec = get_edge_coverage(<span class="kw-2">&amp;</span>edge.optional)<span class="question-mark">?</span>;
 
-            <span class="comment">// get the node index for a given edge</span>
-            <span class="kw">let</span> <span class="ident">from_index</span> <span class="op">=</span> <span class="ident">graph_indices</span>.<span class="ident">seg_id_to_node_index</span>(<span class="ident">from</span>)<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">to_index</span> <span class="op">=</span> <span class="ident">graph_indices</span>.<span class="ident">seg_id_to_node_index</span>(<span class="ident">to</span>)<span class="question-mark">?</span>;
+            <span class="comment">// get the node index for a given edge
+            </span><span class="kw">let </span>from_index = graph_indices.seg_id_to_node_index(from)<span class="question-mark">?</span>;
+            <span class="kw">let </span>to_index = graph_indices.seg_id_to_node_index(to)<span class="question-mark">?</span>;
 
-            <span class="comment">// add the edges</span>
-            <span class="ident">gfa_graph</span>.<span class="ident">add_edge</span>(<span class="ident">from_index</span>, <span class="ident">to_index</span>, (<span class="ident">from_orient</span>, <span class="ident">to_orient</span>, <span class="prelude-val">Some</span>(<span class="ident">ec</span>)));
+            <span class="comment">// add the edges
+            </span>gfa_graph.add_edge(from_index, to_index, (from_orient, to_orient, <span class="prelude-val">Some</span>(ec)));
         }
 
-        <span class="prelude-val">Ok</span>((<span class="ident">graph_indices</span>, <span class="ident">GFAdigraph</span>(<span class="ident">gfa_graph</span>)))
+        <span class="prelude-val">Ok</span>((graph_indices, GFAdigraph(gfa_graph)))
     }
 
-    <span class="doccomment">/// A method to print a GFA to STDOUT, given a vector of sequence ID&#39;s to keep.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">print_extract</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">sequences_to_keep</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>) {
-        <span class="kw">let</span> <span class="ident">gfa</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
-        <span class="kw">let</span> <span class="ident">subgraph_gfa</span> <span class="op">=</span> <span class="ident">GFAtk</span>(<span class="ident">segments_subgraph</span>(<span class="ident">gfa</span>, <span class="ident">sequences_to_keep</span>));
+    <span class="doccomment">/// A method to print a GFA to STDOUT, given a vector of sequence ID&#39;s to keep.
+    </span><span class="kw">pub fn </span>print_extract(<span class="kw-2">&amp;</span><span class="self">self</span>, sequences_to_keep: Vec&lt;usize&gt;) {
+        <span class="kw">let </span>gfa = <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
+        <span class="kw">let </span>subgraph_gfa = GFAtk(segments_subgraph(gfa, sequences_to_keep));
 
-        <span class="macro">print!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">gfa_string</span>(<span class="kw-2">&amp;</span><span class="ident">subgraph_gfa</span>.<span class="number">0</span>));
+        <span class="macro">print!</span>(<span class="string">&quot;{}&quot;</span>, gfa_string(<span class="kw-2">&amp;</span>subgraph_gfa.<span class="number">0</span>));
     }
 
-    <span class="doccomment">/// Returns the overlaps between all the segments in a GFA.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_overlaps</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">extend_length</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Overlaps</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">gfa</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
-        <span class="comment">// tuple of (from: overlap - length (incl. overlap), to: overlap + length)</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">from_to</span> <span class="op">=</span> <span class="ident">Overlaps::new</span>();
-        <span class="comment">// outer loop over links</span>
-        <span class="kw">for</span> <span class="ident">link</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">gfa</span>.<span class="ident">links</span> {
-            <span class="comment">// get all the info out of each link</span>
-            <span class="kw">let</span> <span class="ident">from_segment</span> <span class="op">=</span> <span class="ident">link</span>.<span class="ident">from_segment</span>;
-            <span class="kw">let</span> <span class="ident">from_orient</span> <span class="op">=</span> <span class="ident">link</span>.<span class="ident">from_orient</span>;
-            <span class="kw">let</span> <span class="ident">to_segment</span> <span class="op">=</span> <span class="ident">link</span>.<span class="ident">to_segment</span>;
-            <span class="kw">let</span> <span class="ident">to_orient</span> <span class="op">=</span> <span class="ident">link</span>.<span class="ident">to_orient</span>;
-            <span class="kw">let</span> <span class="ident">overlap</span> <span class="op">=</span> <span class="ident">parse_cigar</span>(<span class="kw-2">&amp;</span><span class="ident">link</span>.<span class="ident">overlap</span>)<span class="question-mark">?</span>;
+    <span class="doccomment">/// Returns the overlaps between all the segments in a GFA.
+    </span><span class="kw">pub fn </span>make_overlaps(<span class="kw-2">&amp;</span><span class="self">self</span>, extend_length: usize) -&gt; <span class="prelude-ty">Result</span>&lt;Overlaps&gt; {
+        <span class="kw">let </span>gfa = <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
+        <span class="comment">// tuple of (from: overlap - length (incl. overlap), to: overlap + length)
+        </span><span class="kw">let </span><span class="kw-2">mut </span>from_to = Overlaps::new();
+        <span class="comment">// outer loop over links
+        </span><span class="kw">for </span>link <span class="kw">in </span><span class="kw-2">&amp;</span>gfa.links {
+            <span class="comment">// get all the info out of each link
+            </span><span class="kw">let </span>from_segment = link.from_segment;
+            <span class="kw">let </span>from_orient = link.from_orient;
+            <span class="kw">let </span>to_segment = link.to_segment;
+            <span class="kw">let </span>to_orient = link.to_orient;
+            <span class="kw">let </span>overlap = parse_cigar(<span class="kw-2">&amp;</span>link.overlap)<span class="question-mark">?</span>;
 
             <span class="macro">eprintln!</span>(
                 <span class="string">&quot;From segment {} ({}) to segment {} ({})\nOverlap: {}&quot;</span>,
-                <span class="ident">from_segment</span>, <span class="ident">from_orient</span>, <span class="ident">to_segment</span>, <span class="ident">to_orient</span>, <span class="ident">overlap</span>
+                from_segment, from_orient, to_segment, to_orient, overlap
             );
 
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">from_seq</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="kw-2">&amp;</span>[];
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">to_seq</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="kw-2">&amp;</span>[];
+            <span class="kw">let </span><span class="kw-2">mut </span>from_seq: <span class="kw-2">&amp;</span>[u8] = <span class="kw-2">&amp;</span>[];
+            <span class="kw">let </span><span class="kw-2">mut </span>to_seq: <span class="kw-2">&amp;</span>[u8] = <span class="kw-2">&amp;</span>[];
 
-            <span class="comment">// get the from and to sequences.</span>
-            <span class="kw">for</span> <span class="ident">line</span> <span class="kw">in</span> <span class="ident">gfa</span>.<span class="ident">lines_iter</span>() {
-                <span class="comment">// if we meet a segment, let&#39;s do something</span>
-                <span class="kw">match</span> <span class="ident">line</span>.<span class="ident">some_segment</span>() {
-                    <span class="prelude-val">Some</span>(<span class="ident">s</span>) =&gt; {
-                        <span class="kw">if</span> <span class="ident">s</span>.<span class="ident">name</span> <span class="op">==</span> <span class="ident">from_segment</span> <span class="op">&amp;&amp;</span> <span class="ident">s</span>.<span class="ident">name</span> <span class="op">==</span> <span class="ident">to_segment</span> {
-                            <span class="ident">from_seq</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">s</span>.<span class="ident">sequence</span>;
-                            <span class="ident">to_seq</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">s</span>.<span class="ident">sequence</span>;
-                        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">s</span>.<span class="ident">name</span> <span class="op">==</span> <span class="ident">from_segment</span> {
-                            <span class="ident">from_seq</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">s</span>.<span class="ident">sequence</span>;
-                        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">s</span>.<span class="ident">name</span> <span class="op">==</span> <span class="ident">to_segment</span> {
-                            <span class="ident">to_seq</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">s</span>.<span class="ident">sequence</span>;
-                        }
+            <span class="comment">// get the from and to sequences.
+            </span><span class="kw">for </span>line <span class="kw">in </span>gfa.lines_iter() {
+                <span class="comment">// if we meet a segment, let&#39;s do something
+                </span><span class="kw">if let </span><span class="prelude-val">Some</span>(s) = line.some_segment() {
+                    <span class="kw">if </span>s.name == from_segment &amp;&amp; s.name == to_segment {
+                        from_seq = <span class="kw-2">&amp;</span>s.sequence;
+                        to_seq = <span class="kw-2">&amp;</span>s.sequence;
+                    } <span class="kw">else if </span>s.name == from_segment {
+                        from_seq = <span class="kw-2">&amp;</span>s.sequence;
+                    } <span class="kw">else if </span>s.name == to_segment {
+                        to_seq = <span class="kw-2">&amp;</span>s.sequence;
                     }
-                    <span class="prelude-val">None</span> =&gt; (),
                 }
             }
 
-            <span class="comment">// initiate so we can append to vec</span>
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">overlap_str_from_f</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="prelude-val">None</span>;
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">overlap_str_from_r</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="prelude-val">None</span>;
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">overlap_str_to_f</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="prelude-val">None</span>;
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">overlap_str_to_r</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="prelude-val">None</span>;
+            <span class="comment">// initiate so we can append to vec
+            </span><span class="kw">let </span><span class="kw-2">mut </span>overlap_str_from_f: <span class="prelude-ty">Option</span>&lt;String&gt; = <span class="prelude-val">None</span>;
+            <span class="kw">let </span><span class="kw-2">mut </span>overlap_str_from_r: <span class="prelude-ty">Option</span>&lt;String&gt; = <span class="prelude-val">None</span>;
+            <span class="kw">let </span><span class="kw-2">mut </span>overlap_str_to_f: <span class="prelude-ty">Option</span>&lt;String&gt; = <span class="prelude-val">None</span>;
+            <span class="kw">let </span><span class="kw-2">mut </span>overlap_str_to_r: <span class="prelude-ty">Option</span>&lt;String&gt; = <span class="prelude-val">None</span>;
 
-            <span class="comment">// deal with the from&#39;s</span>
-            <span class="kw">match</span> <span class="ident">from_orient</span> {
-                <span class="ident">Orientation::Forward</span> =&gt; {
-                    <span class="comment">// do nothing</span>
-                    <span class="comment">// length - overlap - extend length at the end of the sequence.</span>
-                    <span class="kw">let</span> <span class="ident">overlap_seq</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">from_seq</span>.<span class="ident">get</span>(<span class="ident">from_seq</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="ident">overlap</span> <span class="op">-</span> <span class="ident">extend_length</span>..);
-                    <span class="comment">// if the extend length is too long, it means that</span>
-                    <span class="comment">// we hit the start of the sequence, so take full slice.</span>
-                    <span class="kw">let</span> <span class="ident">overlap_str</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">overlap_seq</span> {
-                        <span class="prelude-val">Some</span>(<span class="ident">sl</span>) =&gt; <span class="ident">std::str::from_utf8</span>(<span class="ident">sl</span>)
-                            .<span class="ident">with_context</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">format!</span>(<span class="string">&quot;Malformed UTF8: {:?}&quot;</span>, <span class="ident">sl</span>))<span class="question-mark">?</span>,
-                        <span class="prelude-val">None</span> =&gt; <span class="ident">std::str::from_utf8</span>(<span class="ident">from_seq</span>)
-                            .<span class="ident">with_context</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">format!</span>(<span class="string">&quot;Malformed UTF8: {:?}&quot;</span>, <span class="ident">from_seq</span>))<span class="question-mark">?</span>,
+            <span class="comment">// deal with the from&#39;s
+            </span><span class="kw">match </span>from_orient {
+                Orientation::Forward =&gt; {
+                    <span class="comment">// do nothing
+                    // length - overlap - extend length at the end of the sequence.
+                    </span><span class="kw">let </span>overlap_seq = <span class="kw-2">&amp;</span>from_seq.get(from_seq.len() - overlap - extend_length..);
+                    <span class="comment">// if the extend length is too long, it means that
+                    // we hit the start of the sequence, so take full slice.
+                    </span><span class="kw">let </span>overlap_str = <span class="kw">match </span>overlap_seq {
+                        <span class="prelude-val">Some</span>(sl) =&gt; std::str::from_utf8(sl)
+                            .with_context(|| <span class="macro">format!</span>(<span class="string">&quot;Malformed UTF8: {:?}&quot;</span>, sl))<span class="question-mark">?</span>,
+                        <span class="prelude-val">None </span>=&gt; std::str::from_utf8(from_seq)
+                            .with_context(|| <span class="macro">format!</span>(<span class="string">&quot;Malformed UTF8: {:?}&quot;</span>, from_seq))<span class="question-mark">?</span>,
                     };
-                    <span class="ident">overlap_str_from_f</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">overlap_str</span>.<span class="ident">to_string</span>());
+                    overlap_str_from_f = <span class="prelude-val">Some</span>(overlap_str.to_string());
                 }
-                <span class="comment">// if the relative negative strand matches</span>
-                <span class="comment">// revcomp and take the end.</span>
-                <span class="ident">Orientation::Backward</span> =&gt; {
-                    <span class="kw">let</span> <span class="ident">revcomp</span> <span class="op">=</span> <span class="ident">reverse_complement</span>(<span class="ident">from_seq</span>);
-                    <span class="comment">// let overlap_revcomp = revcomp[revcomp.len() - overlap - extend_length..].to_vec();</span>
-                    <span class="kw">let</span> <span class="ident">overlap_revcomp</span> <span class="op">=</span> <span class="ident">revcomp</span>.<span class="ident">get</span>(<span class="ident">revcomp</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="ident">overlap</span> <span class="op">-</span> <span class="ident">extend_length</span>..);
+                <span class="comment">// if the relative negative strand matches
+                // revcomp and take the end.
+                </span>Orientation::Backward =&gt; {
+                    <span class="kw">let </span>revcomp = reverse_complement(from_seq);
+                    <span class="comment">// let overlap_revcomp = revcomp[revcomp.len() - overlap - extend_length..].to_vec();
+                    </span><span class="kw">let </span>overlap_revcomp = revcomp.get(revcomp.len() - overlap - extend_length..);
 
-                    <span class="kw">let</span> <span class="ident">overlap_str</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">overlap_revcomp</span> {
-                        <span class="prelude-val">Some</span>(<span class="ident">sl</span>) =&gt; <span class="ident">String::from_utf8</span>(<span class="ident">sl</span>.<span class="ident">to_vec</span>())
-                            .<span class="ident">with_context</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">format!</span>(<span class="string">&quot;Malformed UTF8: {:?}&quot;</span>, <span class="ident">sl</span>))<span class="question-mark">?</span>,
-                        <span class="comment">// take the whole thing.</span>
-                        <span class="prelude-val">None</span> =&gt; <span class="ident">String::from_utf8</span>(<span class="ident">revcomp</span>).<span class="ident">context</span>(<span class="string">&quot;Malformed UTF8.&quot;</span>)<span class="question-mark">?</span>,
+                    <span class="kw">let </span>overlap_str = <span class="kw">match </span>overlap_revcomp {
+                        <span class="prelude-val">Some</span>(sl) =&gt; String::from_utf8(sl.to_vec())
+                            .with_context(|| <span class="macro">format!</span>(<span class="string">&quot;Malformed UTF8: {:?}&quot;</span>, sl))<span class="question-mark">?</span>,
+                        <span class="comment">// take the whole thing.
+                        </span><span class="prelude-val">None </span>=&gt; String::from_utf8(revcomp).context(<span class="string">&quot;Malformed UTF8.&quot;</span>)<span class="question-mark">?</span>,
                     };
 
-                    <span class="ident">overlap_str_from_r</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">overlap_str</span>);
+                    overlap_str_from_r = <span class="prelude-val">Some</span>(overlap_str);
                 }
             }
-            <span class="comment">// deal with the to&#39;s</span>
-            <span class="comment">// here we ignore the overlap, as that is</span>
-            <span class="comment">// captured above.</span>
-            <span class="kw">match</span> <span class="ident">to_orient</span> {
-                <span class="ident">Orientation::Forward</span> =&gt; {
-                    <span class="comment">// do nothing</span>
-                    <span class="comment">// let overlap = &amp;to_seq[overlap..overlap + extend_length];</span>
-                    <span class="kw">let</span> <span class="ident">overlap_seq</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">to_seq</span>.<span class="ident">get</span>(<span class="ident">overlap</span>..<span class="ident">overlap</span> <span class="op">+</span> <span class="ident">extend_length</span>);
+            <span class="comment">// deal with the to&#39;s
+            // here we ignore the overlap, as that is
+            // captured above.
+            </span><span class="kw">match </span>to_orient {
+                Orientation::Forward =&gt; {
+                    <span class="comment">// do nothing
+                    // let overlap = &amp;to_seq[overlap..overlap + extend_length];
+                    </span><span class="kw">let </span>overlap_seq = <span class="kw-2">&amp;</span>to_seq.get(overlap..overlap + extend_length);
 
-                    <span class="kw">let</span> <span class="ident">overlap_str</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">overlap_seq</span> {
-                        <span class="prelude-val">Some</span>(<span class="ident">sl</span>) =&gt; <span class="ident">std::str::from_utf8</span>(<span class="ident">sl</span>)
-                            .<span class="ident">with_context</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">format!</span>(<span class="string">&quot;Malformed UTF8: {:?}&quot;</span>, <span class="ident">sl</span>))<span class="question-mark">?</span>,
-                        <span class="comment">// from end of overlap to the end of the sequence</span>
-                        <span class="prelude-val">None</span> =&gt; <span class="ident">std::str::from_utf8</span>(<span class="kw-2">&amp;</span><span class="ident">to_seq</span>[<span class="ident">overlap</span>..])
-                            .<span class="ident">with_context</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">format!</span>(<span class="string">&quot;Malformed UTF8: {:?}&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">to_seq</span>[<span class="ident">overlap</span>..]))<span class="question-mark">?</span>,
+                    <span class="kw">let </span>overlap_str = <span class="kw">match </span>overlap_seq {
+                        <span class="prelude-val">Some</span>(sl) =&gt; std::str::from_utf8(sl)
+                            .with_context(|| <span class="macro">format!</span>(<span class="string">&quot;Malformed UTF8: {:?}&quot;</span>, sl))<span class="question-mark">?</span>,
+                        <span class="comment">// from end of overlap to the end of the sequence
+                        </span><span class="prelude-val">None </span>=&gt; std::str::from_utf8(<span class="kw-2">&amp;</span>to_seq[overlap..])
+                            .with_context(|| <span class="macro">format!</span>(<span class="string">&quot;Malformed UTF8: {:?}&quot;</span>, <span class="kw-2">&amp;</span>to_seq[overlap..]))<span class="question-mark">?</span>,
                     };
 
-                    <span class="ident">overlap_str_to_f</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">overlap_str</span>.<span class="ident">to_string</span>());
+                    overlap_str_to_f = <span class="prelude-val">Some</span>(overlap_str.to_string());
                 }
-                <span class="comment">// if the relative negative strand matches</span>
-                <span class="comment">// revcomp and take the start.</span>
-                <span class="ident">Orientation::Backward</span> =&gt; {
-                    <span class="kw">let</span> <span class="ident">revcomp</span> <span class="op">=</span> <span class="ident">reverse_complement</span>(<span class="ident">to_seq</span>);
-                    <span class="comment">// let overlap_revcomp = revcomp[overlap..overlap + extend_length].to_vec();</span>
-                    <span class="kw">let</span> <span class="ident">overlap_revcomp</span> <span class="op">=</span> <span class="ident">revcomp</span>.<span class="ident">get</span>(<span class="ident">overlap</span>..<span class="ident">overlap</span> <span class="op">+</span> <span class="ident">extend_length</span>);
+                <span class="comment">// if the relative negative strand matches
+                // revcomp and take the start.
+                </span>Orientation::Backward =&gt; {
+                    <span class="kw">let </span>revcomp = reverse_complement(to_seq);
+                    <span class="comment">// let overlap_revcomp = revcomp[overlap..overlap + extend_length].to_vec();
+                    </span><span class="kw">let </span>overlap_revcomp = revcomp.get(overlap..overlap + extend_length);
 
-                    <span class="kw">let</span> <span class="ident">overlap_str</span> <span class="op">=</span>
-                        <span class="kw">match</span> <span class="ident">overlap_revcomp</span> {
-                            <span class="prelude-val">Some</span>(<span class="ident">sl</span>) =&gt; <span class="ident">String::from_utf8</span>(<span class="ident">sl</span>.<span class="ident">to_vec</span>())
-                                .<span class="ident">with_context</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">format!</span>(<span class="string">&quot;Malformed UTF8: {:?}&quot;</span>, <span class="ident">sl</span>))<span class="question-mark">?</span>,
-                            <span class="prelude-val">None</span> =&gt; <span class="ident">String::from_utf8</span>(<span class="ident">revcomp</span>[<span class="ident">overlap</span>..].<span class="ident">to_vec</span>()).<span class="ident">with_context</span>(
-                                <span class="op">|</span><span class="op">|</span> <span class="macro">format!</span>(<span class="string">&quot;Malformed UTF8: {:?}&quot;</span>, <span class="ident">revcomp</span>[<span class="ident">overlap</span>..].<span class="ident">to_vec</span>()),
+                    <span class="kw">let </span>overlap_str =
+                        <span class="kw">match </span>overlap_revcomp {
+                            <span class="prelude-val">Some</span>(sl) =&gt; String::from_utf8(sl.to_vec())
+                                .with_context(|| <span class="macro">format!</span>(<span class="string">&quot;Malformed UTF8: {:?}&quot;</span>, sl))<span class="question-mark">?</span>,
+                            <span class="prelude-val">None </span>=&gt; String::from_utf8(revcomp[overlap..].to_vec()).with_context(
+                                || <span class="macro">format!</span>(<span class="string">&quot;Malformed UTF8: {:?}&quot;</span>, revcomp[overlap..].to_vec()),
                             )<span class="question-mark">?</span>,
                         };
 
-                    <span class="ident">overlap_str_to_r</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">overlap_str</span>);
+                    overlap_str_to_r = <span class="prelude-val">Some</span>(overlap_str);
                 }
             }
 
-            <span class="ident">from_to</span>.<span class="ident">push</span>(<span class="ident">Overlap</span> {
-                <span class="ident">overlap_str_from_f</span>,
-                <span class="ident">overlap_str_from_r</span>,
-                <span class="ident">overlap_str_to_f</span>,
-                <span class="ident">overlap_str_to_r</span>,
-                <span class="ident">from_segment</span>,
-                <span class="ident">to_segment</span>,
-                <span class="ident">from_orient</span>,
-                <span class="ident">to_orient</span>,
+            from_to.push(Overlap {
+                overlap_str_from_f,
+                overlap_str_from_r,
+                overlap_str_to_f,
+                overlap_str_to_r,
+                from_segment,
+                to_segment,
+                from_orient,
+                to_orient,
             });
         }
-        <span class="prelude-val">Ok</span>(<span class="ident">from_to</span>)
+        <span class="prelude-val">Ok</span>(from_to)
     }
 
-    <span class="doccomment">/// The internal function called when `gfatk fasta` is called.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Prints all segments of the GFA as-is.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">print_sequences</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">subgraph_index_header</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">gfa</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
-        <span class="kw">let</span> <span class="ident">subgraph_index_header</span> <span class="op">=</span> <span class="ident">subgraph_index_header</span>.<span class="ident">unwrap_or</span>(<span class="string">&quot;&quot;</span>.<span class="ident">to_string</span>());
+    <span class="doccomment">/// The internal function called when `gfatk fasta` is called.
+    ///
+    /// Prints all segments of the GFA as-is.
+    </span><span class="kw">pub fn </span>print_sequences(<span class="kw-2">&amp;</span><span class="self">self</span>, subgraph_index_header: <span class="prelude-ty">Option</span>&lt;String&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span>gfa = <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
+        <span class="kw">let </span>subgraph_index_header = subgraph_index_header.unwrap_or(<span class="string">&quot;&quot;</span>.to_string());
 
-        <span class="kw">for</span> <span class="ident">line</span> <span class="kw">in</span> <span class="ident">gfa</span>.<span class="ident">lines_iter</span>() {
-            <span class="kw">match</span> <span class="ident">line</span>.<span class="ident">some_segment</span>() {
-                <span class="prelude-val">Some</span>(<span class="ident">s</span>) =&gt; {
-                    <span class="kw">let</span> <span class="ident">seq</span> <span class="op">=</span> <span class="ident">std::str::from_utf8</span>(<span class="kw-2">&amp;</span><span class="ident">s</span>.<span class="ident">sequence</span>)
-                        .<span class="ident">with_context</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">format!</span>(<span class="string">&quot;Malformed UTF8: {:?}&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">s</span>.<span class="ident">sequence</span>))<span class="question-mark">?</span>;
-                    <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">s</span>.<span class="ident">name</span>;
-                    <span class="macro">println!</span>(<span class="string">&quot;&gt;{}{}\n{}&quot;</span>, <span class="ident">id</span>, <span class="ident">subgraph_index_header</span>, <span class="ident">seq</span>);
-                }
-                <span class="prelude-val">None</span> =&gt; (),
+        <span class="kw">for </span>line <span class="kw">in </span>gfa.lines_iter() {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(s) = line.some_segment() {
+                <span class="kw">let </span>seq = std::str::from_utf8(<span class="kw-2">&amp;</span>s.sequence)
+                    .with_context(|| <span class="macro">format!</span>(<span class="string">&quot;Malformed UTF8: {:?}&quot;</span>, <span class="kw-2">&amp;</span>s.sequence))<span class="question-mark">?</span>;
+                <span class="kw">let </span>id = s.name;
+                <span class="macro">println!</span>(<span class="string">&quot;&gt;{}{}\n{}&quot;</span>, id, subgraph_index_header, seq);
             }
         }
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="doccomment">/// Two internal functions below to parse coverage of a GFA segment.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Used in `gfatk stats`.</span>
-    <span class="kw">fn</span> <span class="ident">parse_coverage_opt</span>(<span class="ident">opt</span>: <span class="kw-2">&amp;</span><span class="ident">OptFieldVal</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">f32</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">ll</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">opt</span> {
-            <span class="ident">OptFieldVal::Float</span>(<span class="ident">f</span>) =&gt; <span class="ident">f</span>,
-            <span class="kw">_</span> =&gt; <span class="macro">bail!</span>(<span class="string">&quot;ll: coverage should be Float()&quot;</span>),
+    <span class="doccomment">/// Two internal functions below to parse coverage of a GFA segment.
+    ///
+    /// Used in `gfatk stats`.
+    </span><span class="kw">fn </span>parse_coverage_opt(opt: <span class="kw-2">&amp;</span>OptFieldVal) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span>f32&gt; {
+        <span class="kw">let </span>ll = <span class="kw">match </span>opt {
+            OptFieldVal::Float(f) =&gt; f,
+            <span class="kw">_ </span>=&gt; <span class="macro">bail!</span>(<span class="string">&quot;ll: coverage should be Float()&quot;</span>),
         };
-        <span class="prelude-val">Ok</span>(<span class="ident">ll</span>)
+        <span class="prelude-val">Ok</span>(ll)
     }
 
-    <span class="kw">fn</span> <span class="ident">get_coverage</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">gfa</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
+    <span class="kw">fn </span>get_coverage(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;f32&gt; {
+        <span class="kw">let </span>gfa = <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
 
-        <span class="kw">let</span> <span class="ident">ll_tag</span>: [<span class="ident">u8</span>; <span class="number">2</span>] <span class="op">=</span> [<span class="number">108</span>, <span class="number">108</span>];
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ll_tag_vec</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
+        <span class="kw">let </span>ll_tag: [u8; <span class="number">2</span>] = [<span class="number">108</span>, <span class="number">108</span>];
+        <span class="kw">let </span><span class="kw-2">mut </span>ll_tag_vec = Vec::new();
 
-        <span class="kw">for</span> <span class="ident">seg</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">gfa</span>.<span class="ident">segments</span> {
-            <span class="kw">let</span> <span class="ident">opts</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">seg</span>.<span class="ident">optional</span>;
-            <span class="kw">for</span> <span class="ident">opt</span> <span class="kw">in</span> <span class="ident">opts</span> {
-                <span class="kw">if</span> <span class="ident">opt</span>.<span class="ident">tag</span> <span class="op">==</span> <span class="ident">ll_tag</span> {
-                    <span class="ident">ll_tag_vec</span>.<span class="ident">push</span>(<span class="ident"><span class="self">Self</span>::parse_coverage_opt</span>(<span class="kw-2">&amp;</span><span class="ident">opt</span>.<span class="ident">value</span>)<span class="question-mark">?</span>);
+        <span class="kw">for </span>seg <span class="kw">in </span><span class="kw-2">&amp;</span>gfa.segments {
+            <span class="kw">let </span>opts = <span class="kw-2">&amp;</span>seg.optional;
+            <span class="kw">for </span>opt <span class="kw">in </span>opts {
+                <span class="kw">if </span>opt.tag == ll_tag {
+                    ll_tag_vec.push(<span class="self">Self</span>::parse_coverage_opt(<span class="kw-2">&amp;</span>opt.value)<span class="question-mark">?</span>);
                 }
             }
         }
-        <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="ident">ll_tag_vec</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">f32</span>;
-        <span class="kw">let</span> <span class="ident">sum</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="ident">ll_tag_vec</span>.<span class="ident">iter</span>().<span class="ident">fold</span>(<span class="number">0.0</span>, <span class="op">|</span><span class="ident">a</span>, <span class="ident">b</span><span class="op">|</span> <span class="ident">a</span> <span class="op">+</span> <span class="kw-2">*</span><span class="kw-2">*</span><span class="ident">b</span>);
+        <span class="kw">let </span>len = ll_tag_vec.len() <span class="kw">as </span>f32;
+        <span class="kw">let </span>sum: f32 = ll_tag_vec.iter().fold(<span class="number">0.0</span>, |a, b| a + <span class="kw-2">**</span>b);
 
-        <span class="prelude-val">Ok</span>(<span class="ident">sum</span> <span class="op">/</span> <span class="ident">len</span>)
+        <span class="prelude-val">Ok</span>(sum / len)
     }
 
-    <span class="doccomment">/// Return the coverage and sequence length for a segment, given a segment name.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Note segment names are always `usize`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">node_seq_len_and_cov</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">node</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">usize</span>, <span class="ident">f32</span>)<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">gfa</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
+    <span class="doccomment">/// Return the coverage and sequence length for a segment, given a segment name.
+    ///
+    /// Note segment names are always `usize`.
+    </span><span class="kw">pub fn </span>node_seq_len_and_cov(<span class="kw-2">&amp;</span><span class="self">self</span>, node: usize) -&gt; <span class="prelude-ty">Result</span>&lt;(usize, f32)&gt; {
+        <span class="kw">let </span>gfa = <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
 
-        <span class="kw">let</span> <span class="ident">ll_tag</span>: [<span class="ident">u8</span>; <span class="number">2</span>] <span class="op">=</span> [<span class="number">108</span>, <span class="number">108</span>];
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">seq_len</span> <span class="op">=</span> <span class="prelude-val">None</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cov</span> <span class="op">=</span> <span class="prelude-val">None</span>;
+        <span class="kw">let </span>ll_tag: [u8; <span class="number">2</span>] = [<span class="number">108</span>, <span class="number">108</span>];
+        <span class="kw">let </span><span class="kw-2">mut </span>seq_len = <span class="prelude-val">None</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>cov = <span class="prelude-val">None</span>;
 
-        <span class="kw">for</span> <span class="ident">segment</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">gfa</span>.<span class="ident">segments</span> {
-            <span class="kw">if</span> <span class="ident">segment</span>.<span class="ident">name</span> <span class="op">==</span> <span class="ident">node</span> {
-                <span class="ident">seq_len</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">segment</span>.<span class="ident">sequence</span>.<span class="ident">len</span>());
-                <span class="kw">let</span> <span class="ident">opt</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">segment</span>.<span class="ident">optional</span>;
-                <span class="kw">for</span> <span class="ident">c</span> <span class="kw">in</span> <span class="ident">opt</span> {
-                    <span class="kw">if</span> <span class="ident">c</span>.<span class="ident">tag</span> <span class="op">==</span> <span class="ident">ll_tag</span> {
-                        <span class="ident">cov</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="kw-2">*</span><span class="ident"><span class="self">Self</span>::parse_coverage_opt</span>(<span class="kw-2">&amp;</span><span class="ident">c</span>.<span class="ident">value</span>)<span class="question-mark">?</span>);
+        <span class="kw">for </span>segment <span class="kw">in </span><span class="kw-2">&amp;</span>gfa.segments {
+            <span class="kw">if </span>segment.name == node {
+                seq_len = <span class="prelude-val">Some</span>(segment.sequence.len());
+                <span class="kw">let </span>opt = <span class="kw-2">&amp;</span>segment.optional;
+                <span class="kw">for </span>c <span class="kw">in </span>opt {
+                    <span class="kw">if </span>c.tag == ll_tag {
+                        cov = <span class="prelude-val">Some</span>(<span class="kw-2">*</span><span class="self">Self</span>::parse_coverage_opt(<span class="kw-2">&amp;</span>c.value)<span class="question-mark">?</span>);
                         <span class="kw">break</span>;
                     }
                 }
@@ -948,329 +939,334 @@
         }
 
         <span class="prelude-val">Ok</span>((
-            <span class="ident">seq_len</span>.<span class="ident">context</span>(<span class="string">&quot;No sequence length for each segment in GFA.&quot;</span>)<span class="question-mark">?</span>,
-            <span class="ident">cov</span>.<span class="ident">context</span>(<span class="string">&quot;No segment coverage for each segment in GFA.&quot;</span>)<span class="question-mark">?</span>,
+            seq_len.context(<span class="string">&quot;No sequence length for each segment in GFA.&quot;</span>)<span class="question-mark">?</span>,
+            cov.context(<span class="string">&quot;No segment coverage for each segment in GFA.&quot;</span>)<span class="question-mark">?</span>,
         ))
     }
 
-    <span class="doccomment">/// The internal function called in `gfatk stats`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Returns average GC%, average coverage, and total sequence length for a GFA (sub)graph.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sequence_stats</span>(
+    <span class="doccomment">/// The internal function called in `gfatk stats`.
+    ///
+    /// Returns average GC%, average coverage, and total sequence length for a GFA (sub)graph.
+    </span><span class="kw">pub fn </span>sequence_stats(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">genome_type</span>: <span class="ident">GenomeType</span>,
-        <span class="ident">tabular</span>: <span class="ident">bool</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">f32</span>, <span class="ident">f32</span>, <span class="ident">usize</span>)<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">gfa</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
+        genome_type: GenomeType,
+        tabular: bool,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(f32, f32, usize)&gt; {
+        <span class="kw">let </span>gfa = <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
 
-        <span class="kw">let</span> <span class="ident">cov</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::get_coverage</span>(<span class="self">self</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>cov = <span class="self">Self</span>::get_coverage(<span class="self">self</span>)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">total_overlap_length</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="kw">for</span> <span class="ident">link</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">gfa</span>.<span class="ident">links</span> {
-            <span class="ident">total_overlap_length</span> <span class="op">+</span><span class="op">=</span> <span class="ident">parse_cigar</span>(<span class="kw-2">&amp;</span><span class="ident">link</span>.<span class="ident">overlap</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>total_overlap_length = <span class="number">0</span>;
+        <span class="kw">for </span>link <span class="kw">in </span><span class="kw-2">&amp;</span>gfa.links {
+            total_overlap_length += parse_cigar(<span class="kw-2">&amp;</span>link.overlap)<span class="question-mark">?</span>;
         }
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">total_sequence_length</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">gc_vec</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>total_sequence_length = <span class="number">0</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>gc_vec = Vec::new();
 
-        <span class="kw">for</span> <span class="ident">segment</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">gfa</span>.<span class="ident">segments</span> {
-            <span class="kw">let</span> <span class="ident">seq</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">segment</span>.<span class="ident">sequence</span>;
-            <span class="ident">total_sequence_length</span> <span class="op">+</span><span class="op">=</span> <span class="ident">seq</span>.<span class="ident">len</span>();
+        <span class="kw">for </span>segment <span class="kw">in </span><span class="kw-2">&amp;</span>gfa.segments {
+            <span class="kw">let </span>seq = <span class="kw-2">&amp;</span>segment.sequence;
+            total_sequence_length += seq.len();
 
-            <span class="kw">let</span> <span class="ident">gc</span> <span class="op">=</span> <span class="ident">utils::gc_content</span>(<span class="ident">seq</span>);
-            <span class="ident">gc_vec</span>.<span class="ident">push</span>(<span class="ident">gc</span>);
+            <span class="kw">let </span>gc = utils::gc_content(seq);
+            gc_vec.push(gc);
         }
 
-        <span class="kw">let</span> <span class="ident">avg_gc</span> <span class="op">=</span> <span class="ident">gc_vec</span>.<span class="ident">iter</span>().<span class="ident">sum</span>::<span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>() <span class="op">/</span> <span class="ident">gc_vec</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">f32</span>;
+        <span class="kw">let </span>avg_gc = gc_vec.iter().sum::&lt;f32&gt;() / gc_vec.len() <span class="kw">as </span>f32;
 
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">tabular</span> <span class="op">&amp;&amp;</span> <span class="ident">genome_type</span> <span class="op">==</span> <span class="ident">GenomeType::None</span> {
-            <span class="macro">println!</span>(<span class="string">&quot;\tTotal sequence length:\t{}&quot;</span>, <span class="ident">total_sequence_length</span>);
-            <span class="macro">println!</span>(<span class="string">&quot;\tTotal sequence overlap length:\t{}&quot;</span>, <span class="ident">total_overlap_length</span>);
+        <span class="kw">if </span>!tabular &amp;&amp; genome_type == GenomeType::None {
+            <span class="macro">println!</span>(<span class="string">&quot;\tTotal sequence length:\t{}&quot;</span>, total_sequence_length);
+            <span class="macro">println!</span>(<span class="string">&quot;\tTotal sequence overlap length:\t{}&quot;</span>, total_overlap_length);
             <span class="macro">println!</span>(
                 <span class="string">&quot;\tSequence length minus overlaps:\t{}&quot;</span>,
-                <span class="ident">total_sequence_length</span> <span class="kw">as</span> <span class="ident">i32</span> <span class="op">-</span> <span class="ident">total_overlap_length</span> <span class="kw">as</span> <span class="ident">i32</span>
+                total_sequence_length <span class="kw">as </span>i32 - total_overlap_length <span class="kw">as </span>i32
             );
-            <span class="macro">println!</span>(<span class="string">&quot;\tGC content of total sequence:\t{}&quot;</span>, <span class="ident">avg_gc</span>);
-            <span class="macro">println!</span>(<span class="string">&quot;\tAverage coverage of total segments:\t{}&quot;</span>, <span class="ident">cov</span>);
+            <span class="macro">println!</span>(<span class="string">&quot;\tGC content of total sequence:\t{}&quot;</span>, avg_gc);
+            <span class="macro">println!</span>(<span class="string">&quot;\tAverage coverage of total segments:\t{}&quot;</span>, cov);
         }
 
-        <span class="prelude-val">Ok</span>((<span class="ident">avg_gc</span>, <span class="ident">cov</span>, <span class="ident">total_sequence_length</span>))
+        <span class="prelude-val">Ok</span>((avg_gc, cov, total_sequence_length))
     }
 
-    <span class="doccomment">/// Returns a `HashMap` of relative coverage of each node (segment) in the GFA.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Relative here indicates that each segment coverage is divided by the lowest coverage node, and rounded.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">gen_cov_hash</span>(
+    <span class="doccomment">/// Returns a `HashMap` of relative coverage of each node (segment) in the GFA.
+    ///
+    /// Relative here indicates that each segment coverage is divided by the lowest coverage node, and rounded.
+    </span><span class="kw">pub fn </span>gen_cov_hash(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">graph_lookup</span>: <span class="kw-2">&amp;</span><span class="ident">GFAGraphLookups</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">NodeIndex</span>, <span class="ident">usize</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">gfa</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
+        graph_lookup: <span class="kw-2">&amp;</span>GFAGraphLookups,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;HashMap&lt;NodeIndex, usize&gt;&gt; {
+        <span class="kw">let </span>gfa = <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
 
-        <span class="kw">let</span> <span class="ident">ll_tag</span>: [<span class="ident">u8</span>; <span class="number">2</span>] <span class="op">=</span> [<span class="number">108</span>, <span class="number">108</span>];
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">node_cov_map</span> <span class="op">=</span> <span class="ident">HashMap::new</span>();
+        <span class="kw">let </span>ll_tag: [u8; <span class="number">2</span>] = [<span class="number">108</span>, <span class="number">108</span>];
+        <span class="kw">let </span><span class="kw-2">mut </span>node_cov_map = HashMap::new();
 
-        <span class="comment">// the initial map contains node index and coverage</span>
-        <span class="kw">for</span> <span class="ident">seg</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">gfa</span>.<span class="ident">segments</span> {
-            <span class="comment">// get the coverage</span>
-            <span class="kw">let</span> <span class="ident">opts</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">seg</span>.<span class="ident">optional</span>;
-            <span class="kw">let</span> <span class="ident">node_index</span> <span class="op">=</span> <span class="ident">graph_lookup</span>.<span class="ident">seg_id_to_node_index</span>(<span class="ident">seg</span>.<span class="ident">name</span>)<span class="question-mark">?</span>;
+        <span class="comment">// the initial map contains node index and coverage
+        </span><span class="kw">for </span>seg <span class="kw">in </span><span class="kw-2">&amp;</span>gfa.segments {
+            <span class="comment">// get the coverage
+            </span><span class="kw">let </span>opts = <span class="kw-2">&amp;</span>seg.optional;
+            <span class="kw">let </span>node_index = graph_lookup.seg_id_to_node_index(seg.name)<span class="question-mark">?</span>;
 
-            <span class="kw">for</span> <span class="ident">opt</span> <span class="kw">in</span> <span class="ident">opts</span> {
-                <span class="kw">if</span> <span class="ident">opt</span>.<span class="ident">tag</span> <span class="op">==</span> <span class="ident">ll_tag</span> {
-                    <span class="kw">let</span> <span class="ident">cov</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::parse_coverage_opt</span>(<span class="kw-2">&amp;</span><span class="ident">opt</span>.<span class="ident">value</span>)<span class="question-mark">?</span>;
-                    <span class="ident">node_cov_map</span>.<span class="ident">insert</span>(<span class="ident">node_index</span>, <span class="kw-2">*</span><span class="ident">cov</span>);
+            <span class="kw">for </span>opt <span class="kw">in </span>opts {
+                <span class="kw">if </span>opt.tag == ll_tag {
+                    <span class="kw">let </span>cov = <span class="self">Self</span>::parse_coverage_opt(<span class="kw-2">&amp;</span>opt.value)<span class="question-mark">?</span>;
+                    node_cov_map.insert(node_index, <span class="kw-2">*</span>cov);
                 }
             }
         }
 
-        <span class="comment">// we want to convert the node index and coverage</span>
-        <span class="comment">// to node index and *relative* coverage</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">lowest_cov_iter</span> <span class="op">=</span> <span class="ident">node_cov_map</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">_k</span>, <span class="ident">v</span>)<span class="op">|</span> <span class="ident">v</span>).<span class="ident">enumerate</span>();
-        <span class="kw">let</span> <span class="ident">init</span> <span class="op">=</span> <span class="ident">lowest_cov_iter</span>
-            .<span class="ident">next</span>()
-            .<span class="ident">context</span>(<span class="string">&quot;No coverage information found in this GFA.&quot;</span>)<span class="question-mark">?</span>;
-        <span class="comment">// we process the rest</span>
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">lowest_cov_iter</span>.<span class="ident">try_fold</span>(<span class="ident">init</span>, <span class="op">|</span><span class="ident">acc</span>, <span class="ident">x</span><span class="op">|</span> {
-            <span class="comment">// return None if x is NaN</span>
-            <span class="kw">let</span> <span class="ident">cmp</span> <span class="op">=</span> <span class="ident">x</span>.<span class="number">1</span>.<span class="ident">partial_cmp</span>(<span class="ident">acc</span>.<span class="number">1</span>)<span class="question-mark">?</span>;
-            <span class="comment">// if x is less than the acc</span>
-            <span class="kw">let</span> <span class="ident">min</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="ident">std::cmp::Ordering::Less</span> <span class="op">=</span> <span class="ident">cmp</span> {
-                <span class="ident">x</span>
-            } <span class="kw">else</span> {
-                <span class="ident">acc</span>
+        <span class="comment">// we want to convert the node index and coverage
+        // to node index and *relative* coverage
+        </span><span class="kw">let </span><span class="kw-2">mut </span>lowest_cov_iter = node_cov_map.values().enumerate();
+        <span class="kw">let </span>init = lowest_cov_iter
+            .next()
+            .context(<span class="string">&quot;No coverage information found in this GFA.&quot;</span>)<span class="question-mark">?</span>;
+        <span class="comment">// we process the rest
+        </span><span class="kw">let </span>result = lowest_cov_iter.try_fold(init, |acc, x| {
+            <span class="comment">// return None if x is NaN
+            </span><span class="kw">let </span>cmp = x.<span class="number">1</span>.partial_cmp(acc.<span class="number">1</span>)<span class="question-mark">?</span>;
+            <span class="comment">// if x is less than the acc
+            </span><span class="kw">let </span>min = <span class="kw">if let </span>std::cmp::Ordering::Less = cmp {
+                x
+            } <span class="kw">else </span>{
+                acc
             };
-            <span class="prelude-val">Some</span>(<span class="ident">min</span>)
+            <span class="prelude-val">Some</span>(min)
         });
 
-        <span class="comment">// allocate to a new map as we want u32&#39;s</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rel_cov_map</span> <span class="op">=</span> <span class="ident">HashMap::new</span>();
+        <span class="comment">// allocate to a new map as we want u32&#39;s
+        </span><span class="kw">let </span><span class="kw-2">mut </span>rel_cov_map = HashMap::new();
 
-        <span class="kw">for</span> (<span class="ident">k</span>, <span class="ident">v</span>) <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">node_cov_map</span> {
-            <span class="ident">rel_cov_map</span>.<span class="ident">insert</span>(<span class="kw-2">*</span><span class="ident">k</span>, (<span class="ident">v</span> <span class="op">/</span> <span class="ident">result</span>.<span class="ident">unwrap</span>().<span class="number">1</span>).<span class="ident">round</span>() <span class="kw">as</span> <span class="ident">usize</span>);
+        <span class="kw">for </span>(k, v) <span class="kw">in </span><span class="kw-2">&amp;</span>node_cov_map {
+            rel_cov_map.insert(<span class="kw-2">*</span>k, (v / result.unwrap().<span class="number">1</span>).round() <span class="kw">as </span>usize);
         }
 
-        <span class="prelude-val">Ok</span>(<span class="ident">rel_cov_map</span>)
+        <span class="prelude-val">Ok</span>(rel_cov_map)
     }
 
-    <span class="doccomment">/// Take a [`GFAPath`] and print out the path</span>
-    <span class="doccomment">/// from a GFA.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Currently implemented requires two loops of the GFA, and storage</span>
-    <span class="doccomment">/// of the sequences in a [`HashMap`].</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_path_cli</span>(
+    <span class="doccomment">/// Take a [`GFAPath`] and print out the path
+    /// from a GFA.
+    ///
+    /// Currently implemented requires two loops of the GFA, and storage
+    /// of the sequences in a [`HashMap`].
+    </span><span class="kw">pub fn </span>from_path_cli(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">path</span>: <span class="ident">GFAPath</span>,
-        <span class="ident">link_map</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">usize</span><span class="op">&gt;</span>,
-        <span class="ident">call</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-        <span class="ident">fasta_header</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">gfa</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
+        path: GFAPath,
+        link_map: HashMap&lt;String, usize&gt;,
+        call: <span class="kw-2">&amp;</span>str,
+        fasta_header: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span>gfa = <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
 
-        <span class="comment">// put all the segments in memory - easiest way for now.</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">seg_map</span> <span class="op">=</span> <span class="ident">HashMap::new</span>();
+        <span class="comment">// put all the segments in memory - easiest way for now.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>seg_map = HashMap::new();
 
-        <span class="kw">for</span> <span class="ident">seg</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">gfa</span>.<span class="ident">segments</span> {
-            <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">seg</span>.<span class="ident">name</span>;
-            <span class="kw">let</span> <span class="ident">seq</span> <span class="op">=</span> <span class="ident">seg</span>.<span class="ident">sequence</span>.<span class="ident">clone</span>();
+        <span class="kw">for </span>seg <span class="kw">in </span><span class="kw-2">&amp;</span>gfa.segments {
+            <span class="kw">let </span>id = seg.name;
+            <span class="kw">let </span>seq = seg.sequence.clone();
 
-            <span class="ident">seg_map</span>.<span class="ident">insert</span>(<span class="ident">id</span>, <span class="ident">seq</span>);
+            seg_map.insert(id, seq);
         }
 
-        <span class="kw">match</span> <span class="ident">call</span> {
-            <span class="string">&quot;path&quot;</span> =&gt; <span class="macro">println!</span>(<span class="string">&quot;&gt;{}&quot;</span>, <span class="ident">path</span>.<span class="ident">to_fasta_header</span>()),
-            <span class="string">&quot;linear&quot;</span> =&gt; <span class="macro">println!</span>(<span class="string">&quot;&gt;{}&quot;</span>, <span class="ident">fasta_header</span>.<span class="ident">unwrap</span>()),
-            <span class="kw">_</span> =&gt; <span class="macro">bail!</span>(<span class="string">&quot;Should never reach here.&quot;</span>),
+        <span class="kw">match </span>call {
+            <span class="string">&quot;path&quot; </span>=&gt; <span class="macro">println!</span>(<span class="string">&quot;&gt;{}&quot;</span>, path.to_fasta_header()),
+            <span class="string">&quot;linear&quot; </span>=&gt; <span class="macro">println!</span>(<span class="string">&quot;&gt;{}&quot;</span>, fasta_header.unwrap()),
+            <span class="kw">_ </span>=&gt; <span class="macro">bail!</span>(<span class="string">&quot;Should never reach here.&quot;</span>),
         }
 
-        <span class="comment">// if we have only one segment, print this fully</span>
-        <span class="kw">if</span> <span class="ident">path</span>.<span class="ident">inner</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="number">1</span> {
-            <span class="kw">match</span> <span class="ident">path</span>.<span class="ident">inner</span>[<span class="number">0</span>].<span class="ident">orientation</span> {
-                <span class="ident">Orientation::Forward</span> =&gt; {
-                    <span class="kw">let</span> <span class="ident">seq</span> <span class="op">=</span> <span class="ident">seg_map</span>
-                        .<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">path</span>.<span class="ident">inner</span>[<span class="number">0</span>].<span class="ident">segment_id</span>)
-                        .<span class="ident">context</span>(<span class="string">&quot;This segment ID does not exist in the GFA&quot;</span>)<span class="question-mark">?</span>
-                        .<span class="ident">to_vec</span>();
-                    <span class="macro">println!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">std::str::from_utf8</span>(<span class="kw-2">&amp;</span><span class="ident">seq</span>)<span class="question-mark">?</span>);
+        <span class="comment">// if we have only one segment, print this fully
+        </span><span class="kw">if </span>path.inner.len() == <span class="number">1 </span>{
+            <span class="kw">match </span>path.inner[<span class="number">0</span>].orientation {
+                Orientation::Forward =&gt; {
+                    <span class="kw">let </span>seq = seg_map
+                        .get(<span class="kw-2">&amp;</span>path.inner[<span class="number">0</span>].segment_id)
+                        .context(<span class="string">&quot;This segment ID does not exist in the GFA&quot;</span>)<span class="question-mark">?
+                        </span>.to_vec();
+                    <span class="macro">println!</span>(<span class="string">&quot;{}&quot;</span>, std::str::from_utf8(<span class="kw-2">&amp;</span>seq)<span class="question-mark">?</span>);
                 }
-                <span class="ident">Orientation::Backward</span> =&gt; {
-                    <span class="kw">let</span> <span class="ident">seq</span> <span class="op">=</span> <span class="ident">seg_map</span>
-                        .<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">path</span>.<span class="ident">inner</span>[<span class="number">0</span>].<span class="ident">segment_id</span>)
-                        .<span class="ident">context</span>(<span class="string">&quot;This segment ID does not exist in the GFA&quot;</span>)<span class="question-mark">?</span>;
-                    <span class="macro">println!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">std::str::from_utf8</span>(<span class="kw-2">&amp;</span><span class="ident">utils::reverse_complement</span>(<span class="ident">seq</span>))<span class="question-mark">?</span>);
+                Orientation::Backward =&gt; {
+                    <span class="kw">let </span>seq = seg_map
+                        .get(<span class="kw-2">&amp;</span>path.inner[<span class="number">0</span>].segment_id)
+                        .context(<span class="string">&quot;This segment ID does not exist in the GFA&quot;</span>)<span class="question-mark">?</span>;
+                    <span class="macro">println!</span>(<span class="string">&quot;{}&quot;</span>, std::str::from_utf8(<span class="kw-2">&amp;</span>utils::reverse_complement(seq))<span class="question-mark">?</span>);
                 }
             }
-            <span class="comment">// probably not strictly necessary, but nice to be explicit in the return.</span>
-            <span class="kw">return</span> <span class="prelude-val">Ok</span>(());
+            <span class="comment">// probably not strictly necessary, but nice to be explicit in the return.
+            </span><span class="kw">return </span><span class="prelude-val">Ok</span>(());
         }
 
-        <span class="comment">// now iterate over the path itself</span>
-        <span class="kw">for</span> <span class="ident">path_el</span> <span class="kw">in</span> <span class="ident">path</span>.<span class="ident">inner</span>.<span class="ident">windows</span>(<span class="number">2</span>) {
-            <span class="comment">// from</span>
-            <span class="kw">let</span> <span class="ident">seg_id_from</span> <span class="op">=</span> <span class="ident">path_el</span>[<span class="number">0</span>].<span class="ident">segment_id</span>;
-            <span class="kw">let</span> <span class="ident">orientation_from</span> <span class="op">=</span> <span class="ident">path_el</span>[<span class="number">0</span>].<span class="ident">orientation</span>;
-            <span class="comment">// to</span>
-            <span class="kw">let</span> <span class="ident">seg_id_to</span> <span class="op">=</span> <span class="ident">path_el</span>[<span class="number">1</span>].<span class="ident">segment_id</span>;
-            <span class="kw">let</span> <span class="ident">orientation_to</span> <span class="op">=</span> <span class="ident">path_el</span>[<span class="number">1</span>].<span class="ident">orientation</span>;
+        <span class="comment">// now iterate over the path itself
+        </span><span class="kw">for </span>path_el <span class="kw">in </span>path.inner.windows(<span class="number">2</span>) {
+            <span class="comment">// from
+            </span><span class="kw">let </span>seg_id_from = path_el[<span class="number">0</span>].segment_id;
+            <span class="kw">let </span>orientation_from = path_el[<span class="number">0</span>].orientation;
+            <span class="comment">// to
+            </span><span class="kw">let </span>seg_id_to = path_el[<span class="number">1</span>].segment_id;
+            <span class="kw">let </span>orientation_to = path_el[<span class="number">1</span>].orientation;
 
-            <span class="comment">// format so we can match on the links map</span>
-            <span class="kw">let</span> <span class="ident">cigar_match</span> <span class="op">=</span> <span class="macro">format!</span>(
+            <span class="comment">// format so we can match on the links map
+            </span><span class="kw">let </span>cigar_match = <span class="macro">format!</span>(
                 <span class="string">&quot;{}{}|{}{}&quot;</span>,
-                <span class="ident">seg_id_from</span>, <span class="ident">orientation_from</span>, <span class="ident">seg_id_to</span>, <span class="ident">orientation_to</span>
+                seg_id_from, orientation_from, seg_id_to, orientation_to
             );
 
-            <span class="kw">let</span> <span class="ident">overlap</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">link_map</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">cigar_match</span>).<span class="ident">context</span>(<span class="macro">format!</span>(
+            <span class="kw">let </span>overlap = <span class="kw-2">*</span>link_map.get(<span class="kw-2">&amp;</span>cigar_match).context(<span class="macro">format!</span>(
                 <span class="string">&quot;This link: {} - does not occur in the input GFA. Perhaps re-consider the input path?&quot;</span>,
-                <span class="ident">cigar_match</span>
+                cigar_match
             ))<span class="question-mark">?</span>;
 
-            <span class="comment">// for the first element in the path</span>
-            <span class="comment">// we print the entire sequence</span>
-            <span class="kw">if</span> <span class="ident">path_el</span>[<span class="number">0</span>].<span class="ident">index</span> <span class="op">==</span> <span class="number">0</span> {
-                <span class="kw">let</span> <span class="ident">sequence</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">orientation_from</span> {
-                    <span class="ident">Orientation::Forward</span> =&gt; <span class="ident">seg_map</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">seg_id_from</span>).<span class="ident">unwrap</span>().<span class="ident">to_vec</span>(),
-                    <span class="ident">Orientation::Backward</span> =&gt; {
-                        <span class="kw">let</span> <span class="ident">seq</span> <span class="op">=</span> <span class="ident">seg_map</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">seg_id_from</span>).<span class="ident">unwrap</span>();
-                        <span class="ident">utils::reverse_complement</span>(<span class="ident">seq</span>)
+            <span class="comment">// for the first element in the path
+            // we print the entire sequence
+            </span><span class="kw">if </span>path_el[<span class="number">0</span>].index == <span class="number">0 </span>{
+                <span class="kw">let </span>sequence = <span class="kw">match </span>orientation_from {
+                    Orientation::Forward =&gt; seg_map.get(<span class="kw-2">&amp;</span>seg_id_from).unwrap().to_vec(),
+                    Orientation::Backward =&gt; {
+                        <span class="kw">let </span>seq = seg_map.get(<span class="kw-2">&amp;</span>seg_id_from).unwrap();
+                        utils::reverse_complement(seq)
                     }
                 };
 
-                <span class="comment">// and we must print out this second sequence, otherwise it&#39;s skipped!</span>
-                <span class="kw">let</span> <span class="ident">sequence2</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">orientation_to</span> {
-                    <span class="ident">Orientation::Forward</span> =&gt; <span class="ident">seg_map</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">seg_id_to</span>).<span class="ident">unwrap</span>()[<span class="ident">overlap</span>..].<span class="ident">to_vec</span>(),
-                    <span class="ident">Orientation::Backward</span> =&gt; {
-                        <span class="kw">let</span> <span class="ident">seq</span> <span class="op">=</span> <span class="ident">seg_map</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">seg_id_to</span>).<span class="ident">unwrap</span>();
-                        <span class="ident">utils::reverse_complement</span>(<span class="ident">seq</span>)[<span class="ident">overlap</span>..].<span class="ident">to_vec</span>()
+                <span class="comment">// and we must print out this second sequence, otherwise it&#39;s skipped!
+                </span><span class="kw">let </span>sequence2 = <span class="kw">match </span>orientation_to {
+                    Orientation::Forward =&gt; seg_map.get(<span class="kw-2">&amp;</span>seg_id_to).unwrap()[overlap..].to_vec(),
+                    Orientation::Backward =&gt; {
+                        <span class="kw">let </span>seq = seg_map.get(<span class="kw-2">&amp;</span>seg_id_to).unwrap();
+                        utils::reverse_complement(seq)[overlap..].to_vec()
                     }
                 };
 
-                <span class="macro">print!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">std::str::from_utf8</span>(<span class="kw-2">&amp;</span><span class="ident">sequence</span>)<span class="question-mark">?</span>);
-                <span class="macro">print!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">std::str::from_utf8</span>(<span class="kw-2">&amp;</span><span class="ident">sequence2</span>)<span class="question-mark">?</span>);
-            } <span class="kw">else</span> {
-                <span class="comment">// otherwise we print the second element of the windows :)</span>
-                <span class="comment">// and these are all dealt with in the same way</span>
-                <span class="kw">let</span> <span class="ident">sequence</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">orientation_to</span> {
-                    <span class="ident">Orientation::Forward</span> =&gt; <span class="ident">seg_map</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">seg_id_to</span>).<span class="ident">unwrap</span>()[<span class="ident">overlap</span>..].<span class="ident">to_vec</span>(),
-                    <span class="ident">Orientation::Backward</span> =&gt; {
-                        <span class="kw">let</span> <span class="ident">seq</span> <span class="op">=</span> <span class="ident">seg_map</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">seg_id_to</span>).<span class="ident">unwrap</span>();
-                        <span class="ident">utils::reverse_complement</span>(<span class="ident">seq</span>)[<span class="ident">overlap</span>..].<span class="ident">to_vec</span>()
+                <span class="macro">print!</span>(<span class="string">&quot;{}&quot;</span>, std::str::from_utf8(<span class="kw-2">&amp;</span>sequence)<span class="question-mark">?</span>);
+                <span class="macro">print!</span>(<span class="string">&quot;{}&quot;</span>, std::str::from_utf8(<span class="kw-2">&amp;</span>sequence2)<span class="question-mark">?</span>);
+            } <span class="kw">else </span>{
+                <span class="comment">// otherwise we print the second element of the windows :)
+                // and these are all dealt with in the same way
+                </span><span class="kw">let </span>sequence = <span class="kw">match </span>orientation_to {
+                    Orientation::Forward =&gt; seg_map.get(<span class="kw-2">&amp;</span>seg_id_to).unwrap()[overlap..].to_vec(),
+                    Orientation::Backward =&gt; {
+                        <span class="kw">let </span>seq = seg_map.get(<span class="kw-2">&amp;</span>seg_id_to).unwrap();
+                        utils::reverse_complement(seq)[overlap..].to_vec()
                     }
                 };
 
-                <span class="macro">print!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">std::str::from_utf8</span>(<span class="kw-2">&amp;</span><span class="ident">sequence</span>)<span class="question-mark">?</span>);
+                <span class="macro">print!</span>(<span class="string">&quot;{}&quot;</span>, std::str::from_utf8(<span class="kw-2">&amp;</span>sequence)<span class="question-mark">?</span>);
             }
         }
 
-        <span class="comment">// newline</span>
-        <span class="macro">println!</span>();
+        <span class="comment">// newline
+        </span><span class="macro">println!</span>();
 
         <span class="prelude-val">Ok</span>(())
     }
+
+    <span class="comment">// pub fn get_path_lines(&amp;self) {
+    //     for path in &amp;self.0.paths {
+    //         for (segment, orientation) in path.iter() {}
+    //     }
+    // }
+</span>}
+
+<span class="doccomment">/// Overlap from one segment to another.
+</span><span class="kw">pub struct </span>Overlap {
+    <span class="doccomment">/// From segment forward.
+    </span><span class="kw">pub </span>overlap_str_from_f: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    <span class="doccomment">/// From segment reverse.
+    </span><span class="kw">pub </span>overlap_str_from_r: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    <span class="doccomment">/// To segment forward.
+    </span><span class="kw">pub </span>overlap_str_to_f: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    <span class="doccomment">/// To segment reverse.
+    </span><span class="kw">pub </span>overlap_str_to_r: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    <span class="doccomment">/// ID of from segment.
+    </span><span class="kw">pub </span>from_segment: usize,
+    <span class="doccomment">/// ID of to segment.
+    </span><span class="kw">pub </span>to_segment: usize,
+    <span class="doccomment">/// Orientation of from segment.
+    </span><span class="kw">pub </span>from_orient: Orientation,
+    <span class="doccomment">/// Orientation of to segment.
+    </span><span class="kw">pub </span>to_orient: Orientation,
 }
 
-<span class="doccomment">/// Overlap from one segment to another.</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Overlap</span> {
-    <span class="doccomment">/// From segment forward.</span>
-    <span class="kw">pub</span> <span class="ident">overlap_str_from_f</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// From segment reverse.</span>
-    <span class="kw">pub</span> <span class="ident">overlap_str_from_r</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// To segment forward.</span>
-    <span class="kw">pub</span> <span class="ident">overlap_str_to_f</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// To segment reverse.</span>
-    <span class="kw">pub</span> <span class="ident">overlap_str_to_r</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// ID of from segment.</span>
-    <span class="kw">pub</span> <span class="ident">from_segment</span>: <span class="ident">usize</span>,
-    <span class="doccomment">/// ID of to segment.</span>
-    <span class="kw">pub</span> <span class="ident">to_segment</span>: <span class="ident">usize</span>,
-    <span class="doccomment">/// Orientation of from segment.</span>
-    <span class="kw">pub</span> <span class="ident">from_orient</span>: <span class="ident">Orientation</span>,
-    <span class="doccomment">/// Orientation of to segment.</span>
-    <span class="kw">pub</span> <span class="ident">to_orient</span>: <span class="ident">Orientation</span>,
-}
+<span class="doccomment">/// A vector of `Overlap` structs.
+</span><span class="kw">pub struct </span>Overlaps(Vec&lt;Overlap&gt;);
 
-<span class="doccomment">/// A vector of `Overlap` structs.</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Overlaps</span>(<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Overlap</span><span class="op">&gt;</span>);
-
-<span class="kw">impl</span> <span class="ident">Overlaps</span> {
-    <span class="doccomment">/// Create a new instance of `Overlaps`.</span>
-    <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span>(<span class="ident">Vec::new</span>())
+<span class="kw">impl </span>Overlaps {
+    <span class="doccomment">/// Create a new instance of `Overlaps`.
+    </span><span class="kw">fn </span>new() -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>(Vec::new())
     }
-    <span class="doccomment">/// Append to `Overlaps`, adding another `Overlap`.</span>
-    <span class="kw">fn</span> <span class="ident">push</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">add</span>: <span class="ident">Overlap</span>) {
-        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">push</span>(<span class="ident">add</span>)
+    <span class="doccomment">/// Append to `Overlaps`, adding another `Overlap`.
+    </span><span class="kw">fn </span>push(<span class="kw-2">&amp;mut </span><span class="self">self</span>, add: Overlap) {
+        <span class="self">self</span>.<span class="number">0</span>.push(add)
     }
-    <span class="doccomment">/// Print overlaps to STDOUT.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">print</span>(<span class="self">self</span>, <span class="ident">extend_length</span>: <span class="ident">usize</span>) {
-        <span class="comment">// long winded...</span>
-        <span class="kw">for</span> <span class="ident">o</span> <span class="kw">in</span> <span class="self">self</span>.<span class="number">0</span> {
-            <span class="comment">// unwrap None -&gt; zero length string.</span>
-            <span class="kw">let</span> <span class="ident">ff</span> <span class="op">=</span> <span class="ident">o</span>.<span class="ident">overlap_str_from_f</span>.<span class="ident">unwrap_or</span>(<span class="string">&quot;&quot;</span>.<span class="ident">to_string</span>());
-            <span class="kw">let</span> <span class="ident">fr</span> <span class="op">=</span> <span class="ident">o</span>.<span class="ident">overlap_str_from_r</span>.<span class="ident">unwrap_or</span>(<span class="string">&quot;&quot;</span>.<span class="ident">to_string</span>());
-            <span class="kw">let</span> <span class="ident">tf</span> <span class="op">=</span> <span class="ident">o</span>.<span class="ident">overlap_str_to_f</span>.<span class="ident">unwrap_or</span>(<span class="string">&quot;&quot;</span>.<span class="ident">to_string</span>());
-            <span class="kw">let</span> <span class="ident">tr</span> <span class="op">=</span> <span class="ident">o</span>.<span class="ident">overlap_str_to_r</span>.<span class="ident">unwrap_or</span>(<span class="string">&quot;&quot;</span>.<span class="ident">to_string</span>());
-            <span class="kw">let</span> <span class="ident">from_seg</span> <span class="op">=</span> <span class="ident">o</span>.<span class="ident">from_segment</span>;
-            <span class="kw">let</span> <span class="ident">to_seg</span> <span class="op">=</span> <span class="ident">o</span>.<span class="ident">to_segment</span>;
-            <span class="kw">let</span> <span class="ident">from_orient</span> <span class="op">=</span> <span class="ident">o</span>.<span class="ident">from_orient</span>;
-            <span class="kw">let</span> <span class="ident">to_orient</span> <span class="op">=</span> <span class="ident">o</span>.<span class="ident">to_orient</span>;
+    <span class="doccomment">/// Print overlaps to STDOUT.
+    </span><span class="kw">pub fn </span>print(<span class="self">self</span>, extend_length: usize) {
+        <span class="comment">// long winded...
+        </span><span class="kw">for </span>o <span class="kw">in </span><span class="self">self</span>.<span class="number">0 </span>{
+            <span class="comment">// unwrap None -&gt; zero length string.
+            </span><span class="kw">let </span>ff = o.overlap_str_from_f.unwrap_or(<span class="string">&quot;&quot;</span>.to_string());
+            <span class="kw">let </span>fr = o.overlap_str_from_r.unwrap_or(<span class="string">&quot;&quot;</span>.to_string());
+            <span class="kw">let </span>tf = o.overlap_str_to_f.unwrap_or(<span class="string">&quot;&quot;</span>.to_string());
+            <span class="kw">let </span>tr = o.overlap_str_to_r.unwrap_or(<span class="string">&quot;&quot;</span>.to_string());
+            <span class="kw">let </span>from_seg = o.from_segment;
+            <span class="kw">let </span>to_seg = o.to_segment;
+            <span class="kw">let </span>from_orient = o.from_orient;
+            <span class="kw">let </span>to_orient = o.to_orient;
 
             <span class="macro">println!</span>(
                 <span class="string">&quot;&gt;{}({})-&gt;{}({}): extend = {}\n{}{}{}{}&quot;</span>,
-                <span class="ident">from_seg</span>, <span class="ident">from_orient</span>, <span class="ident">to_seg</span>, <span class="ident">to_orient</span>, <span class="ident">extend_length</span>, <span class="ident">ff</span>, <span class="ident">fr</span>, <span class="ident">tf</span>, <span class="ident">tr</span>
+                from_seg, from_orient, to_seg, to_orient, extend_length, ff, fr, tf, tr
             );
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
 
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::load::load_gfa</span>;
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::stats::GenomeType</span>;
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use </span><span class="kw">crate</span>::load::load_gfa;
+    <span class="kw">use </span><span class="kw">crate</span>::stats::GenomeType;
 
-    <span class="comment">// the GFA -&gt; GFAtk structure used in tests below.</span>
-    <span class="kw">fn</span> <span class="ident">make_gfa</span>(<span class="ident">path</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">GFAtk</span> {
-        <span class="ident">GFAtk</span>(<span class="ident">load_gfa</span>(<span class="ident">path</span>).<span class="ident">unwrap</span>())
+    <span class="comment">// the GFA -&gt; GFAtk structure used in tests below.
+    </span><span class="kw">fn </span>make_gfa(path: <span class="kw-2">&amp;</span>str) -&gt; GFAtk {
+        GFAtk(load_gfa(path).unwrap())
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_gfa_sequence_stats</span>() {
-        <span class="kw">let</span> <span class="ident">gfa</span> <span class="op">=</span> <span class="ident">make_gfa</span>(<span class="string">&quot;./tests/test_linear.gfa&quot;</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_gfa_sequence_stats() {
+        <span class="kw">let </span>gfa = make_gfa(<span class="string">&quot;./tests/test_linear.gfa&quot;</span>);
 
-        <span class="comment">// could be mitochondria/chloroplast</span>
-        <span class="kw">let</span> (<span class="ident">gc</span>, <span class="ident">cov</span>, <span class="ident">len</span>) <span class="op">=</span> <span class="ident">gfa</span>.<span class="ident">sequence_stats</span>(<span class="ident">GenomeType::Mitochondria</span>, <span class="bool-val">false</span>).<span class="ident">unwrap</span>();
+        <span class="comment">// could be mitochondria/chloroplast
+        </span><span class="kw">let </span>(gc, cov, len) = gfa.sequence_stats(GenomeType::Mitochondria, <span class="bool-val">false</span>).unwrap();
 
-        <span class="macro">assert!</span>(<span class="ident">cov</span> <span class="op">==</span> <span class="number">40.0</span>);
-        <span class="macro">assert!</span>(<span class="ident">gc</span> <span class="op">==</span> <span class="number">0.39523807</span>);
-        <span class="macro">assert!</span>(<span class="ident">len</span> <span class="op">==</span> <span class="number">18</span>);
+        <span class="macro">assert!</span>(cov == <span class="number">40.0</span>);
+        <span class="macro">assert!</span>(gc == <span class="number">0.39523807</span>);
+        <span class="macro">assert!</span>(len == <span class="number">18</span>);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_gen_cov_hash</span>() {
-        <span class="kw">let</span> <span class="ident">gfa</span> <span class="op">=</span> <span class="ident">make_gfa</span>(<span class="string">&quot;./tests/test_linear.gfa&quot;</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_gen_cov_hash() {
+        <span class="kw">let </span>gfa = make_gfa(<span class="string">&quot;./tests/test_linear.gfa&quot;</span>);
 
-        <span class="kw">let</span> <span class="ident">lookup</span> <span class="op">=</span> <span class="ident">GFAGraphLookups</span>(<span class="macro">vec!</span>[
-            <span class="ident"><span class="kw">crate</span>::utils::GFAGraphPair</span> {
-                <span class="ident">node_index</span>: <span class="ident">NodeIndex::new</span>(<span class="number">0</span>),
-                <span class="ident">seg_id</span>: <span class="number">11</span>,
+        <span class="kw">let </span>lookup = GFAGraphLookups(<span class="macro">vec!</span>[
+            <span class="kw">crate</span>::utils::GFAGraphPair {
+                node_index: NodeIndex::new(<span class="number">0</span>),
+                seg_id: <span class="number">11</span>,
             },
-            <span class="ident"><span class="kw">crate</span>::utils::GFAGraphPair</span> {
-                <span class="ident">node_index</span>: <span class="ident">NodeIndex::new</span>(<span class="number">1</span>),
-                <span class="ident">seg_id</span>: <span class="number">12</span>,
+            <span class="kw">crate</span>::utils::GFAGraphPair {
+                node_index: NodeIndex::new(<span class="number">1</span>),
+                seg_id: <span class="number">12</span>,
             },
-            <span class="ident"><span class="kw">crate</span>::utils::GFAGraphPair</span> {
-                <span class="ident">node_index</span>: <span class="ident">NodeIndex::new</span>(<span class="number">2</span>),
-                <span class="ident">seg_id</span>: <span class="number">13</span>,
+            <span class="kw">crate</span>::utils::GFAGraphPair {
+                node_index: NodeIndex::new(<span class="number">2</span>),
+                seg_id: <span class="number">13</span>,
             },
         ]);
 
-        <span class="kw">let</span> <span class="ident">cov_hash</span> <span class="op">=</span> <span class="ident">gfa</span>.<span class="ident">gen_cov_hash</span>(<span class="kw-2">&amp;</span><span class="ident">lookup</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let </span>cov_hash = gfa.gen_cov_hash(<span class="kw-2">&amp;</span>lookup).unwrap();
 
-        <span class="macro">assert_eq!</span>(<span class="ident">cov_hash</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">NodeIndex::new</span>(<span class="number">0</span>)).<span class="ident">unwrap</span>(), <span class="kw-2">&amp;</span><span class="number">1</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">cov_hash</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">NodeIndex::new</span>(<span class="number">1</span>)).<span class="ident">unwrap</span>(), <span class="kw-2">&amp;</span><span class="number">2</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">cov_hash</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">NodeIndex::new</span>(<span class="number">2</span>)).<span class="ident">unwrap</span>(), <span class="kw-2">&amp;</span><span class="number">1</span>);
+        <span class="macro">assert_eq!</span>(cov_hash.get(<span class="kw-2">&amp;</span>NodeIndex::new(<span class="number">0</span>)).unwrap(), <span class="kw-2">&amp;</span><span class="number">1</span>);
+        <span class="macro">assert_eq!</span>(cov_hash.get(<span class="kw-2">&amp;</span>NodeIndex::new(<span class="number">1</span>)).unwrap(), <span class="kw-2">&amp;</span><span class="number">2</span>);
+        <span class="macro">assert_eq!</span>(cov_hash.get(<span class="kw-2">&amp;</span>NodeIndex::new(<span class="number">2</span>)).unwrap(), <span class="kw-2">&amp;</span><span class="number">1</span>);
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="gfatk" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.62.0 (a8314ef7d 2022-06-27)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="gfatk" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0 (69f9c33d7 2022-12-12)" ></div></body></html>

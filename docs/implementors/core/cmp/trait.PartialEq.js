@@ -1,3 +1,3 @@
-(function() {var implementors = {};
-implementors["gfatk"] = [{"text":"impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.62.0/core/cmp/trait.PartialEq.html\" title=\"trait core::cmp::PartialEq\">PartialEq</a>&lt;<a class=\"enum\" href=\"gfatk/stats/enum.GenomeType.html\" title=\"enum gfatk::stats::GenomeType\">GenomeType</a>&gt; for <a class=\"enum\" href=\"gfatk/stats/enum.GenomeType.html\" title=\"enum gfatk::stats::GenomeType\">GenomeType</a>","synthetic":false,"types":["gfatk::stats::GenomeType"]}];
-if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
+(function() {var implementors = {
+"gfatk":[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.66.0/core/cmp/trait.PartialEq.html\" title=\"trait core::cmp::PartialEq\">PartialEq</a>&lt;<a class=\"enum\" href=\"gfatk/stats/enum.GenomeType.html\" title=\"enum gfatk::stats::GenomeType\">GenomeType</a>&gt; for <a class=\"enum\" href=\"gfatk/stats/enum.GenomeType.html\" title=\"enum gfatk::stats::GenomeType\">GenomeType</a>"]]
+};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

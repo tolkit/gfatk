@@ -7,6 +7,7 @@ use gfa::gfa::Orientation;
 use std::collections::HashMap;
 use std::fs;
 use std::io::{BufRead, BufReader};
+use std::path::PathBuf;
 
 /// Which option is used on the CLI, either a string
 /// or a file path.
@@ -30,9 +31,9 @@ pub enum CLIOpt {
 /// ```
 pub fn path(matches: &clap::ArgMatches) -> Result<()> {
     // read in path and parse gfa
-    let gfa_file = matches.value_of("GFA");
-    let path_cli = matches.value_of("path_cli");
-    let path_file = matches.value_of("path_file");
+    let gfa_file = matches.get_one::<PathBuf>("GFA");
+    let path_cli = matches.get_one::<String>("path_cli");
+    let path_file = matches.get_one::<PathBuf>("path_file");
 
     // we need some path specified
     if path_cli.is_none() && path_file.is_none() {
@@ -47,10 +48,17 @@ pub fn path(matches: &clap::ArgMatches) -> Result<()> {
 
     let gfa: GFAtk = match gfa_file {
         Some(f) => {
-            if !f.ends_with(".gfa") {
-                bail!("Input file is not a GFA.")
+            let ext = f.extension();
+            match ext {
+                Some(e) => {
+                    if e == "gfa" {
+                        GFAtk(load_gfa(f)?)
+                    } else {
+                        bail!("Input is not a GFA.")
+                    }
+                }
+                None => bail!("Could not read file."),
             }
-            GFAtk(load_gfa(f)?)
         }
         None => match utils::is_stdin() {
             true => GFAtk(load_gfa_stdin(std::io::stdin().lock())?),
@@ -61,7 +69,10 @@ pub fn path(matches: &clap::ArgMatches) -> Result<()> {
     let (path, link_map) = match path_cli {
         Some(p) => parse_path(p, CLIOpt::String, &gfa),
         None => match path_file {
-            Some(f) => parse_path(f, CLIOpt::File, &gfa),
+            Some(f) => match f.to_str() {
+                Some(string) => parse_path(string, CLIOpt::File, &gfa),
+                None => bail!("Could not convert 'path' file path to string."),
+            },
             None => bail!("Should never reach here."),
         },
     }?;

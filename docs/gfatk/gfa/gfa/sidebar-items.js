@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["GFAtk","A wrapper around GFA from the gfa crate"],["Overlap","Overlap from one segment to another."],["Overlaps","A vector of `Overlap` structs."]]});
+window.SIDEBAR_ITEMS = {"struct":[["GFAtk","A wrapper around GFA from the gfa crate TODO: make GFAtk generic for any segment name, not just usize."],["Overlap","Overlap from one segment to another."],["Overlaps","A vector of `Overlap` structs."]]};

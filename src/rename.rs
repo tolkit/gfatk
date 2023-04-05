@@ -1,17 +1,26 @@
+use std::path::PathBuf;
+
 use crate::load::{load_gfa, load_gfa_stdin};
 use crate::utils;
 use anyhow::{bail, Result};
 use gfa::{gfa::name_conversion::NameMap, gfa::GFA, optfields::OptionalFields};
 
 pub fn rename_gfa(matches: &clap::ArgMatches) -> Result<()> {
-    let gfa_file = matches.value_of("GFA");
+    let gfa_file = matches.get_one::<PathBuf>("GFA");
 
     let gfa: GFA<Vec<u8>, OptionalFields> = match gfa_file {
         Some(f) => {
-            if !f.ends_with(".gfa") {
-                bail!("Input file is not a GFA.")
+            let ext = f.extension();
+            match ext {
+                Some(e) => {
+                    if e == "gfa" {
+                        load_gfa(f)?
+                    } else {
+                        bail!("Input is not a GFA.")
+                    }
+                }
+                None => bail!("Could not read file."),
             }
-            load_gfa(f)?
         }
         None => match utils::is_stdin() {
             true => load_gfa_stdin(std::io::stdin().lock())?,

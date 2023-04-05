@@ -1,7 +1,9 @@
+use std::path::PathBuf;
+
 use crate::load::load_gfa;
 use crate::utils::{self, GFAGraphLookups};
 use crate::{gfa::gfa::GFAtk, gfa::graph::segments_subgraph, load::load_gfa_stdin};
-use anyhow::{bail, Context, Result};
+use anyhow::{bail, Result};
 use petgraph::algo::is_cyclic_directed;
 
 /// Enumeration of the genomes we are interested in.
@@ -178,24 +180,40 @@ pub fn stats(
     matches: &clap::ArgMatches,
     genome_type: GenomeType,
 ) -> Result<Option<(GFAtk, Vec<usize>)>> {
-    let gfa_file = matches.value_of("GFA");
-    let tabular = matches.is_present("tabular");
+    let gfa_file = matches.get_one::<PathBuf>("GFA");
+    let tabular = matches.get_flag("tabular");
     // only passed through extract_mito
     let mito_args = if matches!(genome_type, GenomeType::Mitochondria) {
-        let size_lower: usize = matches.value_of_t("size-lower")?;
-        let size_upper: usize = matches.value_of_t("size-upper")?;
-        let gc_lower: f32 = matches.value_of_t("gc-lower")?;
-        let gc_upper: f32 = matches.value_of_t("gc-upper")?;
+        let size_lower = *matches
+            .get_one::<usize>("size-lower")
+            .expect("defaulted by clap");
+        let size_upper = *matches
+            .get_one::<usize>("size-upper")
+            .expect("defaulted by clap");
+        let gc_lower = *matches
+            .get_one::<f32>("gc-lower")
+            .expect("defaulted by clap");
+        let gc_upper = *matches
+            .get_one::<f32>("gc-upper")
+            .expect("defaulted by clap");
         Some((size_lower, size_upper, gc_lower, gc_upper))
     } else {
         None
     };
     // only required for extract_chloro
     let chloro_args = if matches!(genome_type, GenomeType::Chloroplast) {
-        let size_lower: usize = matches.value_of_t("size-lower")?;
-        let size_upper: usize = matches.value_of_t("size-upper")?;
-        let gc_lower: f32 = matches.value_of_t("gc-lower")?;
-        let gc_upper: f32 = matches.value_of_t("gc-upper")?;
+        let size_lower = *matches
+            .get_one::<usize>("size-lower")
+            .expect("defaulted by clap");
+        let size_upper = *matches
+            .get_one::<usize>("size-upper")
+            .expect("defaulted by clap");
+        let gc_lower = *matches
+            .get_one::<f32>("gc-lower")
+            .expect("defaulted by clap");
+        let gc_upper = *matches
+            .get_one::<f32>("gc-upper")
+            .expect("defaulted by clap");
         Some((size_lower, size_upper, gc_lower, gc_upper))
     } else {
         None
@@ -203,11 +221,17 @@ pub fn stats(
 
     let gfa = match gfa_file {
         Some(f) => {
-            if !f.ends_with(".gfa") {
-                bail!("Input file is not a GFA.")
+            let ext = f.extension();
+            match ext {
+                Some(e) => {
+                    if e == "gfa" {
+                        GFAtk(load_gfa(f)?)
+                    } else {
+                        bail!("Input is not a GFA.")
+                    }
+                }
+                None => bail!("Could not read file."),
             }
-
-            GFAtk(load_gfa(f)?)
         }
         None => match utils::is_stdin() {
             true => GFAtk(load_gfa_stdin(std::io::stdin().lock())?),
@@ -274,7 +298,8 @@ pub fn stats(
     // if we want to do more stat things
     match genome_type {
         GenomeType::Mitochondria => {
-            let mito_args = mito_args.context("There were no `extract-mito` arguments.")?;
+            // should be safe to unwrap?
+            let mito_args = mito_args.unwrap();
             return Ok(Some((
                 gfa,
                 store_stats.extract_organelle(
@@ -286,7 +311,8 @@ pub fn stats(
             )));
         }
         GenomeType::Chloroplast => {
-            let chloro_args = chloro_args.context("There were no `extract-chloro` arguments.")?;
+            // safe to unwrap here too.
+            let chloro_args = chloro_args.unwrap();
             return Ok(Some((
                 gfa,
                 store_stats.extract_organelle(

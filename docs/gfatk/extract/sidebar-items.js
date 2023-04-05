@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["extract","Supply a sequence/segment ID from the GFA, and extract the GFA with all nodes connected to the input node."]]});
+window.SIDEBAR_ITEMS = {"fn":[["extract","Supply a sequence/segment ID from the GFA, and extract the GFA with all nodes connected to the input node."]]};

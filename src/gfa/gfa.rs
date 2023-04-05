@@ -14,6 +14,7 @@ use petgraph::graph::{Graph, NodeIndex, UnGraph};
 use std::collections::HashMap;
 
 /// A wrapper around GFA from the gfa crate
+/// TODO: make GFAtk generic for any segment name, not just usize.
 #[derive(Clone)]
 pub struct GFAtk(pub GFA<usize, OptionalFields>);
 
@@ -126,18 +127,15 @@ impl GFAtk {
             // get the from and to sequences.
             for line in gfa.lines_iter() {
                 // if we meet a segment, let's do something
-                match line.some_segment() {
-                    Some(s) => {
-                        if s.name == from_segment && s.name == to_segment {
-                            from_seq = &s.sequence;
-                            to_seq = &s.sequence;
-                        } else if s.name == from_segment {
-                            from_seq = &s.sequence;
-                        } else if s.name == to_segment {
-                            to_seq = &s.sequence;
-                        }
+                if let Some(s) = line.some_segment() {
+                    if s.name == from_segment && s.name == to_segment {
+                        from_seq = &s.sequence;
+                        to_seq = &s.sequence;
+                    } else if s.name == from_segment {
+                        from_seq = &s.sequence;
+                    } else if s.name == to_segment {
+                        to_seq = &s.sequence;
                     }
-                    None => (),
                 }
             }
 
@@ -241,14 +239,11 @@ impl GFAtk {
         let subgraph_index_header = subgraph_index_header.unwrap_or("".to_string());
 
         for line in gfa.lines_iter() {
-            match line.some_segment() {
-                Some(s) => {
-                    let seq = std::str::from_utf8(&s.sequence)
-                        .with_context(|| format!("Malformed UTF8: {:?}", &s.sequence))?;
-                    let id = s.name;
-                    println!(">{}{}\n{}", id, subgraph_index_header, seq);
-                }
-                None => (),
+            if let Some(s) = line.some_segment() {
+                let seq = std::str::from_utf8(&s.sequence)
+                    .with_context(|| format!("Malformed UTF8: {:?}", &s.sequence))?;
+                let id = s.name;
+                println!(">{}{}\n{}", id, subgraph_index_header, seq);
             }
         }
         Ok(())
@@ -386,7 +381,7 @@ impl GFAtk {
 
         // we want to convert the node index and coverage
         // to node index and *relative* coverage
-        let mut lowest_cov_iter = node_cov_map.iter().map(|(_k, v)| v).enumerate();
+        let mut lowest_cov_iter = node_cov_map.values().enumerate();
         let init = lowest_cov_iter
             .next()
             .context("No coverage information found in this GFA.")?;
@@ -526,6 +521,12 @@ impl GFAtk {
 
         Ok(())
     }
+
+    // pub fn get_path_lines(&self) {
+    //     for path in &self.0.paths {
+    //         for (segment, orientation) in path.iter() {}
+    //     }
+    // }
 }
 
 /// Overlap from one segment to another.

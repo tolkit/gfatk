@@ -1,9 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/gfa/graph.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>graph.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><script defer src="../../../main.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script>
-    <noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../gfatk/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../gfatk/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../gfatk/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><div class="theme-picker hidden"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="22" height="22" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/gfa/graph.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>graph.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../../gfatk/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -999,138 +994,136 @@
 <span id="994">994</span>
 <span id="995">995</span>
 <span id="996">996</span>
-<span id="997">997</span>
-<span id="998">998</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::gfa::gfa::GFAtk</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils</span>::{<span class="ident">format_usize_to_kb</span>, <span class="ident">GFAGraphLookups</span>};
-<span class="kw">use</span> <span class="ident">anyhow</span>::{<span class="ident">bail</span>, <span class="ident">Context</span>, <span class="prelude-ty">Result</span>};
-<span class="kw">use</span> <span class="ident">gfa::gfa::Orientation</span>;
-<span class="kw">use</span> <span class="ident">gfa::gfa::GFA</span>;
-<span class="kw">use</span> <span class="ident">gfa::optfields::OptFields</span>;
-<span class="kw">use</span> <span class="ident">itertools::Itertools</span>;
-<span class="kw">use</span> <span class="ident">petgraph</span>::{
-    <span class="ident">graph</span>::{<span class="ident">Graph</span>, <span class="ident">IndexType</span>, <span class="ident">NodeIndex</span>},
-    <span class="ident">visit</span>::{<span class="ident">EdgeRef</span>, <span class="ident">IntoNodeIdentifiers</span>, <span class="ident">IntoNodeReferences</span>, <span class="ident">NodeIndexable</span>, <span class="ident">NodeRef</span>},
-    <span class="ident">Directed</span>,
-    <span class="ident">Direction::Outgoing</span>,
-    <span class="ident">Undirected</span>,
+</pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::gfa::gfa::GFAtk;
+<span class="kw">use </span><span class="kw">crate</span>::utils::{format_usize_to_kb, GFAGraphLookups};
+<span class="kw">use </span>anyhow::{bail, Context, <span class="prelude-ty">Result</span>};
+<span class="kw">use </span>gfa::gfa::Orientation;
+<span class="kw">use </span>gfa::gfa::GFA;
+<span class="kw">use </span>gfa::optfields::OptFields;
+<span class="kw">use </span>itertools::Itertools;
+<span class="kw">use </span>petgraph::{
+    graph::{Graph, IndexType, NodeIndex},
+    visit::{EdgeRef, IntoNodeIdentifiers, IntoNodeReferences, NodeIndexable, NodeRef},
+    Directed,
+    Direction::Outgoing,
+    Undirected,
 };
-<span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
-<span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
+<span class="kw">use </span>std::collections::HashMap;
+<span class="kw">use </span>std::collections::HashSet;
 
-<span class="doccomment">/// A wrapper of petgraph&#39;s undirected `Graph` struct, applied to a GFA. No weights.</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">GFAungraph</span>(<span class="kw">pub</span> <span class="ident">Graph</span><span class="op">&lt;</span><span class="ident">usize</span>, (), <span class="ident">Undirected</span><span class="op">&gt;</span>);
+<span class="doccomment">/// A wrapper of petgraph&#39;s undirected `Graph` struct, applied to a GFA. No weights.
+</span><span class="kw">pub struct </span>GFAungraph(<span class="kw">pub </span>Graph&lt;usize, (), Undirected&gt;);
 
-<span class="kw">impl</span> <span class="ident">GFAungraph</span> {
-    <span class="doccomment">/// The algorithm called in `gfatk extract`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The number of iterations of searching for neighbouring nodes can be modified.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// It&#39;s a naive algorithm, but it&#39;s fast enough for our purposes.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">recursive_search</span>(
+<span class="kw">impl </span>GFAungraph {
+    <span class="doccomment">/// The algorithm called in `gfatk extract`.
+    ///
+    /// The number of iterations of searching for neighbouring nodes can be modified.
+    ///
+    /// It&#39;s a naive algorithm, but it&#39;s fast enough for our purposes.
+    </span><span class="kw">pub fn </span>recursive_search(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">sequence_id</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>,
-        <span class="ident">iterations</span>: <span class="ident">i32</span>,
-        <span class="kw-2">mut</span> <span class="ident">collect_sequence_names</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">NodeIndex</span><span class="op">&gt;</span>,
-        <span class="ident">graph_indices</span>: <span class="ident">GFAGraphLookups</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">gfa_graph</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
+        sequence_id: Vec&lt;usize&gt;,
+        iterations: i32,
+        <span class="kw-2">mut </span>collect_sequence_names: Vec&lt;NodeIndex&gt;,
+        graph_indices: GFAGraphLookups,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;usize&gt;&gt; {
+        <span class="kw">let </span>gfa_graph = <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
 
         <span class="macro">eprintln!</span>(
             <span class="string">&quot;[+]\tRecursively searching around nodes {:?} at depth {}&quot;</span>,
-            <span class="ident">sequence_id</span>, <span class="ident">iterations</span>
+            sequence_id, iterations
         );
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">iteration</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="kw">loop</span> {
-            <span class="comment">// collect all the neighbours of all the current node indices</span>
-            <span class="kw">for</span> <span class="ident">index</span> <span class="kw">in</span> <span class="ident">collect_sequence_names</span>.<span class="ident">clone</span>() {
-                <span class="kw">for</span> <span class="ident">c</span> <span class="kw">in</span> <span class="ident">gfa_graph</span>.<span class="ident">neighbors</span>(<span class="ident">index</span>) {
-                    <span class="comment">// could possibly add a conditional in here.</span>
-                    <span class="ident">collect_sequence_names</span>.<span class="ident">push</span>(<span class="ident">c</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>iteration = <span class="number">0</span>;
+        <span class="kw">loop </span>{
+            <span class="comment">// collect all the neighbours of all the current node indices
+            </span><span class="kw">for </span>index <span class="kw">in </span>collect_sequence_names.clone() {
+                <span class="kw">for </span>c <span class="kw">in </span>gfa_graph.neighbors(index) {
+                    <span class="comment">// could possibly add a conditional in here.
+                    </span>collect_sequence_names.push(c);
                 }
             }
-            <span class="comment">// add sorting and deduping here too</span>
-            <span class="comment">// yes otherwise vectors are enormous.</span>
-            <span class="ident">collect_sequence_names</span>.<span class="ident">sort</span>();
-            <span class="ident">collect_sequence_names</span>.<span class="ident">dedup</span>();
+            <span class="comment">// add sorting and deduping here too
+            // yes otherwise vectors are enormous.
+            </span>collect_sequence_names.sort();
+            collect_sequence_names.dedup();
 
-            <span class="ident">iteration</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-            <span class="kw">if</span> <span class="ident">iteration</span> <span class="op">==</span> <span class="ident">iterations</span> {
+            iteration += <span class="number">1</span>;
+            <span class="kw">if </span>iteration == iterations {
                 <span class="kw">break</span>;
             }
         }
 
-        <span class="ident">collect_sequence_names</span>.<span class="ident">sort</span>();
-        <span class="ident">collect_sequence_names</span>.<span class="ident">dedup</span>();
+        collect_sequence_names.sort();
+        collect_sequence_names.dedup();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">sequences_to_keep</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-        <span class="comment">// turn node indexes into sequence ID&#39;s</span>
-        <span class="kw">for</span> <span class="ident">index</span> <span class="kw">in</span> <span class="ident">collect_sequence_names</span> {
-            <span class="kw">let</span> <span class="ident">t</span> <span class="op">=</span> <span class="ident">graph_indices</span>.<span class="ident">node_index_to_seg_id</span>(<span class="ident">index</span>)<span class="question-mark">?</span>;
-            <span class="ident">sequences_to_keep</span>.<span class="ident">push</span>(<span class="ident">t</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>sequences_to_keep = Vec::new();
+        <span class="comment">// turn node indexes into sequence ID&#39;s
+        </span><span class="kw">for </span>index <span class="kw">in </span>collect_sequence_names {
+            <span class="kw">let </span>t = graph_indices.node_index_to_seg_id(index)<span class="question-mark">?</span>;
+            sequences_to_keep.push(t);
         }
 
-        <span class="prelude-val">Ok</span>(<span class="ident">sequences_to_keep</span>)
+        <span class="prelude-val">Ok</span>(sequences_to_keep)
     }
 }
 
-<span class="comment">// weights are the orientations, used at various points, and an optional</span>
-<span class="comment">// coverage weight, used in gfatk linear.</span>
-<span class="comment">// GFA&#39;s should always specify Links in a specific direction..?</span>
-<span class="comment">// so digraphs should be where all the functionality lies.</span>
+<span class="comment">// weights are the orientations, used at various points, and an optional
+// coverage weight, used in gfatk linear.
+// GFA&#39;s should always specify Links in a specific direction..?
+// so digraphs should be where all the functionality lies.
 
-<span class="doccomment">/// A wrapper of petgraph&#39;s directed `Graph` struct, applied to a GFA. The edge weights included are the `Orientation`&#39;s of the adjacent segments, and the coverage of this edge.</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">GFAdigraph</span>(<span class="kw">pub</span> <span class="ident">Graph</span><span class="op">&lt;</span><span class="ident">usize</span>, (<span class="ident">Orientation</span>, <span class="ident">Orientation</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span>)<span class="op">&gt;</span>);
+</span><span class="doccomment">/// A wrapper of petgraph&#39;s directed `Graph` struct, applied to a GFA. The edge weights included are the `Orientation`&#39;s of the adjacent segments, and the coverage of this edge.
+</span><span class="kw">pub struct </span>GFAdigraph(<span class="kw">pub </span>Graph&lt;usize, (Orientation, Orientation, <span class="prelude-ty">Option</span>&lt;i64&gt;)&gt;);
 
-<span class="kw">impl</span> <span class="ident">GFAdigraph</span> {
-    <span class="doccomment">/// The main function called from `gfatk dot`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// It is a somewhat modified, simplified version of this:</span>
-    <span class="doccomment">/// &lt;https://docs.rs/petgraph/latest/src/petgraph/dot.rs.html#1-349&gt;</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Generating a DOT language output of a GFA file.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">dot</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">gfa</span>: <span class="ident">GFAtk</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">gfa_graph</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
-        <span class="kw">static</span> <span class="ident">INDENT</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;    &quot;</span>;
+<span class="kw">impl </span>GFAdigraph {
+    <span class="doccomment">/// The main function called from `gfatk dot`.
+    ///
+    /// It is a somewhat modified, simplified version of this:
+    /// &lt;https://docs.rs/petgraph/latest/src/petgraph/dot.rs.html#1-349&gt;
+    ///
+    /// Generating a DOT language output of a GFA file.
+    </span><span class="kw">pub fn </span>dot(<span class="kw-2">&amp;</span><span class="self">self</span>, gfa: GFAtk) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span>gfa_graph = <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
+        <span class="kw">static </span>INDENT: <span class="kw-2">&amp;</span>str = <span class="string">&quot;    &quot;</span>;
 
         <span class="macro">println!</span>(<span class="string">&quot;digraph GFA {{&quot;</span>);
-        <span class="comment">// print nodes</span>
-        <span class="kw">for</span> <span class="ident">node</span> <span class="kw">in</span> <span class="ident">gfa_graph</span>.<span class="ident">node_references</span>() {
-            <span class="kw">let</span> <span class="ident">e</span> <span class="op">=</span> <span class="ident">gfa_graph</span>.<span class="ident">to_index</span>(<span class="ident">node</span>.<span class="ident">id</span>());
-            <span class="kw">let</span> <span class="ident">w</span> <span class="op">=</span> <span class="ident">node</span>.<span class="ident">weight</span>();
-            <span class="kw">let</span> <span class="ident">meta</span> <span class="op">=</span> <span class="ident">gfa</span>.<span class="ident">node_seq_len_and_cov</span>(<span class="kw-2">*</span><span class="ident">w</span>)<span class="question-mark">?</span>;
+        <span class="comment">// print nodes
+        </span><span class="kw">for </span>node <span class="kw">in </span>gfa_graph.node_references() {
+            <span class="kw">let </span>e = gfa_graph.to_index(node.id());
+            <span class="kw">let </span>w = node.weight();
+            <span class="kw">let </span>meta = gfa.node_seq_len_and_cov(<span class="kw-2">*</span>w)<span class="question-mark">?</span>;
             <span class="macro">println!</span>(
-                <span class="comment">// see https://stackoverflow.com/questions/20516143/graphviz-dot-different-fontsizes-in-same-label</span>
-                <span class="string">&quot;{}{} [ label = &lt;&lt;FONT POINT-SIZE=\&#39;20\&#39;&gt;{}&lt;/FONT&gt;&lt;br/&gt;&lt;FONT POINT-SIZE=\&#39;10\&#39;&gt;L: {}&lt;/FONT&gt;&lt;br/&gt;&lt;FONT POINT-SIZE=\&#39;10\&#39;&gt;C: {}&lt;/FONT&gt;&gt; ];&quot;</span>,
-                <span class="ident">INDENT</span>, <span class="ident">e</span>, <span class="ident">w</span>, <span class="ident">format_usize_to_kb</span>(<span class="ident">meta</span>.<span class="number">0</span>), <span class="ident">meta</span>.<span class="number">1</span>
-            );
+                <span class="comment">// see https://stackoverflow.com/questions/20516143/graphviz-dot-different-fontsizes-in-same-label
+                </span><span class="string">&quot;{}{} [ label = &lt;&lt;FONT POINT-SIZE=\&#39;20\&#39;&gt;{}&lt;/FONT&gt;&lt;br/&gt;&lt;FONT POINT-SIZE=\&#39;10\&#39;&gt;L: {}&lt;/FONT&gt;&lt;br/&gt;&lt;FONT POINT-SIZE=\&#39;10\&#39;&gt;C: {}&lt;/FONT&gt;&gt; ];&quot;</span>,
+                INDENT, e, w, format_usize_to_kb(meta.<span class="number">0</span>), meta.<span class="number">1
+            </span>);
         }
-        <span class="comment">// print edges</span>
-        <span class="kw">for</span> <span class="ident">edge</span> <span class="kw">in</span> <span class="ident">gfa_graph</span>.<span class="ident">edge_references</span>() {
-            <span class="kw">let</span> <span class="ident">from</span> <span class="op">=</span> <span class="ident">gfa_graph</span>.<span class="ident">to_index</span>(<span class="ident">edge</span>.<span class="ident">source</span>());
-            <span class="kw">let</span> <span class="ident">to</span> <span class="op">=</span> <span class="ident">gfa_graph</span>.<span class="ident">to_index</span>(<span class="ident">edge</span>.<span class="ident">target</span>());
-            <span class="kw">let</span> <span class="ident">from_o</span> <span class="op">=</span> <span class="ident">edge</span>.<span class="ident">weight</span>().<span class="number">0</span>;
-            <span class="kw">let</span> <span class="ident">to_o</span> <span class="op">=</span> <span class="ident">edge</span>.<span class="ident">weight</span>().<span class="number">1</span>;
+        <span class="comment">// print edges
+        </span><span class="kw">for </span>edge <span class="kw">in </span>gfa_graph.edge_references() {
+            <span class="kw">let </span>from = gfa_graph.to_index(edge.source());
+            <span class="kw">let </span>to = gfa_graph.to_index(edge.target());
+            <span class="kw">let </span>from_o = edge.weight().<span class="number">0</span>;
+            <span class="kw">let </span>to_o = edge.weight().<span class="number">1</span>;
 
-            <span class="kw">let</span> <span class="ident">arrowhead_shape</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">to_o</span> {
-                <span class="ident">Orientation::Forward</span> =&gt; <span class="string">&quot;ornormal&quot;</span>,
-                <span class="ident">Orientation::Backward</span> =&gt; <span class="string">&quot;olnormal&quot;</span>,
+            <span class="kw">let </span>arrowhead_shape = <span class="kw">match </span>to_o {
+                Orientation::Forward =&gt; <span class="string">&quot;ornormal&quot;</span>,
+                Orientation::Backward =&gt; <span class="string">&quot;olnormal&quot;</span>,
             };
 
-            <span class="kw">let</span> <span class="ident">ec</span> <span class="op">=</span> <span class="ident">edge</span>
-                .<span class="ident">weight</span>()
-                .<span class="number">2</span>
-                .<span class="ident">context</span>(<span class="macro">format!</span>(<span class="string">&quot;No edge weight for edge {:?}&quot;</span>, <span class="ident">edge</span>))<span class="question-mark">?</span>;
+            <span class="kw">let </span>ec = edge
+                .weight()
+                .<span class="number">2
+                </span>.context(<span class="macro">format!</span>(<span class="string">&quot;No edge weight for edge {:?}&quot;</span>, edge))<span class="question-mark">?</span>;
 
             <span class="macro">println!</span>(<span class="string">&quot;{}{} -&gt; {} [ label = \&quot;  {}  \&quot; taillabel = \&quot;  {}  \&quot; headlabel = \&quot;  {}  \&quot; arrowhead = \&quot;{}\&quot; ];&quot;</span>, 
-                <span class="ident">INDENT</span>,
-                <span class="ident">from</span>,
-                <span class="ident">to</span>,
-                <span class="ident">ec</span>,
-                <span class="ident">from_o</span>,
-                <span class="ident">to_o</span>,
-                <span class="ident">arrowhead_shape</span>
+                INDENT,
+                from,
+                to,
+                ec,
+                from_o,
+                to_o,
+                arrowhead_shape
             );
         }
 
@@ -1138,867 +1131,864 @@
 
         <span class="prelude-val">Ok</span>(())
     }
-    <span class="comment">// we want weakly connected components, as there may only be an edge in one</span>
-    <span class="comment">// orientation (perhaps unlikely... but still)</span>
+    <span class="comment">// we want weakly connected components, as there may only be an edge in one
+    // orientation (perhaps unlikely... but still)
 
-    <span class="doccomment">/// Split the GFA digraph into subgraphs which are the weakly connected components of the graph.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Taken from &lt;https://github.com/Qiskit/retworkx/blob/79900cf8da0c0665ac5ce1ccb0f57373434b14b8/src/connectivity/mod.rs&gt;</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">weakly_connected_components</span>(
+    </span><span class="doccomment">/// Split the GFA digraph into subgraphs which are the weakly connected components of the graph.
+    ///
+    /// Taken from &lt;https://github.com/Qiskit/retworkx/blob/79900cf8da0c0665ac5ce1ccb0f57373434b14b8/src/connectivity/mod.rs&gt;
+    </span><span class="kw">pub fn </span>weakly_connected_components(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">graph_indices</span>: <span class="ident">GFAGraphLookups</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">graph</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">seen</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">NodeIndex</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">HashSet::with_capacity</span>(<span class="ident">graph</span>.<span class="ident">node_count</span>());
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">out_vec</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
+        graph_indices: GFAGraphLookups,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;Vec&lt;usize&gt;&gt;&gt; {
+        <span class="kw">let </span>graph = <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>seen: HashSet&lt;NodeIndex&gt; = HashSet::with_capacity(graph.node_count());
+        <span class="kw">let </span><span class="kw-2">mut </span>out_vec: Vec&lt;Vec&lt;usize&gt;&gt; = Vec::new();
 
-        <span class="kw">for</span> <span class="ident">node</span> <span class="kw">in</span> <span class="ident">graph</span>.<span class="ident">node_indices</span>() {
-            <span class="kw">if</span> <span class="op">!</span><span class="ident">seen</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">node</span>) {
-                <span class="comment">// BFS node generator</span>
+        <span class="kw">for </span>node <span class="kw">in </span>graph.node_indices() {
+            <span class="kw">if </span>!seen.contains(<span class="kw-2">&amp;</span>node) {
+                <span class="comment">// BFS node generator
 
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">component_set</span>: <span class="ident">std::collections::BTreeSet</span><span class="op">&lt;</span><span class="ident">NodeIndex</span><span class="op">&gt;</span> <span class="op">=</span>
-                    <span class="ident">std::collections::BTreeSet::new</span>();
+                </span><span class="kw">let </span><span class="kw-2">mut </span>component_set: std::collections::BTreeSet&lt;NodeIndex&gt; =
+                    std::collections::BTreeSet::new();
 
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bfs_seen</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">NodeIndex</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
+                <span class="kw">let </span><span class="kw-2">mut </span>bfs_seen: HashSet&lt;NodeIndex&gt; = HashSet::new();
 
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">next_level</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">NodeIndex</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
+                <span class="kw">let </span><span class="kw-2">mut </span>next_level: HashSet&lt;NodeIndex&gt; = HashSet::new();
 
-                <span class="ident">next_level</span>.<span class="ident">insert</span>(<span class="ident">node</span>);
+                next_level.insert(node);
 
-                <span class="kw">while</span> <span class="op">!</span><span class="ident">next_level</span>.<span class="ident">is_empty</span>() {
-                    <span class="kw">let</span> <span class="ident">this_level</span> <span class="op">=</span> <span class="ident">next_level</span>;
+                <span class="kw">while </span>!next_level.is_empty() {
+                    <span class="kw">let </span>this_level = next_level;
 
-                    <span class="ident">next_level</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
+                    next_level = HashSet::new();
 
-                    <span class="kw">for</span> <span class="ident">bfs_node</span> <span class="kw">in</span> <span class="ident">this_level</span> {
-                        <span class="kw">if</span> <span class="op">!</span><span class="ident">bfs_seen</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">bfs_node</span>) {
-                            <span class="ident">component_set</span>.<span class="ident">insert</span>(<span class="ident">bfs_node</span>);
+                    <span class="kw">for </span>bfs_node <span class="kw">in </span>this_level {
+                        <span class="kw">if </span>!bfs_seen.contains(<span class="kw-2">&amp;</span>bfs_node) {
+                            component_set.insert(bfs_node);
 
-                            <span class="ident">bfs_seen</span>.<span class="ident">insert</span>(<span class="ident">bfs_node</span>);
+                            bfs_seen.insert(bfs_node);
 
-                            <span class="kw">for</span> <span class="ident">neighbor</span> <span class="kw">in</span> <span class="ident">graph</span>.<span class="ident">neighbors_undirected</span>(<span class="ident">bfs_node</span>) {
-                                <span class="ident">next_level</span>.<span class="ident">insert</span>(<span class="ident">neighbor</span>);
+                            <span class="kw">for </span>neighbor <span class="kw">in </span>graph.neighbors_undirected(bfs_node) {
+                                next_level.insert(neighbor);
                             }
                         }
                     }
                 }
-                <span class="kw">let</span> <span class="ident">set_to_vec</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">component_set</span>.<span class="ident">iter</span>().<span class="ident">cloned</span>().<span class="ident">collect</span>();
-                <span class="comment">// convert node indices to segment ID&#39;s</span>
-                <span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="ident">set_to_vec</span>
-                    .<span class="ident">iter</span>()
-                    .<span class="ident">map</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
-                        <span class="kw">let</span> <span class="ident">seg_id</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">graph_indices</span>.<span class="ident">node_index_to_seg_id</span>(<span class="kw-2">*</span><span class="ident">e</span>) {
-                            <span class="prelude-val">Ok</span>(<span class="ident">s</span>) =&gt; <span class="ident">s</span>,
-                            <span class="prelude-val">Err</span>(<span class="ident">err</span>) =&gt; <span class="macro">bail!</span>(
+                <span class="kw">let </span>set_to_vec: Vec&lt;<span class="kw">_</span>&gt; = component_set.iter().cloned().collect();
+                <span class="comment">// convert node indices to segment ID&#39;s
+                </span><span class="kw">let </span>x = set_to_vec
+                    .iter()
+                    .map(|e| {
+                        <span class="kw">let </span>seg_id = <span class="kw">match </span>graph_indices.node_index_to_seg_id(<span class="kw-2">*</span>e) {
+                            <span class="prelude-val">Ok</span>(s) =&gt; s,
+                            <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">bail!</span>(
                                 <span class="string">&quot;NodeIndex {:?} could not be converted to segment ID.\n{}&quot;</span>,
-                                <span class="ident">e</span>,
-                                <span class="ident">err</span>
+                                e,
+                                err
                             ),
                         };
-                        <span class="prelude-val">Ok</span>(<span class="ident">seg_id</span>)
+                        <span class="prelude-val">Ok</span>(seg_id)
                     })
-                    .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>();
+                    .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;usize&gt;&gt;&gt;();
 
-                <span class="ident">out_vec</span>.<span class="ident">push</span>(<span class="ident">x</span><span class="question-mark">?</span>);
+                out_vec.push(x<span class="question-mark">?</span>);
 
-                <span class="ident">seen</span>.<span class="ident">extend</span>(<span class="ident">bfs_seen</span>);
+                seen.extend(bfs_seen);
             }
         }
-        <span class="prelude-val">Ok</span>(<span class="ident">out_vec</span>)
+        <span class="prelude-val">Ok</span>(out_vec)
     }
 
-    <span class="doccomment">/// The main function called from `gfatk linear`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This function will generate the longest path through the GFA, by</span>
-    <span class="doccomment">/// filtering the output of `all_paths`, and choosing the path with</span>
-    <span class="doccomment">/// the highest cumulative edge coverage.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">all_paths_all_node_pairs</span>(
+    <span class="doccomment">/// The main function called from `gfatk linear`.
+    ///
+    /// This function will generate the longest path through the GFA, by
+    /// filtering the output of `all_paths`, and choosing the path with
+    /// the highest cumulative edge coverage.
+    </span><span class="kw">pub fn </span>all_paths_all_node_pairs(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">graph_indices</span>: <span class="kw-2">&amp;</span><span class="ident">GFAGraphLookups</span>,
-        <span class="ident">rel_coverage_map</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">NodeIndex</span>, <span class="ident">usize</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">NodeIndex</span>, <span class="ident">Orientation</span>)<span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>, <span class="ident">String</span>)<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">graph</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
-        <span class="kw">let</span> <span class="ident">nodes</span> <span class="op">=</span> <span class="ident">graph</span>.<span class="ident">node_identifiers</span>();
+        graph_indices: <span class="kw-2">&amp;</span>GFAGraphLookups,
+        rel_coverage_map: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>HashMap&lt;NodeIndex, usize&gt;&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(Vec&lt;(NodeIndex, Orientation)&gt;, Vec&lt;usize&gt;, String)&gt; {
+        <span class="kw">let </span>graph = <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
+        <span class="kw">let </span>nodes = graph.node_identifiers();
 
-        <span class="kw">let</span> <span class="ident">all_paths</span>: <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">nodes</span>
-            .<span class="ident">permutations</span>(<span class="number">2</span>)
-            .<span class="ident">enumerate</span>()
-            .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">index</span>, <span class="ident">pair</span>)<span class="op">|</span> <span class="ident">all_paths</span>(<span class="ident">graph</span>, <span class="ident">pair</span>[<span class="number">0</span>], <span class="ident">pair</span>[<span class="number">1</span>], <span class="ident">rel_coverage_map</span>, <span class="ident">index</span>))
-            .<span class="ident">collect</span>();
+        <span class="kw">let </span>all_paths: <span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;&gt; = nodes
+            .permutations(<span class="number">2</span>)
+            .enumerate()
+            .map(|(index, pair)| all_paths(graph, pair[<span class="number">0</span>], pair[<span class="number">1</span>], rel_coverage_map, index))
+            .collect();
 
-        <span class="comment">// this is kind of annoying to add this, but I could not think</span>
-        <span class="comment">// of another way to overcome the eprint!() in `all_paths()`</span>
-        <span class="macro">eprintln!</span>();
-        <span class="comment">// make the set of legal paths through the GFA</span>
+        <span class="comment">// this is kind of annoying to add this, but I could not think
+        // of another way to overcome the eprint!() in `all_paths()`
+        </span><span class="macro">eprintln!</span>();
+        <span class="comment">// make the set of legal paths through the GFA
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">valid_paths</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-        <span class="comment">// iterate over the paths</span>
-        <span class="kw">for</span> <span class="ident">paths</span> <span class="kw">in</span> <span class="ident">all_paths</span><span class="question-mark">?</span> {
-            <span class="comment">// iterate over each path</span>
-            <span class="kw">for</span> <span class="ident">path</span> <span class="kw">in</span> <span class="ident">paths</span> {
-                <span class="comment">// I think easiest to just append all paths length = 2</span>
-                <span class="comment">// does this make sense? if there are paths of longer length</span>
-                <span class="comment">// than two, these will *always* be the highest coverage</span>
-                <span class="comment">// so no need to filter later.</span>
-                <span class="kw">if</span> <span class="ident">path</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="number">2</span> {
-                    <span class="ident">valid_paths</span>.<span class="ident">push</span>(<span class="ident">path</span>.<span class="ident">clone</span>());
+        </span><span class="kw">let </span><span class="kw-2">mut </span>valid_paths = Vec::new();
+        <span class="comment">// iterate over the paths
+        </span><span class="kw">for </span>paths <span class="kw">in </span>all_paths<span class="question-mark">? </span>{
+            <span class="comment">// iterate over each path
+            </span><span class="kw">for </span>path <span class="kw">in </span>paths {
+                <span class="comment">// I think easiest to just append all paths length = 2
+                // does this make sense? if there are paths of longer length
+                // than two, these will *always* be the highest coverage
+                // so no need to filter later.
+                </span><span class="kw">if </span>path.len() == <span class="number">2 </span>{
+                    valid_paths.push(path.clone());
                 }
-                <span class="comment">// iterate over adjacent nodes</span>
-                <span class="kw">let</span> <span class="ident">node_pairs</span> <span class="op">=</span> <span class="ident">path</span>.<span class="ident">windows</span>(<span class="number">2</span>);
-                <span class="comment">// and the skipped iterator</span>
-                <span class="kw">let</span> <span class="ident">node_pairs_skip</span> <span class="op">=</span> <span class="ident">path</span>.<span class="ident">windows</span>(<span class="number">2</span>).<span class="ident">skip</span>(<span class="number">1</span>);
-                <span class="comment">// assess whether we should keep a path</span>
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">keep</span> <span class="op">=</span> <span class="bool-val">false</span>;
-                <span class="comment">// so we can compare NodeIndex(0), NodeIndex(1), and NodeIndex(2) directly</span>
-                <span class="lifetime">&#39;node_pairs_loop</span>: <span class="kw">for</span> (<span class="ident">pair1</span>, <span class="ident">pair2</span>) <span class="kw">in</span> <span class="ident">node_pairs</span>.<span class="ident">zip</span>(<span class="ident">node_pairs_skip</span>) {
-                    <span class="comment">// first node</span>
-                    <span class="kw">let</span> <span class="ident">from_p1</span> <span class="op">=</span> <span class="ident">pair1</span>[<span class="number">0</span>];
-                    <span class="comment">// second node</span>
-                    <span class="kw">let</span> <span class="ident">to_p1</span> <span class="op">=</span> <span class="ident">pair1</span>[<span class="number">1</span>];
-                    <span class="comment">// second node (again)</span>
-                    <span class="kw">let</span> <span class="ident">from_p2</span> <span class="op">=</span> <span class="ident">pair2</span>[<span class="number">0</span>];
-                    <span class="comment">// third node</span>
-                    <span class="kw">let</span> <span class="ident">to_p2</span> <span class="op">=</span> <span class="ident">pair2</span>[<span class="number">1</span>];
+                <span class="comment">// iterate over adjacent nodes
+                </span><span class="kw">let </span>node_pairs = path.windows(<span class="number">2</span>);
+                <span class="comment">// and the skipped iterator
+                </span><span class="kw">let </span>node_pairs_skip = path.windows(<span class="number">2</span>).skip(<span class="number">1</span>);
+                <span class="comment">// assess whether we should keep a path
+                </span><span class="kw">let </span><span class="kw-2">mut </span>keep = <span class="bool-val">false</span>;
+                <span class="comment">// so we can compare NodeIndex(0), NodeIndex(1), and NodeIndex(2) directly
+                </span><span class="lifetime">&#39;node_pairs_loop</span>: <span class="kw">for </span>(pair1, pair2) <span class="kw">in </span>node_pairs.zip(node_pairs_skip) {
+                    <span class="comment">// first node
+                    </span><span class="kw">let </span>from_p1 = pair1[<span class="number">0</span>];
+                    <span class="comment">// second node
+                    </span><span class="kw">let </span>to_p1 = pair1[<span class="number">1</span>];
+                    <span class="comment">// second node (again)
+                    </span><span class="kw">let </span>from_p2 = pair2[<span class="number">0</span>];
+                    <span class="comment">// third node
+                    </span><span class="kw">let </span>to_p2 = pair2[<span class="number">1</span>];
 
-                    <span class="comment">// so what we really want is to take the first and second nodes</span>
-                    <span class="comment">// get all the edges</span>
-                    <span class="comment">// then get all the edges from the third to the second node</span>
-                    <span class="comment">// added NodeIndexes here for debugging</span>
-                    <span class="kw">let</span> <span class="ident">a_b_edges</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(
-                        <span class="ident">NodeIndex</span>,
-                        <span class="ident">NodeIndex</span>,
-                        (<span class="ident">Orientation</span>, <span class="ident">Orientation</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span>),
-                    )<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">graph</span>
-                        .<span class="ident">edges_connecting</span>(<span class="ident">from_p1</span>, <span class="ident">to_p1</span>)
-                        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
-                            <span class="kw">let</span> <span class="ident">s</span> <span class="op">=</span> <span class="ident">e</span>.<span class="ident">source</span>();
-                            <span class="kw">let</span> <span class="ident">t</span> <span class="op">=</span> <span class="ident">e</span>.<span class="ident">target</span>();
-                            (<span class="ident">s</span>, <span class="ident">t</span>, <span class="kw-2">*</span><span class="ident">e</span>.<span class="ident">weight</span>())
+                    <span class="comment">// so what we really want is to take the first and second nodes
+                    // get all the edges
+                    // then get all the edges from the third to the second node
+                    // added NodeIndexes here for debugging
+                    </span><span class="kw">let </span>a_b_edges: Vec&lt;(
+                        NodeIndex,
+                        NodeIndex,
+                        (Orientation, Orientation, <span class="prelude-ty">Option</span>&lt;i64&gt;),
+                    )&gt; = graph
+                        .edges_connecting(from_p1, to_p1)
+                        .map(|e| {
+                            <span class="kw">let </span>s = e.source();
+                            <span class="kw">let </span>t = e.target();
+                            (s, t, <span class="kw-2">*</span>e.weight())
                         })
-                        .<span class="ident">collect</span>();
+                        .collect();
 
-                    <span class="kw">let</span> <span class="ident">c_b_edges</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(
-                        <span class="ident">NodeIndex</span>,
-                        <span class="ident">NodeIndex</span>,
-                        (<span class="ident">Orientation</span>, <span class="ident">Orientation</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span>),
-                    )<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">graph</span>
-                        .<span class="ident">edges_connecting</span>(<span class="ident">to_p2</span>, <span class="ident">from_p2</span>)
-                        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
-                            <span class="kw">let</span> <span class="ident">s</span> <span class="op">=</span> <span class="ident">e</span>.<span class="ident">source</span>();
-                            <span class="kw">let</span> <span class="ident">t</span> <span class="op">=</span> <span class="ident">e</span>.<span class="ident">target</span>();
-                            (<span class="ident">s</span>, <span class="ident">t</span>, <span class="kw-2">*</span><span class="ident">e</span>.<span class="ident">weight</span>())
+                    <span class="kw">let </span>c_b_edges: Vec&lt;(
+                        NodeIndex,
+                        NodeIndex,
+                        (Orientation, Orientation, <span class="prelude-ty">Option</span>&lt;i64&gt;),
+                    )&gt; = graph
+                        .edges_connecting(to_p2, from_p2)
+                        .map(|e| {
+                            <span class="kw">let </span>s = e.source();
+                            <span class="kw">let </span>t = e.target();
+                            (s, t, <span class="kw-2">*</span>e.weight())
                         })
-                        .<span class="ident">collect</span>();
+                        .collect();
 
-                    <span class="comment">// 1. we can then compare the orientation of the &#39;to&#39; Orientation</span>
-                    <span class="comment">// for a-&gt;b and c-&gt;b</span>
-                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">keep_vec</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-                    <span class="kw">for</span> <span class="ident">e</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">a_b_edges</span> {
-                        <span class="kw">for</span> <span class="ident">f</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">c_b_edges</span> {
-                            <span class="kw">let</span> (<span class="kw">_</span>, <span class="ident">a_b_to</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">e</span>.<span class="number">2</span>;
-                            <span class="kw">let</span> (<span class="kw">_</span>, <span class="ident">c_b_to</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">f</span>.<span class="number">2</span>;
-                            <span class="comment">// we found a path through!</span>
-                            <span class="comment">// i.e. the links are not connected to the</span>
-                            <span class="kw">if</span> <span class="ident">a_b_to</span> <span class="op">!</span><span class="op">=</span> <span class="ident">c_b_to</span> {
-                                <span class="comment">// keep = true;</span>
-                                <span class="ident">keep_vec</span>.<span class="ident">push</span>(<span class="bool-val">true</span>);
-                            } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">a_b_to</span> <span class="op">==</span> <span class="ident">c_b_to</span> {
-                                <span class="ident">keep_vec</span>.<span class="ident">push</span>(<span class="bool-val">false</span>);
+                    <span class="comment">// 1. we can then compare the orientation of the &#39;to&#39; Orientation
+                    // for a-&gt;b and c-&gt;b
+                    </span><span class="kw">let </span><span class="kw-2">mut </span>keep_vec = Vec::new();
+                    <span class="kw">for </span>e <span class="kw">in </span><span class="kw-2">&amp;</span>a_b_edges {
+                        <span class="kw">for </span>f <span class="kw">in </span><span class="kw-2">&amp;</span>c_b_edges {
+                            <span class="kw">let </span>(<span class="kw">_</span>, a_b_to, <span class="kw">_</span>) = e.<span class="number">2</span>;
+                            <span class="kw">let </span>(<span class="kw">_</span>, c_b_to, <span class="kw">_</span>) = f.<span class="number">2</span>;
+                            <span class="comment">// we found a path through!
+                            // i.e. the links are not connected to the
+                            </span><span class="kw">if </span>a_b_to != c_b_to {
+                                <span class="comment">// keep = true;
+                                </span>keep_vec.push(<span class="bool-val">true</span>);
+                            } <span class="kw">else if </span>a_b_to == c_b_to {
+                                keep_vec.push(<span class="bool-val">false</span>);
                             }
                         }
                     }
-                    <span class="comment">// keep if any of the elements is true</span>
-                    <span class="kw">let</span> <span class="ident">do_keep</span> <span class="op">=</span> <span class="ident">keep_vec</span>.<span class="ident">iter</span>().<span class="ident">any</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="kw-2">*</span><span class="ident">e</span>);
+                    <span class="comment">// keep if any of the elements is true
+                    </span><span class="kw">let </span>do_keep = keep_vec.iter().any(|e| <span class="kw-2">*</span>e);
 
-                    <span class="comment">// if we got to here and diff is still false, break out of this path</span>
-                    <span class="comment">// it&#39;s a no-go...</span>
-                    <span class="kw">if</span> <span class="ident">do_keep</span> {
-                        <span class="ident">keep</span> <span class="op">=</span> <span class="bool-val">true</span>;
-                    } <span class="kw">else</span> {
-                        <span class="ident">keep</span> <span class="op">=</span> <span class="bool-val">false</span>;
-                        <span class="kw">break</span> <span class="lifetime">&#39;node_pairs_loop</span>;
+                    <span class="comment">// if we got to here and diff is still false, break out of this path
+                    // it&#39;s a no-go...
+                    </span><span class="kw">if </span>do_keep {
+                        keep = <span class="bool-val">true</span>;
+                    } <span class="kw">else </span>{
+                        keep = <span class="bool-val">false</span>;
+                        <span class="kw">break </span><span class="lifetime">&#39;node_pairs_loop</span>;
                     }
                 }
-                <span class="kw">if</span> <span class="ident">keep</span> {
-                    <span class="ident">valid_paths</span>.<span class="ident">push</span>(<span class="ident">path</span>);
+                <span class="kw">if </span>keep {
+                    valid_paths.push(path);
                 }
             }
         }
-        <span class="ident">valid_paths</span>.<span class="ident">sort_by_key</span>(<span class="op">|</span><span class="ident">b</span><span class="op">|</span> <span class="ident">std::cmp::Reverse</span>(<span class="ident">b</span>.<span class="ident">len</span>()));
-        <span class="ident">valid_paths</span>.<span class="ident">dedup</span>();
+        valid_paths.sort_by_key(|b| std::cmp::Reverse(b.len()));
+        valid_paths.dedup();
 
-        <span class="comment">// now make the final path</span>
-        <span class="kw">let</span> <span class="ident">final_path</span> <span class="op">=</span> {
-            <span class="comment">// push path and coverage into map</span>
-            <span class="comment">// don&#39;t care about memory allocations for the moment.</span>
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">map</span> <span class="op">=</span> <span class="ident">HashMap::new</span>();
+        <span class="comment">// now make the final path
+        </span><span class="kw">let </span>final_path = {
+            <span class="comment">// push path and coverage into map
+            // don&#39;t care about memory allocations for the moment.
+            </span><span class="kw">let </span><span class="kw-2">mut </span>map = HashMap::new();
 
-            <span class="comment">// test this please.</span>
-            <span class="lifetime">&#39;outer</span>: <span class="kw">for</span> <span class="ident">path</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">valid_paths</span> {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">path_coverage</span> <span class="op">=</span> <span class="number">0</span>;
+            <span class="comment">// test this please.
+            </span><span class="lifetime">&#39;outer</span>: <span class="kw">for </span>path <span class="kw">in </span><span class="kw-2">&amp;</span>valid_paths {
+                <span class="kw">let </span><span class="kw-2">mut </span>path_coverage = <span class="number">0</span>;
 
-                <span class="comment">// test this</span>
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">path_orientations</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
+                <span class="comment">// test this
+                </span><span class="kw">let </span><span class="kw-2">mut </span>path_orientations = Vec::new();
 
-                <span class="comment">// try a different method</span>
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">fi</span> <span class="op">=</span> <span class="number">0</span>;
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">se</span> <span class="op">=</span> <span class="number">1</span>;
+                <span class="comment">// try a different method
+                </span><span class="kw">let </span><span class="kw-2">mut </span>fi = <span class="number">0</span>;
+                <span class="kw">let </span><span class="kw-2">mut </span>se = <span class="number">1</span>;
 
-                <span class="kw">let</span> <span class="ident">path_len</span> <span class="op">=</span> <span class="ident">path</span>.<span class="ident">len</span>();
-                <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">path_len</span> {
-                    <span class="kw">let</span> <span class="ident">node_1</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">path</span>.<span class="ident">get</span>(<span class="ident">fi</span>) {
-                        <span class="prelude-val">Some</span>(<span class="ident">p</span>) =&gt; <span class="kw-2">*</span><span class="ident">p</span>,
-                        <span class="prelude-val">None</span> =&gt; <span class="kw">continue</span>,
+                <span class="kw">let </span>path_len = path.len();
+                <span class="kw">for _ in </span><span class="number">0</span>..path_len {
+                    <span class="kw">let </span>node_1 = <span class="kw">match </span>path.get(fi) {
+                        <span class="prelude-val">Some</span>(p) =&gt; <span class="kw-2">*</span>p,
+                        <span class="prelude-val">None </span>=&gt; <span class="kw">continue</span>,
                     };
-                    <span class="kw">let</span> <span class="ident">node_2</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">path</span>.<span class="ident">get</span>(<span class="ident">se</span>) {
-                        <span class="prelude-val">Some</span>(<span class="ident">p</span>) =&gt; <span class="kw-2">*</span><span class="ident">p</span>,
-                        <span class="prelude-val">None</span> =&gt; <span class="kw">continue</span>,
+                    <span class="kw">let </span>node_2 = <span class="kw">match </span>path.get(se) {
+                        <span class="prelude-val">Some</span>(p) =&gt; <span class="kw-2">*</span>p,
+                        <span class="prelude-val">None </span>=&gt; <span class="kw">continue</span>,
                     };
 
-                    <span class="kw">let</span> <span class="ident">pair_connecting</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">graph</span>.<span class="ident">edges_connecting</span>(<span class="ident">node_1</span>, <span class="ident">node_2</span>);
-                    <span class="comment">// from node 1 to node 2, we just choose the first edge</span>
-                    <span class="comment">// as I think it doesn&#39;t matter which edge is chosen (they will have the same coverage in MBG)</span>
-                    <span class="kw">if</span> <span class="ident">fi</span> <span class="op">==</span> <span class="number">0</span> {
-                        <span class="kw">let</span> <span class="ident">pair_weight</span> <span class="op">=</span> <span class="ident">pair_connecting</span>
-                            .<span class="ident">next</span>()
-                            .<span class="ident">with_context</span>(<span class="op">|</span><span class="op">|</span> {
-                                <span class="macro">format!</span>(<span class="string">&quot;No connecting edges from {:?} to {:?}&quot;</span>, <span class="ident">node_1</span>, <span class="ident">node_2</span>)
-                            })<span class="question-mark">?</span>
-                            .<span class="ident">weight</span>();
+                    <span class="kw">let </span>pair_connecting = <span class="kw-2">&amp;mut </span>graph.edges_connecting(node_1, node_2);
+                    <span class="comment">// from node 1 to node 2, we just choose the first edge
+                    // as I think it doesn&#39;t matter which edge is chosen (they will have the same coverage in MBG)
+                    </span><span class="kw">if </span>fi == <span class="number">0 </span>{
+                        <span class="kw">let </span>pair_weight = pair_connecting
+                            .next()
+                            .with_context(|| {
+                                <span class="macro">format!</span>(<span class="string">&quot;No connecting edges from {:?} to {:?}&quot;</span>, node_1, node_2)
+                            })<span class="question-mark">?
+                            </span>.weight();
 
-                        <span class="kw">let</span> <span class="ident">node_1_orientation</span> <span class="op">=</span> <span class="ident">pair_weight</span>.<span class="number">0</span>;
-                        <span class="kw">let</span> <span class="ident">node_2_orientation</span> <span class="op">=</span> <span class="ident">pair_weight</span>.<span class="number">1</span>;
-                        <span class="comment">// this will be path_orientations[0]</span>
-                        <span class="ident">path_orientations</span>.<span class="ident">push</span>(<span class="ident">node_1_orientation</span>);
-                        <span class="comment">// this will be path_orientations[1]</span>
-                        <span class="ident">path_orientations</span>.<span class="ident">push</span>(<span class="ident">node_2_orientation</span>);
+                        <span class="kw">let </span>node_1_orientation = pair_weight.<span class="number">0</span>;
+                        <span class="kw">let </span>node_2_orientation = pair_weight.<span class="number">1</span>;
+                        <span class="comment">// this will be path_orientations[0]
+                        </span>path_orientations.push(node_1_orientation);
+                        <span class="comment">// this will be path_orientations[1]
+                        </span>path_orientations.push(node_2_orientation);
 
-                        <span class="kw">let</span> <span class="ident">coverage</span> <span class="op">=</span> <span class="ident">pair_weight</span>.<span class="number">2</span>;
-                        <span class="kw">match</span> <span class="ident">coverage</span> {
-                            <span class="prelude-val">Some</span>(<span class="ident">c</span>) =&gt; <span class="ident">path_coverage</span> <span class="op">+</span><span class="op">=</span> <span class="ident">c</span>,
-                            <span class="prelude-val">None</span> =&gt; (),
+                        <span class="kw">let </span>coverage = pair_weight.<span class="number">2</span>;
+                        <span class="kw">if let </span><span class="prelude-val">Some</span>(c) = coverage {
+                            path_coverage += c;
                         }
-                    } <span class="kw">else</span> {
-                        <span class="comment">// this might be wrong...</span>
-                        <span class="kw">let</span> <span class="ident">prev_orientation</span> <span class="op">=</span> <span class="ident">path_orientations</span>[<span class="ident">fi</span>];
-                        <span class="kw">let</span> <span class="ident">pair_weight</span> <span class="op">=</span>
-                            <span class="ident">pair_connecting</span>.<span class="ident">find</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">e</span>.<span class="ident">weight</span>().<span class="number">0</span> <span class="op">==</span> <span class="ident">prev_orientation</span>);
+                    } <span class="kw">else </span>{
+                        <span class="comment">// this might be wrong...
+                        </span><span class="kw">let </span>prev_orientation = path_orientations[fi];
+                        <span class="kw">let </span>pair_weight =
+                            pair_connecting.find(|e| e.weight().<span class="number">0 </span>== prev_orientation);
 
-                        <span class="comment">// if:</span>
-                        <span class="comment">// A -&gt; B (orientation)</span>
-                        <span class="comment">// is not equal to</span>
-                        <span class="comment">// B (orientation) -&gt; C</span>
-                        <span class="comment">// we skip this path.</span>
-                        <span class="kw">if</span> <span class="ident">pair_weight</span>.<span class="ident">is_none</span>() {
-                            <span class="kw">continue</span> <span class="lifetime">&#39;outer</span>;
+                        <span class="comment">// if:
+                        // A -&gt; B (orientation)
+                        // is not equal to
+                        // B (orientation) -&gt; C
+                        // we skip this path.
+                        </span><span class="kw">if </span>pair_weight.is_none() {
+                            <span class="kw">continue </span><span class="lifetime">&#39;outer</span>;
                         }
-                        <span class="kw">let</span> <span class="ident">node_2_orientation</span> <span class="op">=</span> <span class="ident">pair_weight</span>.<span class="ident">unwrap</span>().<span class="ident">weight</span>().<span class="number">1</span>;
-                        <span class="ident">path_orientations</span>.<span class="ident">push</span>(<span class="ident">node_2_orientation</span>);
+                        <span class="kw">let </span>node_2_orientation = pair_weight.unwrap().weight().<span class="number">1</span>;
+                        path_orientations.push(node_2_orientation);
 
-                        <span class="kw">let</span> <span class="ident">coverage</span> <span class="op">=</span> <span class="ident">pair_weight</span>.<span class="ident">unwrap</span>().<span class="ident">weight</span>().<span class="number">2</span>;
-                        <span class="kw">match</span> <span class="ident">coverage</span> {
-                            <span class="prelude-val">Some</span>(<span class="ident">c</span>) =&gt; <span class="ident">path_coverage</span> <span class="op">+</span><span class="op">=</span> <span class="ident">c</span>,
-                            <span class="prelude-val">None</span> =&gt; (),
+                        <span class="kw">let </span>coverage = pair_weight.unwrap().weight().<span class="number">2</span>;
+                        <span class="kw">if let </span><span class="prelude-val">Some</span>(c) = coverage {
+                            path_coverage += c;
                         }
                     }
 
-                    <span class="comment">// increment the indices.</span>
-                    <span class="ident">fi</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-                    <span class="ident">se</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+                    <span class="comment">// increment the indices.
+                    </span>fi += <span class="number">1</span>;
+                    se += <span class="number">1</span>;
                 }
 
-                <span class="kw">let</span> <span class="ident">path_orientation_tuple</span> <span class="op">=</span> <span class="ident">path</span>
-                    .<span class="ident">iter</span>()
-                    .<span class="ident">zip</span>(<span class="ident">path_orientations</span>.<span class="ident">iter</span>())
-                    .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">e</span>, <span class="ident">f</span>)<span class="op">|</span> (<span class="kw-2">*</span><span class="ident">e</span>, <span class="kw-2">*</span><span class="ident">f</span>))
-                    .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
+                <span class="kw">let </span>path_orientation_tuple = path
+                    .iter()
+                    .zip(path_orientations.iter())
+                    .map(|(e, f)| (<span class="kw-2">*</span>e, <span class="kw-2">*</span>f))
+                    .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
 
-                <span class="ident">map</span>.<span class="ident">insert</span>(<span class="ident">path_orientation_tuple</span>, <span class="ident">path_coverage</span>);
+                map.insert(path_orientation_tuple, path_coverage);
             }
 
-            <span class="kw">let</span> <span class="ident">highest_coverage_path_op</span> <span class="op">=</span>
-                <span class="ident">map</span>.<span class="ident">iter</span>().<span class="ident">max_by</span>(<span class="op">|</span><span class="ident">a</span>, <span class="ident">b</span><span class="op">|</span> <span class="ident">a</span>.<span class="number">1</span>.<span class="ident">cmp</span>(<span class="ident">b</span>.<span class="number">1</span>)).<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">k</span>, <span class="ident">v</span>)<span class="op">|</span> (<span class="ident">k</span>, <span class="ident">v</span>));
+            <span class="kw">let </span>highest_coverage_path_op =
+                map.iter().max_by(|a, b| a.<span class="number">1</span>.cmp(b.<span class="number">1</span>)).map(|(k, v)| (k, v));
 
-            <span class="comment">// explicit error out here</span>
-            <span class="kw">let</span> <span class="ident">highest_coverage_path</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">highest_coverage_path_op</span> {
-                <span class="prelude-val">Some</span>(<span class="ident">p</span>) =&gt; <span class="ident">p</span>,
-                <span class="prelude-val">None</span> =&gt; <span class="macro">bail!</span>(<span class="string">&quot;There was no highest coverage path.&quot;</span>),
+            <span class="comment">// explicit error out here
+            </span><span class="kw">let </span>highest_coverage_path = <span class="kw">match </span>highest_coverage_path_op {
+                <span class="prelude-val">Some</span>(p) =&gt; p,
+                <span class="prelude-val">None </span>=&gt; <span class="macro">bail!</span>(<span class="string">&quot;There was no highest coverage path.&quot;</span>),
             };
 
             <span class="macro">eprintln!</span>(
                 <span class="string">&quot;[+]\tHighest cumulative coverage path = {}&quot;</span>,
-                <span class="ident">highest_coverage_path</span>.<span class="number">1</span>
-            );
-            (<span class="ident">highest_coverage_path</span>.<span class="number">0</span>.<span class="ident">to_vec</span>(), <span class="kw-2">*</span><span class="ident">highest_coverage_path</span>.<span class="number">1</span>)
+                highest_coverage_path.<span class="number">1
+            </span>);
+            (highest_coverage_path.<span class="number">0</span>.to_vec(), <span class="kw-2">*</span>highest_coverage_path.<span class="number">1</span>)
         };
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">chosen_path_string</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-        <span class="kw">let</span> <span class="ident">final_path_node_pairs</span> <span class="op">=</span> <span class="ident">final_path</span>.<span class="number">0</span>.<span class="ident">windows</span>(<span class="number">2</span>);
-        <span class="kw">for</span> (<span class="ident">index</span>, <span class="ident">pair</span>) <span class="kw">in</span> <span class="ident">final_path_node_pairs</span>.<span class="ident">enumerate</span>() {
-            <span class="kw">let</span> <span class="ident">from</span> <span class="op">=</span> <span class="ident">pair</span>[<span class="number">0</span>].<span class="number">0</span>;
-            <span class="kw">let</span> <span class="ident">from_orient</span> <span class="op">=</span> <span class="ident">pair</span>[<span class="number">0</span>].<span class="number">1</span>;
-            <span class="kw">let</span> <span class="ident">to</span> <span class="op">=</span> <span class="ident">pair</span>[<span class="number">1</span>].<span class="number">0</span>;
-            <span class="kw">let</span> <span class="ident">to_orient</span> <span class="op">=</span> <span class="ident">pair</span>[<span class="number">1</span>].<span class="number">1</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>chosen_path_string = Vec::new();
+        <span class="kw">let </span>final_path_node_pairs = final_path.<span class="number">0</span>.windows(<span class="number">2</span>);
+        <span class="kw">for </span>(index, pair) <span class="kw">in </span>final_path_node_pairs.enumerate() {
+            <span class="kw">let </span>from = pair[<span class="number">0</span>].<span class="number">0</span>;
+            <span class="kw">let </span>from_orient = pair[<span class="number">0</span>].<span class="number">1</span>;
+            <span class="kw">let </span>to = pair[<span class="number">1</span>].<span class="number">0</span>;
+            <span class="kw">let </span>to_orient = pair[<span class="number">1</span>].<span class="number">1</span>;
 
-            <span class="comment">// get segment ID from Node Indices</span>
-            <span class="kw">let</span> <span class="ident">from</span> <span class="op">=</span> <span class="ident">graph_indices</span>.<span class="ident">node_index_to_seg_id</span>(<span class="ident">from</span>)<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">to</span> <span class="op">=</span> <span class="ident">graph_indices</span>.<span class="ident">node_index_to_seg_id</span>(<span class="ident">to</span>)<span class="question-mark">?</span>;
+            <span class="comment">// get segment ID from Node Indices
+            </span><span class="kw">let </span>from = graph_indices.node_index_to_seg_id(from)<span class="question-mark">?</span>;
+            <span class="kw">let </span>to = graph_indices.node_index_to_seg_id(to)<span class="question-mark">?</span>;
 
-            <span class="comment">// no spaces between the formatted strings</span>
-            <span class="kw">if</span> <span class="ident">index</span> <span class="op">==</span> <span class="number">0</span> {
-                <span class="ident">chosen_path_string</span>.<span class="ident">push</span>(<span class="macro">format!</span>(<span class="string">&quot;{}{},{}{}&quot;</span>, <span class="ident">from</span>, <span class="ident">from_orient</span>, <span class="ident">to</span>, <span class="ident">to_orient</span>));
-            } <span class="kw">else</span> {
-                <span class="ident">chosen_path_string</span>.<span class="ident">push</span>(<span class="macro">format!</span>(<span class="string">&quot;,{}{}&quot;</span>, <span class="ident">to</span>, <span class="ident">to_orient</span>));
+            <span class="comment">// no spaces between the formatted strings
+            </span><span class="kw">if </span>index == <span class="number">0 </span>{
+                chosen_path_string.push(<span class="macro">format!</span>(<span class="string">&quot;{}{},{}{}&quot;</span>, from, from_orient, to, to_orient));
+            } <span class="kw">else </span>{
+                chosen_path_string.push(<span class="macro">format!</span>(<span class="string">&quot;,{}{}&quot;</span>, to, to_orient));
             }
         }
 
         <span class="macro">eprintln!</span>(
             <span class="string">&quot;[+]\tChosen path through graph: {}&quot;</span>,
-            <span class="ident">chosen_path_string</span>.<span class="ident">join</span>(<span class="string">&quot;&quot;</span>)
+            chosen_path_string.join(<span class="string">&quot;&quot;</span>)
         );
 
-        <span class="comment">// make a vector of nodes not in the final path</span>
-        <span class="comment">// these will be passed later and printed to a fasta.</span>
-        <span class="kw">let</span> <span class="ident">final_path_set</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">final_path</span>.<span class="number">0</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">e</span>, <span class="ident">_f</span>)<span class="op">|</span> <span class="kw-2">*</span><span class="ident">e</span>).<span class="ident">collect</span>();
+        <span class="comment">// make a vector of nodes not in the final path
+        // these will be passed later and printed to a fasta.
+        </span><span class="kw">let </span>final_path_set: HashSet&lt;<span class="kw">_</span>&gt; = final_path.<span class="number">0</span>.iter().map(|(e, _f)| <span class="kw-2">*</span>e).collect();
 
-        <span class="kw">let</span> <span class="ident">difference</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">graph</span>
-            .<span class="ident">node_identifiers</span>()
-            .<span class="ident">filter</span>(<span class="op">|</span><span class="ident">item</span><span class="op">|</span> <span class="op">!</span><span class="ident">final_path_set</span>.<span class="ident">contains</span>(<span class="ident">item</span>))
-            .<span class="ident">collect</span>();
+        <span class="kw">let </span>difference: Vec&lt;<span class="kw">_</span>&gt; = graph
+            .node_identifiers()
+            .filter(|item| !final_path_set.contains(item))
+            .collect();
 
-        <span class="kw">let</span> <span class="ident">difference_ids</span>: <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">difference</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">graph_indices</span>.<span class="ident">node_index_to_seg_id</span>(<span class="kw-2">*</span><span class="ident">e</span>))
-            .<span class="ident">collect</span>();
+        <span class="kw">let </span>difference_ids: <span class="prelude-ty">Result</span>&lt;Vec&lt;usize&gt;&gt; = difference
+            .iter()
+            .map(|e| graph_indices.node_index_to_seg_id(<span class="kw-2">*</span>e))
+            .collect();
 
-        <span class="comment">// the fasta header should contain the tool, path information, and coverage</span>
-        <span class="kw">let</span> <span class="ident">fasta_header</span> <span class="op">=</span> <span class="macro">format!</span>(
+        <span class="comment">// the fasta header should contain the tool, path information, and coverage
+        </span><span class="kw">let </span>fasta_header = <span class="macro">format!</span>(
             <span class="string">&quot;gfatk_linear:path={}:coverage={}&quot;</span>,
-            <span class="ident">chosen_path_string</span>.<span class="ident">join</span>(<span class="string">&quot;&quot;</span>),
-            <span class="ident">final_path</span>.<span class="number">1</span>
-        );
+            chosen_path_string.join(<span class="string">&quot;&quot;</span>),
+            final_path.<span class="number">1
+        </span>);
 
-        <span class="prelude-val">Ok</span>((<span class="ident">final_path</span>.<span class="number">0</span>.<span class="ident">to_vec</span>(), <span class="ident">difference_ids</span><span class="question-mark">?</span>, <span class="ident">fasta_header</span>))
+        <span class="prelude-val">Ok</span>((final_path.<span class="number">0</span>.to_vec(), difference_ids<span class="question-mark">?</span>, fasta_header))
     }
 
-    <span class="doccomment">/// Simple wrapper of `Graph.node_count()` in petgraph.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">node_count</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="kw">let</span> <span class="ident">gfa_graph</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
+    <span class="doccomment">/// Simple wrapper of `Graph.node_count()` in petgraph.
+    </span><span class="kw">pub fn </span>node_count(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="kw">let </span>gfa_graph = <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
 
-        <span class="ident">gfa_graph</span>.<span class="ident">node_count</span>()
+        gfa_graph.node_count()
     }
 
-    <span class="doccomment">/// Simple wrapper of `Graph.edge_count()` in petgraph.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">edge_count</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="kw">let</span> <span class="ident">gfa_graph</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
+    <span class="doccomment">/// Simple wrapper of `Graph.edge_count()` in petgraph.
+    </span><span class="kw">pub fn </span>edge_count(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="kw">let </span>gfa_graph = <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
 
-        <span class="ident">gfa_graph</span>.<span class="ident">edge_count</span>()
+        gfa_graph.edge_count()
     }
 
-    <span class="doccomment">/// Trim a graph to include only nodes connected to two or more other nodes.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This algorithm will loop for as long as the longest branch in the GFA yields a segment connected to only a single node.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">trim</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">graph_indices</span>: <span class="ident">GFAGraphLookups</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">gfa_graph</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
+    <span class="doccomment">/// Trim a graph to include only nodes connected to two or more other nodes.
+    ///
+    /// This algorithm will loop for as long as the longest branch in the GFA yields a segment connected to only a single node.
+    </span><span class="kw">pub fn </span>trim(<span class="kw-2">&amp;</span><span class="self">self</span>, graph_indices: GFAGraphLookups) -&gt; Vec&lt;usize&gt; {
+        <span class="kw">let </span>gfa_graph = <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">all_nodes</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
-        <span class="comment">// get all node indices into a hashset</span>
-        <span class="kw">for</span> (<span class="ident">node_index</span>, <span class="kw">_</span>) <span class="kw">in</span> <span class="ident">gfa_graph</span>.<span class="ident">node_references</span>() {
-            <span class="ident">all_nodes</span>.<span class="ident">insert</span>(<span class="ident">node_index</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>all_nodes = HashSet::new();
+        <span class="comment">// get all node indices into a hashset
+        </span><span class="kw">for </span>(node_index, <span class="kw">_</span>) <span class="kw">in </span>gfa_graph.node_references() {
+            all_nodes.insert(node_index);
         }
 
-        <span class="comment">// initiate new hashset for the nodes we remove</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">removed_nodes</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
-        <span class="comment">// keep track of the number of removed nodes in a vector</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">track_removed_nodes</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-        <span class="comment">// index for the above vector, keeping track of iterations</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">index</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="kw">loop</span> {
-            <span class="comment">// iterate over the nodes</span>
-            <span class="kw">for</span> (<span class="ident">node_index</span>, <span class="kw">_</span>) <span class="kw">in</span> <span class="ident">gfa_graph</span>.<span class="ident">node_references</span>() {
-                <span class="comment">// how many neighbours for this particular node?</span>
-                <span class="kw">let</span> <span class="ident">neighbours</span> <span class="op">=</span> <span class="ident">gfa_graph</span>.<span class="ident">neighbors</span>(<span class="ident">node_index</span>).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
+        <span class="comment">// initiate new hashset for the nodes we remove
+        </span><span class="kw">let </span><span class="kw-2">mut </span>removed_nodes = HashSet::new();
+        <span class="comment">// keep track of the number of removed nodes in a vector
+        </span><span class="kw">let </span><span class="kw-2">mut </span>track_removed_nodes = Vec::new();
+        <span class="comment">// index for the above vector, keeping track of iterations
+        </span><span class="kw">let </span><span class="kw-2">mut </span>index = <span class="number">0</span>;
+        <span class="kw">loop </span>{
+            <span class="comment">// iterate over the nodes
+            </span><span class="kw">for </span>(node_index, <span class="kw">_</span>) <span class="kw">in </span>gfa_graph.node_references() {
+                <span class="comment">// how many neighbours for this particular node?
+                </span><span class="kw">let </span>neighbours = gfa_graph.neighbors(node_index).collect::&lt;HashSet&lt;<span class="kw">_</span>&gt;&gt;();
 
-                <span class="comment">// if there are fewer than two neighbours</span>
-                <span class="comment">// OR the difference between neighbours &amp; removed nodes == 1</span>
-                <span class="kw">if</span> <span class="ident">neighbours</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="number">2</span>
-                    <span class="op">|</span><span class="op">|</span> <span class="ident">neighbours</span>
-                        .<span class="ident">difference</span>(<span class="kw-2">&amp;</span><span class="ident">removed_nodes</span>)
-                        .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()
-                        .<span class="ident">len</span>()
-                        <span class="op">==</span> <span class="number">1</span>
-                {
-                    <span class="ident">removed_nodes</span>.<span class="ident">insert</span>(<span class="ident">node_index</span>);
+                <span class="comment">// if there are fewer than two neighbours
+                // OR the difference between neighbours &amp; removed nodes == 1
+                </span><span class="kw">if </span>neighbours.len() &lt; <span class="number">2
+                    </span>|| neighbours
+                        .difference(<span class="kw-2">&amp;</span>removed_nodes)
+                        .collect::&lt;HashSet&lt;<span class="kw">_</span>&gt;&gt;()
+                        .len()
+                        == <span class="number">1
+                </span>{
+                    removed_nodes.insert(node_index);
                 }
             }
-            <span class="comment">// push the length</span>
-            <span class="comment">// if the previous length is the same as the current,</span>
-            <span class="comment">// there are no more nodes to delete.</span>
-            <span class="ident">track_removed_nodes</span>.<span class="ident">push</span>(<span class="ident">removed_nodes</span>.<span class="ident">len</span>());
-            <span class="kw">if</span> <span class="ident">track_removed_nodes</span>.<span class="ident">get</span>(<span class="ident">index</span>).<span class="ident">unwrap</span>()
-                <span class="op">==</span> <span class="ident">track_removed_nodes</span>.<span class="ident">get</span>(<span class="ident">index</span> <span class="op">-</span> <span class="number">1</span>).<span class="ident">unwrap_or</span>(<span class="kw-2">&amp;</span><span class="number">0</span>)
+            <span class="comment">// push the length
+            // if the previous length is the same as the current,
+            // there are no more nodes to delete.
+            </span>track_removed_nodes.push(removed_nodes.len());
+            <span class="kw">if </span>track_removed_nodes.get(index).unwrap()
+                == track_removed_nodes.get(index - <span class="number">1</span>).unwrap_or(<span class="kw-2">&amp;</span><span class="number">0</span>)
             {
                 <span class="kw">break</span>;
             }
-            <span class="ident">index</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+            index += <span class="number">1</span>;
         }
-        <span class="comment">// print for user info</span>
-        <span class="kw">for</span> <span class="ident">el</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">removed_nodes</span> {
-            <span class="kw">let</span> <span class="ident">seg_id</span> <span class="op">=</span> <span class="ident">graph_indices</span>.<span class="ident">node_index_to_seg_id</span>(<span class="kw-2">*</span><span class="ident">el</span>).<span class="ident">unwrap</span>();
-            <span class="macro">eprintln!</span>(<span class="string">&quot;[+]\tRemoved segment {} from GFA.&quot;</span>, <span class="ident">seg_id</span>);
+        <span class="comment">// print for user info
+        </span><span class="kw">for </span>el <span class="kw">in </span><span class="kw-2">&amp;</span>removed_nodes {
+            <span class="kw">let </span>seg_id = graph_indices.node_index_to_seg_id(<span class="kw-2">*</span>el).unwrap();
+            <span class="macro">eprintln!</span>(<span class="string">&quot;[+]\tRemoved segment {} from GFA.&quot;</span>, seg_id);
         }
 
-        <span class="ident">all_nodes</span>
-            .<span class="ident">difference</span>(<span class="kw-2">&amp;</span><span class="ident">removed_nodes</span>)
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">graph_indices</span>.<span class="ident">node_index_to_seg_id</span>(<span class="kw-2">*</span><span class="ident">e</span>).<span class="ident">unwrap</span>())
-            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()
+        all_nodes
+            .difference(<span class="kw-2">&amp;</span>removed_nodes)
+            .map(|e| graph_indices.node_index_to_seg_id(<span class="kw-2">*</span>e).unwrap())
+            .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;()
     }
 }
 
-<span class="doccomment">/// A function generic over certain types of `Directed` petgraph `Graph`s.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Given a graph, a start node, an end node, and optionally a map of the coverage of each node, compute all simple paths between these nodes.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Modified from: &lt;https://github.com/Ninjani/rosalind/blob/e22ecf2c9f0935d970b137684029957c0850d63f/t_ba11b/src/lib.rs&gt;</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">all_paths</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">U</span>, <span class="ident">Ix</span>: <span class="ident">IndexType</span><span class="op">&gt;</span>(
-    <span class="ident">graph</span>: <span class="kw-2">&amp;</span><span class="ident">Graph</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">U</span>, <span class="ident">Directed</span>, <span class="ident">Ix</span><span class="op">&gt;</span>,
-    <span class="ident">start_node</span>: <span class="ident">NodeIndex</span><span class="op">&lt;</span><span class="ident">Ix</span><span class="op">&gt;</span>,
-    <span class="ident">end_node</span>: <span class="ident">NodeIndex</span><span class="op">&lt;</span><span class="ident">Ix</span><span class="op">&gt;</span>,
-    <span class="ident">rel_coverage_map</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">NodeIndex</span><span class="op">&lt;</span><span class="ident">Ix</span><span class="op">&gt;</span>, <span class="ident">usize</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">index</span>: <span class="ident">usize</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">NodeIndex</span><span class="op">&lt;</span><span class="ident">Ix</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-    <span class="kw">match</span> <span class="ident">rel_coverage_map</span> {
-        <span class="prelude-val">Some</span>(<span class="ident">cov_map</span>) =&gt; {
-            <span class="comment">// for the set of visited nodes</span>
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">visited</span> <span class="op">=</span> <span class="ident">HashMap::new</span>();
-            <span class="ident">visited</span>.<span class="ident">insert</span>(<span class="ident">start_node</span>, <span class="number">1</span>);
-            <span class="comment">// a counter for recursion depth.</span>
-            <span class="kw">let</span> <span class="ident">depth</span> <span class="op">=</span> <span class="number">0</span>;
-            <span class="kw">match</span> <span class="ident">recursive_path_finder_incl_coverage</span>(
-                <span class="ident">graph</span>,
-                <span class="ident">start_node</span>,
-                <span class="ident">end_node</span>,
-                <span class="kw-2">&amp;mut</span> <span class="ident">visited</span>,
-                <span class="ident">cov_map</span>,
-                <span class="ident">depth</span>,
-                <span class="ident">index</span>,
+<span class="doccomment">/// A function generic over certain types of `Directed` petgraph `Graph`s.
+///
+/// Given a graph, a start node, an end node, and optionally a map of the coverage of each node, compute all simple paths between these nodes.
+///
+/// Modified from: &lt;https://github.com/Ninjani/rosalind/blob/e22ecf2c9f0935d970b137684029957c0850d63f/t_ba11b/src/lib.rs&gt;
+</span><span class="kw">pub fn </span>all_paths&lt;T, U, Ix: IndexType&gt;(
+    graph: <span class="kw-2">&amp;</span>Graph&lt;T, U, Directed, Ix&gt;,
+    start_node: NodeIndex&lt;Ix&gt;,
+    end_node: NodeIndex&lt;Ix&gt;,
+    rel_coverage_map: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>HashMap&lt;NodeIndex&lt;Ix&gt;, usize&gt;&gt;,
+    index: usize,
+) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;Vec&lt;NodeIndex&lt;Ix&gt;&gt;&gt;&gt; {
+    <span class="kw">match </span>rel_coverage_map {
+        <span class="prelude-val">Some</span>(cov_map) =&gt; {
+            <span class="comment">// for the set of visited nodes
+            </span><span class="kw">let </span><span class="kw-2">mut </span>visited = HashMap::new();
+            visited.insert(start_node, <span class="number">1</span>);
+            <span class="comment">// a counter for recursion depth.
+            </span><span class="kw">let </span>depth = <span class="number">0</span>;
+            <span class="kw">match </span>recursive_path_finder_incl_coverage(
+                graph,
+                start_node,
+                end_node,
+                <span class="kw-2">&amp;mut </span>visited,
+                cov_map,
+                depth,
+                index,
             ) {
-                <span class="prelude-val">Some</span>(<span class="ident">p</span>) =&gt; <span class="ident">p</span>,
-                <span class="prelude-val">None</span> =&gt; {
-                    <span class="comment">// copy of the chunk below!</span>
-                    <span class="comment">// so if we go past the self imposed stack limit</span>
-                    <span class="comment">// we default to our other (not including coverage) method.</span>
-                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">visited</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
-                    <span class="ident">visited</span>.<span class="ident">insert</span>(<span class="ident">start_node</span>);
-                    <span class="ident">recursive_path_finder_no_coverage</span>(<span class="ident">graph</span>, <span class="ident">start_node</span>, <span class="ident">end_node</span>, <span class="kw-2">&amp;mut</span> <span class="ident">visited</span>)
+                <span class="prelude-val">Some</span>(p) =&gt; p,
+                <span class="prelude-val">None </span>=&gt; {
+                    <span class="comment">// copy of the chunk below!
+                    // so if we go past the self imposed stack limit
+                    // we default to our other (not including coverage) method.
+                    </span><span class="kw">let </span><span class="kw-2">mut </span>visited = HashSet::new();
+                    visited.insert(start_node);
+                    recursive_path_finder_no_coverage(graph, start_node, end_node, <span class="kw-2">&amp;mut </span>visited)
                 }
             }
         }
-        <span class="prelude-val">None</span> =&gt; {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">visited</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
-            <span class="ident">visited</span>.<span class="ident">insert</span>(<span class="ident">start_node</span>);
-            <span class="ident">recursive_path_finder_no_coverage</span>(<span class="ident">graph</span>, <span class="ident">start_node</span>, <span class="ident">end_node</span>, <span class="kw-2">&amp;mut</span> <span class="ident">visited</span>)
+        <span class="prelude-val">None </span>=&gt; {
+            <span class="kw">let </span><span class="kw-2">mut </span>visited = HashSet::new();
+            visited.insert(start_node);
+            recursive_path_finder_no_coverage(graph, start_node, end_node, <span class="kw-2">&amp;mut </span>visited)
         }
     }
 }
 
-<span class="doccomment">/// A recursion depth limit, so we don&#39;t hit a stack overflow</span>
-<span class="doccomment">/// and instead, abort and call another function.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Why is it 1000? Seemed sensible, and that&#39;s what python&#39;s is.</span>
-<span class="kw">const</span> <span class="ident">MAX_RECURSION_DEPTH</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">1000</span>;
+<span class="doccomment">/// A recursion depth limit, so we don&#39;t hit a stack overflow
+/// and instead, abort and call another function.
+///
+/// Why is it 1000? Seemed sensible, and that&#39;s what python&#39;s is.
+</span><span class="kw">const </span>MAX_RECURSION_DEPTH: usize = <span class="number">1000</span>;
 
-<span class="doccomment">/// Function called by `all_paths` where a `HashMap` is supplied instead of a</span>
-<span class="doccomment">/// `HashSet` in order to keep track of how many times a segment/node has been</span>
-<span class="doccomment">/// passed in a path.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Should be no more stack overflows.</span>
-<span class="kw">fn</span> <span class="ident">recursive_path_finder_incl_coverage</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">U</span>, <span class="ident">Ix</span>: <span class="ident">IndexType</span><span class="op">&gt;</span>(
-    <span class="ident">graph</span>: <span class="kw-2">&amp;</span><span class="ident">Graph</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">U</span>, <span class="ident">Directed</span>, <span class="ident">Ix</span><span class="op">&gt;</span>,
-    <span class="ident">start_node</span>: <span class="ident">NodeIndex</span><span class="op">&lt;</span><span class="ident">Ix</span><span class="op">&gt;</span>,
-    <span class="ident">end_node</span>: <span class="ident">NodeIndex</span><span class="op">&lt;</span><span class="ident">Ix</span><span class="op">&gt;</span>,
-    <span class="ident">visited</span>: <span class="kw-2">&amp;mut</span> <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">NodeIndex</span><span class="op">&lt;</span><span class="ident">Ix</span><span class="op">&gt;</span>, <span class="ident">usize</span><span class="op">&gt;</span>,
-    <span class="ident">rel_coverage_map</span>: <span class="kw-2">&amp;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">NodeIndex</span><span class="op">&lt;</span><span class="ident">Ix</span><span class="op">&gt;</span>, <span class="ident">usize</span><span class="op">&gt;</span>,
-    <span class="ident">depth</span>: <span class="ident">usize</span>,
-    <span class="ident">index</span>: <span class="ident">usize</span>,
-) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">NodeIndex</span><span class="op">&lt;</span><span class="ident">Ix</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-    <span class="kw">if</span> <span class="ident">depth</span> <span class="op">&gt;</span> <span class="ident">MAX_RECURSION_DEPTH</span> {
+<span class="doccomment">/// Function called by `all_paths` where a `HashMap` is supplied instead of a
+/// `HashSet` in order to keep track of how many times a segment/node has been
+/// passed in a path.
+///
+/// Should be no more stack overflows.
+</span><span class="kw">fn </span>recursive_path_finder_incl_coverage&lt;T, U, Ix: IndexType&gt;(
+    graph: <span class="kw-2">&amp;</span>Graph&lt;T, U, Directed, Ix&gt;,
+    start_node: NodeIndex&lt;Ix&gt;,
+    end_node: NodeIndex&lt;Ix&gt;,
+    visited: <span class="kw-2">&amp;mut </span>HashMap&lt;NodeIndex&lt;Ix&gt;, usize&gt;,
+    rel_coverage_map: <span class="kw-2">&amp;</span>HashMap&lt;NodeIndex&lt;Ix&gt;, usize&gt;,
+    depth: usize,
+    index: usize,
+) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;Vec&lt;NodeIndex&lt;Ix&gt;&gt;&gt;&gt;&gt; {
+    <span class="kw">if </span>depth &gt; MAX_RECURSION_DEPTH {
         <span class="macro">eprint!</span>(
             <span class="string">&quot;\r[-]\tRecursion depth limit ({}) exceeded in permutation {}. Switching to default path finder.&quot;</span>,
-            <span class="ident">MAX_RECURSION_DEPTH</span>,
-            <span class="ident">index</span> <span class="op">+</span> <span class="number">1</span>
-        );
-        <span class="kw">return</span> <span class="prelude-val">None</span>;
+            MAX_RECURSION_DEPTH,
+            index + <span class="number">1
+        </span>);
+        <span class="kw">return </span><span class="prelude-val">None</span>;
     }
-    <span class="comment">// if the start node is the same as the end</span>
-    <span class="comment">// the path is just to the end node</span>
-    <span class="kw">if</span> <span class="ident">start_node</span> <span class="op">==</span> <span class="ident">end_node</span> {
-        <span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(<span class="macro">vec!</span>[<span class="macro">vec!</span>[<span class="ident">end_node</span>]]))
-    } <span class="kw">else</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">paths</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-        <span class="kw">for</span> <span class="ident">edge</span> <span class="kw">in</span> <span class="ident">graph</span>.<span class="ident">edges_directed</span>(<span class="ident">start_node</span>, <span class="ident">Outgoing</span>) {
-            <span class="kw">let</span> <span class="ident">next_node</span> <span class="op">=</span> <span class="ident">edge</span>.<span class="ident">target</span>();
+    <span class="comment">// if the start node is the same as the end
+    // the path is just to the end node
+    </span><span class="kw">if </span>start_node == end_node {
+        <span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(<span class="macro">vec!</span>[<span class="macro">vec!</span>[end_node]]))
+    } <span class="kw">else </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>paths = Vec::new();
+        <span class="kw">for </span>edge <span class="kw">in </span>graph.edges_directed(start_node, Outgoing) {
+            <span class="kw">let </span>next_node = edge.target();
 
-            <span class="kw">let</span> <span class="ident">test</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">rel_coverage_map</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">next_node</span>).<span class="ident">unwrap</span>();
+            <span class="kw">let </span>test = <span class="kw-2">*</span>rel_coverage_map.get(<span class="kw-2">&amp;</span>next_node).unwrap();
 
-            <span class="kw">if</span> <span class="op">!</span><span class="ident">visited</span>.<span class="ident">contains_key</span>(<span class="kw-2">&amp;</span><span class="ident">next_node</span>) <span class="op">|</span><span class="op">|</span> <span class="kw-2">*</span><span class="ident">visited</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">next_node</span>).<span class="ident">unwrap</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">test</span> {
-                <span class="kw-2">*</span><span class="ident">visited</span>.<span class="ident">entry</span>(<span class="ident">next_node</span>).<span class="ident">or_insert</span>(<span class="number">0</span>) <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-                <span class="kw">let</span> <span class="ident">descendant_paths</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">recursive_path_finder_incl_coverage</span>(
-                    <span class="ident">graph</span>,
-                    <span class="ident">next_node</span>,
-                    <span class="ident">end_node</span>,
-                    <span class="ident">visited</span>,
-                    <span class="ident">rel_coverage_map</span>,
-                    <span class="ident">depth</span> <span class="op">+</span> <span class="number">1</span>,
-                    <span class="ident">index</span>,
+            <span class="kw">if </span>!visited.contains_key(<span class="kw-2">&amp;</span>next_node) || <span class="kw-2">*</span>visited.get(<span class="kw-2">&amp;</span>next_node).unwrap() != test {
+                <span class="kw-2">*</span>visited.entry(next_node).or_insert(<span class="number">0</span>) += <span class="number">1</span>;
+                <span class="kw">let </span>descendant_paths = <span class="kw">match </span>recursive_path_finder_incl_coverage(
+                    graph,
+                    next_node,
+                    end_node,
+                    visited,
+                    rel_coverage_map,
+                    depth + <span class="number">1</span>,
+                    index,
                 ) {
-                    <span class="comment">// can I get rid of this unwrap? is it safe?</span>
-                    <span class="prelude-val">Some</span>(<span class="ident">p</span>) =&gt; <span class="ident">p</span>.<span class="ident">unwrap</span>(),
-                    <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="prelude-val">None</span>,
+                    <span class="comment">// can I get rid of this unwrap? is it safe?
+                    </span><span class="prelude-val">Some</span>(p) =&gt; p.unwrap(),
+                    <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
                 };
-                <span class="ident">visited</span>.<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="ident">next_node</span>);
-                <span class="ident">paths</span>.<span class="ident">extend</span>(
-                    <span class="ident">descendant_paths</span>
-                        .<span class="ident">into_iter</span>()
-                        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">path</span><span class="op">|</span> {
-                            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">new_path</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">start_node</span>];
-                            <span class="ident">new_path</span>.<span class="ident">extend</span>(<span class="ident">path</span>);
-                            <span class="ident">new_path</span>
+                visited.remove(<span class="kw-2">&amp;</span>next_node);
+                paths.extend(
+                    descendant_paths
+                        .into_iter()
+                        .map(|path| {
+                            <span class="kw">let </span><span class="kw-2">mut </span>new_path = <span class="macro">vec!</span>[start_node];
+                            new_path.extend(path);
+                            new_path
                         })
-                        .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>(),
+                        .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;(),
                 )
             }
         }
-        <span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(<span class="ident">paths</span>))
+        <span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(paths))
     }
 }
 
-<span class="doccomment">/// A safer and more reliable alternative to `recursive_path_finder_incl_coverage` where</span>
-<span class="doccomment">/// a `HashSet` determines whether a segment/node has already been seen or not.</span>
-<span class="kw">fn</span> <span class="ident">recursive_path_finder_no_coverage</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">U</span>, <span class="ident">Ix</span>: <span class="ident">IndexType</span><span class="op">&gt;</span>(
-    <span class="ident">graph</span>: <span class="kw-2">&amp;</span><span class="ident">Graph</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">U</span>, <span class="ident">Directed</span>, <span class="ident">Ix</span><span class="op">&gt;</span>,
-    <span class="ident">start_node</span>: <span class="ident">NodeIndex</span><span class="op">&lt;</span><span class="ident">Ix</span><span class="op">&gt;</span>,
-    <span class="ident">end_node</span>: <span class="ident">NodeIndex</span><span class="op">&lt;</span><span class="ident">Ix</span><span class="op">&gt;</span>,
-    <span class="ident">visited</span>: <span class="kw-2">&amp;mut</span> <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">NodeIndex</span><span class="op">&lt;</span><span class="ident">Ix</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">NodeIndex</span><span class="op">&lt;</span><span class="ident">Ix</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-    <span class="kw">if</span> <span class="ident">start_node</span> <span class="op">==</span> <span class="ident">end_node</span> {
-        <span class="prelude-val">Ok</span>(<span class="macro">vec!</span>[<span class="macro">vec!</span>[<span class="ident">end_node</span>]])
-    } <span class="kw">else</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">paths</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-        <span class="kw">for</span> <span class="ident">edge</span> <span class="kw">in</span> <span class="ident">graph</span>.<span class="ident">edges_directed</span>(<span class="ident">start_node</span>, <span class="ident">Outgoing</span>) {
-            <span class="kw">let</span> <span class="ident">next_node</span> <span class="op">=</span> <span class="ident">edge</span>.<span class="ident">target</span>();
-            <span class="kw">if</span> <span class="op">!</span><span class="ident">visited</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">next_node</span>) {
-                <span class="ident">visited</span>.<span class="ident">insert</span>(<span class="ident">next_node</span>);
-                <span class="kw">let</span> <span class="ident">descendant_paths</span> <span class="op">=</span>
-                    <span class="ident">recursive_path_finder_no_coverage</span>(<span class="ident">graph</span>, <span class="ident">next_node</span>, <span class="ident">end_node</span>, <span class="ident">visited</span>)<span class="question-mark">?</span>;
-                <span class="ident">visited</span>.<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="ident">next_node</span>);
-                <span class="ident">paths</span>.<span class="ident">extend</span>(
-                    <span class="ident">descendant_paths</span>
-                        .<span class="ident">into_iter</span>()
-                        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">path</span><span class="op">|</span> {
-                            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">new_path</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">start_node</span>];
-                            <span class="ident">new_path</span>.<span class="ident">extend</span>(<span class="ident">path</span>);
-                            <span class="ident">new_path</span>
+<span class="doccomment">/// A safer and more reliable alternative to `recursive_path_finder_incl_coverage` where
+/// a `HashSet` determines whether a segment/node has already been seen or not.
+</span><span class="kw">fn </span>recursive_path_finder_no_coverage&lt;T, U, Ix: IndexType&gt;(
+    graph: <span class="kw-2">&amp;</span>Graph&lt;T, U, Directed, Ix&gt;,
+    start_node: NodeIndex&lt;Ix&gt;,
+    end_node: NodeIndex&lt;Ix&gt;,
+    visited: <span class="kw-2">&amp;mut </span>HashSet&lt;NodeIndex&lt;Ix&gt;&gt;,
+) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;Vec&lt;NodeIndex&lt;Ix&gt;&gt;&gt;&gt; {
+    <span class="kw">if </span>start_node == end_node {
+        <span class="prelude-val">Ok</span>(<span class="macro">vec!</span>[<span class="macro">vec!</span>[end_node]])
+    } <span class="kw">else </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>paths = Vec::new();
+        <span class="kw">for </span>edge <span class="kw">in </span>graph.edges_directed(start_node, Outgoing) {
+            <span class="kw">let </span>next_node = edge.target();
+            <span class="kw">if </span>!visited.contains(<span class="kw-2">&amp;</span>next_node) {
+                visited.insert(next_node);
+                <span class="kw">let </span>descendant_paths =
+                    recursive_path_finder_no_coverage(graph, next_node, end_node, visited)<span class="question-mark">?</span>;
+                visited.remove(<span class="kw-2">&amp;</span>next_node);
+                paths.extend(
+                    descendant_paths
+                        .into_iter()
+                        .map(|path| {
+                            <span class="kw">let </span><span class="kw-2">mut </span>new_path = <span class="macro">vec!</span>[start_node];
+                            new_path.extend(path);
+                            new_path
                         })
-                        .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>(),
+                        .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;(),
                 )
             }
         }
-        <span class="prelude-val">Ok</span>(<span class="ident">paths</span>)
+        <span class="prelude-val">Ok</span>(paths)
     }
 }
 
-<span class="doccomment">/// Returns a subgraph GFA that only contains elements with the provided segment names.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Taken from &lt;https://github.com/chfi/rs-gfa-utils/blob/master/src/subgraph.rs&gt;</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">segments_subgraph</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">OptFields</span> <span class="op">+</span> <span class="ident">Clone</span><span class="op">&gt;</span>(
-    <span class="ident">gfa</span>: <span class="kw-2">&amp;</span><span class="ident">GFA</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">T</span><span class="op">&gt;</span>,
-    <span class="ident">segment_names</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>,
-) -&gt; <span class="ident">GFA</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">segments</span> <span class="op">=</span> <span class="ident">gfa</span>
-        .<span class="ident">segments</span>
-        .<span class="ident">iter</span>()
-        .<span class="ident">filter</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">segment_names</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">s</span>.<span class="ident">name</span>))
-        .<span class="ident">cloned</span>()
-        .<span class="ident">collect</span>();
+<span class="doccomment">/// Returns a subgraph GFA that only contains elements with the provided segment names.
+///
+/// Taken from &lt;https://github.com/chfi/rs-gfa-utils/blob/master/src/subgraph.rs&gt;
+</span><span class="kw">pub fn </span>segments_subgraph&lt;T: OptFields + Clone&gt;(
+    gfa: <span class="kw-2">&amp;</span>GFA&lt;usize, T&gt;,
+    segment_names: Vec&lt;usize&gt;,
+) -&gt; GFA&lt;usize, T&gt; {
+    <span class="kw">let </span>segments = gfa
+        .segments
+        .iter()
+        .filter(|s| segment_names.contains(<span class="kw-2">&amp;</span>s.name))
+        .cloned()
+        .collect();
 
-    <span class="kw">let</span> <span class="ident">links</span> <span class="op">=</span> <span class="ident">gfa</span>
-        .<span class="ident">links</span>
-        .<span class="ident">iter</span>()
-        .<span class="ident">filter</span>(<span class="op">|</span><span class="ident">l</span><span class="op">|</span> {
-            <span class="ident">segment_names</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">l</span>.<span class="ident">from_segment</span>) <span class="op">&amp;&amp;</span> <span class="ident">segment_names</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">l</span>.<span class="ident">to_segment</span>)
+    <span class="kw">let </span>links = gfa
+        .links
+        .iter()
+        .filter(|l| {
+            segment_names.contains(<span class="kw-2">&amp;</span>l.from_segment) &amp;&amp; segment_names.contains(<span class="kw-2">&amp;</span>l.to_segment)
         })
-        .<span class="ident">cloned</span>()
-        .<span class="ident">collect</span>();
+        .cloned()
+        .collect();
 
-    <span class="kw">let</span> <span class="ident">containments</span> <span class="op">=</span> <span class="ident">gfa</span>
-        .<span class="ident">containments</span>
-        .<span class="ident">iter</span>()
-        .<span class="ident">filter</span>(<span class="op">|</span><span class="ident">l</span><span class="op">|</span> {
-            <span class="ident">segment_names</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">l</span>.<span class="ident">container_name</span>) <span class="op">&amp;&amp;</span> <span class="ident">segment_names</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">l</span>.<span class="ident">contained_name</span>)
+    <span class="kw">let </span>containments = gfa
+        .containments
+        .iter()
+        .filter(|l| {
+            segment_names.contains(<span class="kw-2">&amp;</span>l.container_name) &amp;&amp; segment_names.contains(<span class="kw-2">&amp;</span>l.contained_name)
         })
-        .<span class="ident">cloned</span>()
-        .<span class="ident">collect</span>();
+        .cloned()
+        .collect();
 
-    <span class="kw">let</span> <span class="ident">paths</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">gfa</span>
-        .<span class="ident">paths</span>
-        .<span class="ident">iter</span>()
-        .<span class="ident">filter</span>(<span class="op">|</span><span class="ident">p</span><span class="op">|</span> <span class="ident">p</span>.<span class="ident">iter</span>().<span class="ident">any</span>(<span class="op">|</span>(<span class="ident">s</span>, <span class="kw">_</span>)<span class="op">|</span> <span class="ident">segment_names</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">s</span>)))
-        .<span class="ident">cloned</span>()
-        .<span class="ident">collect</span>();
+    <span class="kw">let </span>paths: Vec&lt;<span class="kw">_</span>&gt; = gfa
+        .paths
+        .iter()
+        .filter(|p| p.iter().any(|(s, <span class="kw">_</span>)| segment_names.contains(<span class="kw-2">&amp;</span>s)))
+        .cloned()
+        .collect();
 
-    <span class="ident">GFA</span> {
-        <span class="ident">header</span>: <span class="ident">gfa</span>.<span class="ident">header</span>.<span class="ident">clone</span>(),
-        <span class="ident">segments</span>,
-        <span class="ident">links</span>,
-        <span class="ident">paths</span>,
-        <span class="ident">containments</span>,
+    GFA {
+        header: gfa.header.clone(),
+        segments,
+        links,
+        paths,
+        containments,
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
 
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="comment">// we want to make a test graph to play with</span>
-    <span class="comment">// make the inner graph representation of:</span>
-    <span class="comment">// ./examples/mito_NC_037304.1.MZ323108.1.fasta.BOTH.HiFiMapped.bam.filtered.1k.gfa</span>
+    <span class="comment">// we want to make a test graph to play with
+    // make the inner graph representation of:
+    // ./examples/mito_NC_037304.1.MZ323108.1.fasta.BOTH.HiFiMapped.bam.filtered.1k.gfa
 
-    <span class="kw">fn</span> <span class="ident">make_graph</span>() -&gt; <span class="ident">GFAdigraph</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">graph</span> <span class="op">=</span> <span class="ident">Graph</span>::<span class="op">&lt;</span><span class="ident">usize</span>, (<span class="ident">Orientation</span>, <span class="ident">Orientation</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span>)<span class="op">&gt;</span><span class="ident">::new</span>();
+    </span><span class="kw">fn </span>make_graph() -&gt; GFAdigraph {
+        <span class="kw">let </span><span class="kw-2">mut </span>graph = Graph::&lt;usize, (Orientation, Orientation, <span class="prelude-ty">Option</span>&lt;i64&gt;)&gt;::new();
 
-        <span class="comment">// node weights are usize</span>
-        <span class="kw">let</span> <span class="ident">node0</span> <span class="op">=</span> <span class="ident">graph</span>.<span class="ident">add_node</span>(<span class="number">0</span>);
-        <span class="kw">let</span> <span class="ident">node1</span> <span class="op">=</span> <span class="ident">graph</span>.<span class="ident">add_node</span>(<span class="number">1</span>);
-        <span class="kw">let</span> <span class="ident">node2</span> <span class="op">=</span> <span class="ident">graph</span>.<span class="ident">add_node</span>(<span class="number">2</span>);
-        <span class="kw">let</span> <span class="ident">node3</span> <span class="op">=</span> <span class="ident">graph</span>.<span class="ident">add_node</span>(<span class="number">3</span>);
-        <span class="kw">let</span> <span class="ident">node4</span> <span class="op">=</span> <span class="ident">graph</span>.<span class="ident">add_node</span>(<span class="number">4</span>);
-        <span class="kw">let</span> <span class="ident">node5</span> <span class="op">=</span> <span class="ident">graph</span>.<span class="ident">add_node</span>(<span class="number">5</span>);
+        <span class="comment">// node weights are usize
+        </span><span class="kw">let </span>node0 = graph.add_node(<span class="number">0</span>);
+        <span class="kw">let </span>node1 = graph.add_node(<span class="number">1</span>);
+        <span class="kw">let </span>node2 = graph.add_node(<span class="number">2</span>);
+        <span class="kw">let </span>node3 = graph.add_node(<span class="number">3</span>);
+        <span class="kw">let </span>node4 = graph.add_node(<span class="number">4</span>);
+        <span class="kw">let </span>node5 = graph.add_node(<span class="number">5</span>);
 
-        <span class="comment">// we create the following graph</span>
-        <span class="comment">//</span>
-        <span class="comment">//  0 &lt;-----&gt; 3 &lt;-----&gt; 1</span>
-        <span class="comment">//    \     / ˄ \     /</span>
-        <span class="comment">//      \ /   |   \ /</span>
-        <span class="comment">//      / \   |   / \</span>
-        <span class="comment">//    /     \ ˅ /     \</span>
-        <span class="comment">//  5 &lt;-----&gt; 2 &lt;-----&gt; 4</span>
-        <span class="comment">//</span>
+        <span class="comment">// we create the following graph
+        //
+        //  0 &lt;-----&gt; 3 &lt;-----&gt; 1
+        //    \     / ˄ \     /
+        //      \ /   |   \ /
+        //      / \   |   / \
+        //    /     \ ˅ /     \
+        //  5 &lt;-----&gt; 2 &lt;-----&gt; 4
+        //
 
-        <span class="ident">graph</span>.<span class="ident">extend_with_edges</span>(<span class="kw-2">&amp;</span>[
+        </span>graph.extend_with_edges(<span class="kw-2">&amp;</span>[
             (
-                <span class="ident">node0</span>,
-                <span class="ident">node3</span>,
-                (<span class="ident">Orientation::Backward</span>, <span class="ident">Orientation::Backward</span>, <span class="prelude-val">Some</span>(<span class="number">379</span>)),
+                node0,
+                node3,
+                (Orientation::Backward, Orientation::Backward, <span class="prelude-val">Some</span>(<span class="number">379</span>)),
             ),
             (
-                <span class="ident">node0</span>,
-                <span class="ident">node2</span>,
-                (<span class="ident">Orientation::Forward</span>, <span class="ident">Orientation::Backward</span>, <span class="prelude-val">Some</span>(<span class="number">338</span>)),
+                node0,
+                node2,
+                (Orientation::Forward, Orientation::Backward, <span class="prelude-val">Some</span>(<span class="number">338</span>)),
             ),
             (
-                <span class="ident">node1</span>,
-                <span class="ident">node3</span>,
-                (<span class="ident">Orientation::Backward</span>, <span class="ident">Orientation::Backward</span>, <span class="prelude-val">Some</span>(<span class="number">380</span>)),
+                node1,
+                node3,
+                (Orientation::Backward, Orientation::Backward, <span class="prelude-val">Some</span>(<span class="number">380</span>)),
             ),
             (
-                <span class="ident">node1</span>,
-                <span class="ident">node2</span>,
-                (<span class="ident">Orientation::Forward</span>, <span class="ident">Orientation::Backward</span>, <span class="prelude-val">Some</span>(<span class="number">374</span>)),
+                node1,
+                node2,
+                (Orientation::Forward, Orientation::Backward, <span class="prelude-val">Some</span>(<span class="number">374</span>)),
             ),
             (
-                <span class="ident">node2</span>,
-                <span class="ident">node4</span>,
-                (<span class="ident">Orientation::Backward</span>, <span class="ident">Orientation::Forward</span>, <span class="prelude-val">Some</span>(<span class="number">347</span>)),
+                node2,
+                node4,
+                (Orientation::Backward, Orientation::Forward, <span class="prelude-val">Some</span>(<span class="number">347</span>)),
             ),
             (
-                <span class="ident">node2</span>,
-                <span class="ident">node5</span>,
-                (<span class="ident">Orientation::Backward</span>, <span class="ident">Orientation::Forward</span>, <span class="prelude-val">Some</span>(<span class="number">399</span>)),
+                node2,
+                node5,
+                (Orientation::Backward, Orientation::Forward, <span class="prelude-val">Some</span>(<span class="number">399</span>)),
             ),
             (
-                <span class="ident">node2</span>,
-                <span class="ident">node1</span>,
-                (<span class="ident">Orientation::Forward</span>, <span class="ident">Orientation::Backward</span>, <span class="prelude-val">Some</span>(<span class="number">374</span>)),
+                node2,
+                node1,
+                (Orientation::Forward, Orientation::Backward, <span class="prelude-val">Some</span>(<span class="number">374</span>)),
             ),
             (
-                <span class="ident">node2</span>,
-                <span class="ident">node0</span>,
-                (<span class="ident">Orientation::Forward</span>, <span class="ident">Orientation::Backward</span>, <span class="prelude-val">Some</span>(<span class="number">338</span>)),
+                node2,
+                node0,
+                (Orientation::Forward, Orientation::Backward, <span class="prelude-val">Some</span>(<span class="number">338</span>)),
             ),
             (
-                <span class="ident">node3</span>,
-                <span class="ident">node5</span>,
-                (<span class="ident">Orientation::Backward</span>, <span class="ident">Orientation::Backward</span>, <span class="prelude-val">Some</span>(<span class="number">397</span>)),
+                node3,
+                node5,
+                (Orientation::Backward, Orientation::Backward, <span class="prelude-val">Some</span>(<span class="number">397</span>)),
             ),
             (
-                <span class="ident">node3</span>,
-                <span class="ident">node4</span>,
-                (<span class="ident">Orientation::Backward</span>, <span class="ident">Orientation::Backward</span>, <span class="prelude-val">Some</span>(<span class="number">349</span>)),
+                node3,
+                node4,
+                (Orientation::Backward, Orientation::Backward, <span class="prelude-val">Some</span>(<span class="number">349</span>)),
             ),
             (
-                <span class="ident">node3</span>,
-                <span class="ident">node1</span>,
-                (<span class="ident">Orientation::Forward</span>, <span class="ident">Orientation::Forward</span>, <span class="prelude-val">Some</span>(<span class="number">380</span>)),
+                node3,
+                node1,
+                (Orientation::Forward, Orientation::Forward, <span class="prelude-val">Some</span>(<span class="number">380</span>)),
             ),
             (
-                <span class="ident">node3</span>,
-                <span class="ident">node0</span>,
-                (<span class="ident">Orientation::Forward</span>, <span class="ident">Orientation::Forward</span>, <span class="prelude-val">Some</span>(<span class="number">379</span>)),
+                node3,
+                node0,
+                (Orientation::Forward, Orientation::Forward, <span class="prelude-val">Some</span>(<span class="number">379</span>)),
             ),
             (
-                <span class="ident">node4</span>,
-                <span class="ident">node2</span>,
-                (<span class="ident">Orientation::Backward</span>, <span class="ident">Orientation::Forward</span>, <span class="prelude-val">Some</span>(<span class="number">347</span>)),
+                node4,
+                node2,
+                (Orientation::Backward, Orientation::Forward, <span class="prelude-val">Some</span>(<span class="number">347</span>)),
             ),
             (
-                <span class="ident">node4</span>,
-                <span class="ident">node3</span>,
-                (<span class="ident">Orientation::Forward</span>, <span class="ident">Orientation::Forward</span>, <span class="prelude-val">Some</span>(<span class="number">349</span>)),
+                node4,
+                node3,
+                (Orientation::Forward, Orientation::Forward, <span class="prelude-val">Some</span>(<span class="number">349</span>)),
             ),
             (
-                <span class="ident">node5</span>,
-                <span class="ident">node2</span>,
-                (<span class="ident">Orientation::Backward</span>, <span class="ident">Orientation::Forward</span>, <span class="prelude-val">Some</span>(<span class="number">399</span>)),
+                node5,
+                node2,
+                (Orientation::Backward, Orientation::Forward, <span class="prelude-val">Some</span>(<span class="number">399</span>)),
             ),
             (
-                <span class="ident">node5</span>,
-                <span class="ident">node3</span>,
-                (<span class="ident">Orientation::Forward</span>, <span class="ident">Orientation::Forward</span>, <span class="prelude-val">Some</span>(<span class="number">397</span>)),
+                node5,
+                node3,
+                (Orientation::Forward, Orientation::Forward, <span class="prelude-val">Some</span>(<span class="number">397</span>)),
             ),
         ]);
 
-        <span class="ident">GFAdigraph</span>(<span class="ident">graph</span>)
+        GFAdigraph(graph)
     }
 
-    <span class="comment">// there are 6 nodes in this graph</span>
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_node_count</span>() {
-        <span class="kw">let</span> <span class="ident">graph</span> <span class="op">=</span> <span class="ident">make_graph</span>();
+    <span class="comment">// there are 6 nodes in this graph
+    </span><span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_node_count() {
+        <span class="kw">let </span>graph = make_graph();
 
-        <span class="macro">assert_eq!</span>(<span class="ident">graph</span>.<span class="ident">node_count</span>(), <span class="number">6</span>);
+        <span class="macro">assert_eq!</span>(graph.node_count(), <span class="number">6</span>);
     }
 
-    <span class="comment">// there are 16 edges in this graph (incl +/- orientations)</span>
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_edge_count</span>() {
-        <span class="kw">let</span> <span class="ident">graph</span> <span class="op">=</span> <span class="ident">make_graph</span>();
+    <span class="comment">// there are 16 edges in this graph (incl +/- orientations)
+    </span><span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_edge_count() {
+        <span class="kw">let </span>graph = make_graph();
 
-        <span class="macro">assert_eq!</span>(<span class="ident">graph</span>.<span class="ident">edge_count</span>(), <span class="number">16</span>);
+        <span class="macro">assert_eq!</span>(graph.edge_count(), <span class="number">16</span>);
     }
 
-    <span class="comment">// there are two possible paths between node indexes 0 and 2</span>
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_path_generation</span>() {
-        <span class="kw">let</span> <span class="ident">graph</span> <span class="op">=</span> <span class="ident">make_graph</span>();
+    <span class="comment">// there are two possible paths between node indexes 0 and 2
+    </span><span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_path_generation() {
+        <span class="kw">let </span>graph = make_graph();
 
-        <span class="kw">let</span> <span class="ident">paths</span> <span class="op">=</span> <span class="ident">all_paths</span>(<span class="kw-2">&amp;</span><span class="ident">graph</span>.<span class="number">0</span>, <span class="ident">NodeIndex::new</span>(<span class="number">0</span>), <span class="ident">NodeIndex::new</span>(<span class="number">2</span>), <span class="prelude-val">None</span>, <span class="number">0</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let </span>paths = all_paths(<span class="kw-2">&amp;</span>graph.<span class="number">0</span>, NodeIndex::new(<span class="number">0</span>), NodeIndex::new(<span class="number">2</span>), <span class="prelude-val">None</span>, <span class="number">0</span>).unwrap();
 
-        <span class="comment">// there should be two paths</span>
-        <span class="kw">let</span> <span class="ident">path1</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">NodeIndex</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">NodeIndex::new</span>(<span class="number">0</span>), <span class="ident">NodeIndex::new</span>(<span class="number">2</span>)];
-        <span class="kw">let</span> <span class="ident">path2</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">NodeIndex</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec!</span>[
-            <span class="ident">NodeIndex::new</span>(<span class="number">0</span>),
-            <span class="ident">NodeIndex::new</span>(<span class="number">3</span>),
-            <span class="ident">NodeIndex::new</span>(<span class="number">1</span>),
-            <span class="ident">NodeIndex::new</span>(<span class="number">2</span>),
+        <span class="comment">// there should be two paths
+        </span><span class="kw">let </span>path1: Vec&lt;NodeIndex&gt; = <span class="macro">vec!</span>[NodeIndex::new(<span class="number">0</span>), NodeIndex::new(<span class="number">2</span>)];
+        <span class="kw">let </span>path2: Vec&lt;NodeIndex&gt; = <span class="macro">vec!</span>[
+            NodeIndex::new(<span class="number">0</span>),
+            NodeIndex::new(<span class="number">3</span>),
+            NodeIndex::new(<span class="number">1</span>),
+            NodeIndex::new(<span class="number">2</span>),
         ];
-        <span class="kw">let</span> <span class="ident">path3</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">NodeIndex</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec!</span>[
-            <span class="ident">NodeIndex::new</span>(<span class="number">0</span>),
-            <span class="ident">NodeIndex::new</span>(<span class="number">3</span>),
-            <span class="ident">NodeIndex::new</span>(<span class="number">4</span>),
-            <span class="ident">NodeIndex::new</span>(<span class="number">2</span>),
+        <span class="kw">let </span>path3: Vec&lt;NodeIndex&gt; = <span class="macro">vec!</span>[
+            NodeIndex::new(<span class="number">0</span>),
+            NodeIndex::new(<span class="number">3</span>),
+            NodeIndex::new(<span class="number">4</span>),
+            NodeIndex::new(<span class="number">2</span>),
         ];
-        <span class="kw">let</span> <span class="ident">path4</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">NodeIndex</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec!</span>[
-            <span class="ident">NodeIndex::new</span>(<span class="number">0</span>),
-            <span class="ident">NodeIndex::new</span>(<span class="number">3</span>),
-            <span class="ident">NodeIndex::new</span>(<span class="number">5</span>),
-            <span class="ident">NodeIndex::new</span>(<span class="number">2</span>),
+        <span class="kw">let </span>path4: Vec&lt;NodeIndex&gt; = <span class="macro">vec!</span>[
+            NodeIndex::new(<span class="number">0</span>),
+            NodeIndex::new(<span class="number">3</span>),
+            NodeIndex::new(<span class="number">5</span>),
+            NodeIndex::new(<span class="number">2</span>),
         ];
 
-        <span class="macro">assert_eq!</span>(<span class="ident">paths</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">path1</span>), <span class="bool-val">true</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">paths</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">path2</span>), <span class="bool-val">true</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">paths</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">path3</span>), <span class="bool-val">true</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">paths</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">path4</span>), <span class="bool-val">true</span>);
+        <span class="macro">assert!</span>(paths.contains(<span class="kw-2">&amp;</span>path1));
+        <span class="macro">assert!</span>(paths.contains(<span class="kw-2">&amp;</span>path2));
+        <span class="macro">assert!</span>(paths.contains(<span class="kw-2">&amp;</span>path3));
+        <span class="macro">assert!</span>(paths.contains(<span class="kw-2">&amp;</span>path4));
     }
 
-    <span class="comment">//</span>
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_path_generation_incl_node_cov</span>() {
-        <span class="kw">let</span> <span class="ident">graph</span> <span class="op">=</span> <span class="ident">make_graph</span>();
+    <span class="comment">//
+    </span><span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_path_generation_incl_node_cov() {
+        <span class="kw">let </span>graph = make_graph();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">map</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">NodeIndex</span>, <span class="ident">usize</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">HashMap::new</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>map: HashMap&lt;NodeIndex, usize&gt; = HashMap::new();
 
-        <span class="comment">// we can provide a map to say we want to visit certain nodes twice</span>
-        <span class="ident">map</span>.<span class="ident">insert</span>(<span class="ident">NodeIndex::new</span>(<span class="number">0</span>), <span class="number">1</span>);
-        <span class="ident">map</span>.<span class="ident">insert</span>(<span class="ident">NodeIndex::new</span>(<span class="number">1</span>), <span class="number">1</span>);
-        <span class="ident">map</span>.<span class="ident">insert</span>(<span class="ident">NodeIndex::new</span>(<span class="number">2</span>), <span class="number">2</span>);
-        <span class="ident">map</span>.<span class="ident">insert</span>(<span class="ident">NodeIndex::new</span>(<span class="number">3</span>), <span class="number">2</span>);
-        <span class="ident">map</span>.<span class="ident">insert</span>(<span class="ident">NodeIndex::new</span>(<span class="number">4</span>), <span class="number">1</span>);
-        <span class="ident">map</span>.<span class="ident">insert</span>(<span class="ident">NodeIndex::new</span>(<span class="number">5</span>), <span class="number">1</span>);
+        <span class="comment">// we can provide a map to say we want to visit certain nodes twice
+        </span>map.insert(NodeIndex::new(<span class="number">0</span>), <span class="number">1</span>);
+        map.insert(NodeIndex::new(<span class="number">1</span>), <span class="number">1</span>);
+        map.insert(NodeIndex::new(<span class="number">2</span>), <span class="number">2</span>);
+        map.insert(NodeIndex::new(<span class="number">3</span>), <span class="number">2</span>);
+        map.insert(NodeIndex::new(<span class="number">4</span>), <span class="number">1</span>);
+        map.insert(NodeIndex::new(<span class="number">5</span>), <span class="number">1</span>);
 
-        <span class="kw">let</span> <span class="ident">lookup</span> <span class="op">=</span> <span class="ident">GFAGraphLookups</span>(<span class="macro">vec!</span>[
-            <span class="ident"><span class="kw">crate</span>::utils::GFAGraphPair</span> {
-                <span class="ident">node_index</span>: <span class="ident">NodeIndex::new</span>(<span class="number">0</span>),
-                <span class="ident">seg_id</span>: <span class="number">4</span>,
+        <span class="kw">let </span>lookup = GFAGraphLookups(<span class="macro">vec!</span>[
+            <span class="kw">crate</span>::utils::GFAGraphPair {
+                node_index: NodeIndex::new(<span class="number">0</span>),
+                seg_id: <span class="number">4</span>,
             },
-            <span class="ident"><span class="kw">crate</span>::utils::GFAGraphPair</span> {
-                <span class="ident">node_index</span>: <span class="ident">NodeIndex::new</span>(<span class="number">2</span>),
-                <span class="ident">seg_id</span>: <span class="number">6</span>,
+            <span class="kw">crate</span>::utils::GFAGraphPair {
+                node_index: NodeIndex::new(<span class="number">2</span>),
+                seg_id: <span class="number">6</span>,
             },
-            <span class="ident"><span class="kw">crate</span>::utils::GFAGraphPair</span> {
-                <span class="ident">node_index</span>: <span class="ident">NodeIndex::new</span>(<span class="number">5</span>),
-                <span class="ident">seg_id</span>: <span class="number">9</span>,
+            <span class="kw">crate</span>::utils::GFAGraphPair {
+                node_index: NodeIndex::new(<span class="number">5</span>),
+                seg_id: <span class="number">9</span>,
             },
-            <span class="ident"><span class="kw">crate</span>::utils::GFAGraphPair</span> {
-                <span class="ident">node_index</span>: <span class="ident">NodeIndex::new</span>(<span class="number">3</span>),
-                <span class="ident">seg_id</span>: <span class="number">7</span>,
+            <span class="kw">crate</span>::utils::GFAGraphPair {
+                node_index: NodeIndex::new(<span class="number">3</span>),
+                seg_id: <span class="number">7</span>,
             },
-            <span class="ident"><span class="kw">crate</span>::utils::GFAGraphPair</span> {
-                <span class="ident">node_index</span>: <span class="ident">NodeIndex::new</span>(<span class="number">1</span>),
-                <span class="ident">seg_id</span>: <span class="number">5</span>,
+            <span class="kw">crate</span>::utils::GFAGraphPair {
+                node_index: NodeIndex::new(<span class="number">1</span>),
+                seg_id: <span class="number">5</span>,
             },
-            <span class="ident"><span class="kw">crate</span>::utils::GFAGraphPair</span> {
-                <span class="ident">node_index</span>: <span class="ident">NodeIndex::new</span>(<span class="number">4</span>),
-                <span class="ident">seg_id</span>: <span class="number">8</span>,
+            <span class="kw">crate</span>::utils::GFAGraphPair {
+                node_index: NodeIndex::new(<span class="number">4</span>),
+                seg_id: <span class="number">8</span>,
             },
         ]);
 
-        <span class="comment">// generate the paths</span>
-        <span class="kw">let</span> <span class="ident">paths</span> <span class="op">=</span> <span class="ident">graph</span>.<span class="ident">all_paths_all_node_pairs</span>(<span class="kw-2">&amp;</span><span class="ident">lookup</span>, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">map</span>));
+        <span class="comment">// generate the paths
+        </span><span class="kw">let </span>paths = graph.all_paths_all_node_pairs(<span class="kw-2">&amp;</span>lookup, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>map));
 
-        <span class="comment">// either this path</span>
-        <span class="kw">let</span> <span class="ident">longest_path1</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">NodeIndex</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec!</span>[
-            <span class="ident">NodeIndex::new</span>(<span class="number">2</span>),
-            <span class="ident">NodeIndex::new</span>(<span class="number">5</span>),
-            <span class="ident">NodeIndex::new</span>(<span class="number">3</span>),
-            <span class="ident">NodeIndex::new</span>(<span class="number">1</span>),
-            <span class="ident">NodeIndex::new</span>(<span class="number">2</span>),
-            <span class="ident">NodeIndex::new</span>(<span class="number">4</span>),
-            <span class="ident">NodeIndex::new</span>(<span class="number">3</span>),
-            <span class="ident">NodeIndex::new</span>(<span class="number">0</span>),
+        <span class="comment">// either this path
+        </span><span class="kw">let </span>longest_path1: Vec&lt;NodeIndex&gt; = <span class="macro">vec!</span>[
+            NodeIndex::new(<span class="number">2</span>),
+            NodeIndex::new(<span class="number">5</span>),
+            NodeIndex::new(<span class="number">3</span>),
+            NodeIndex::new(<span class="number">1</span>),
+            NodeIndex::new(<span class="number">2</span>),
+            NodeIndex::new(<span class="number">4</span>),
+            NodeIndex::new(<span class="number">3</span>),
+            NodeIndex::new(<span class="number">0</span>),
         ];
 
-        <span class="comment">// or this path</span>
-        <span class="kw">let</span> <span class="ident">longest_path2</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">NodeIndex</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec!</span>[
-            <span class="ident">NodeIndex::new</span>(<span class="number">2</span>),
-            <span class="ident">NodeIndex::new</span>(<span class="number">4</span>),
-            <span class="ident">NodeIndex::new</span>(<span class="number">3</span>),
-            <span class="ident">NodeIndex::new</span>(<span class="number">1</span>),
-            <span class="ident">NodeIndex::new</span>(<span class="number">2</span>),
-            <span class="ident">NodeIndex::new</span>(<span class="number">5</span>),
-            <span class="ident">NodeIndex::new</span>(<span class="number">3</span>),
-            <span class="ident">NodeIndex::new</span>(<span class="number">0</span>),
+        <span class="comment">// or this path
+        </span><span class="kw">let </span>longest_path2: Vec&lt;NodeIndex&gt; = <span class="macro">vec!</span>[
+            NodeIndex::new(<span class="number">2</span>),
+            NodeIndex::new(<span class="number">4</span>),
+            NodeIndex::new(<span class="number">3</span>),
+            NodeIndex::new(<span class="number">1</span>),
+            NodeIndex::new(<span class="number">2</span>),
+            NodeIndex::new(<span class="number">5</span>),
+            NodeIndex::new(<span class="number">3</span>),
+            NodeIndex::new(<span class="number">0</span>),
         ];
 
-        <span class="comment">// will be chosen</span>
-        <span class="kw">let</span> <span class="ident">both</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">longest_path1</span>, <span class="ident">longest_path2</span>];
+        <span class="comment">// will be chosen
+        </span><span class="kw">let </span>both = <span class="macro">vec!</span>[longest_path1, longest_path2];
 
-        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">paths</span>.<span class="ident">unwrap</span>().<span class="number">0</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">a</span>, <span class="kw">_</span>)<span class="op">|</span> <span class="kw-2">*</span><span class="ident">a</span>).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
+        <span class="kw">let </span>path = <span class="kw-2">&amp;</span>paths.unwrap().<span class="number">0</span>.iter().map(|(a, <span class="kw">_</span>)| <span class="kw-2">*</span>a).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
 
-        <span class="macro">assert!</span>(<span class="ident">both</span>.<span class="ident">contains</span>(<span class="ident">path</span>));
+        <span class="macro">assert!</span>(both.contains(path));
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="gfatk" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.62.0 (a8314ef7d 2022-06-27)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="gfatk" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0 (69f9c33d7 2022-12-12)" ></div></body></html>

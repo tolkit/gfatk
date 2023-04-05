@@ -265,10 +265,10 @@ mod tests {
         let cigar_ok = "120M".as_bytes();
         let cigar_err = "30M10D20M5I10M".as_bytes();
 
-        let parsed_cigar = parse_cigar(cigar_ok).is_err();
+        let parsed_cigar = parse_cigar(cigar_ok).is_ok();
         let parsed_cigar2 = parse_cigar(cigar_err).is_err();
 
-        assert_eq!(parsed_cigar, false);
-        assert_eq!(parsed_cigar2, true);
+        assert!(parsed_cigar);
+        assert!(parsed_cigar2);
     }
 }

@@ -1,9 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/utils.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>utils.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script src="../../crates.js"></script><script defer src="../../main.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script>
-    <noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../gfatk/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../gfatk/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../gfatk/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><div class="theme-picker hidden"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="22" height="22" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/utils.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>utils.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../gfatk/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -277,280 +272,279 @@
 <span id="272">272</span>
 <span id="273">273</span>
 <span id="274">274</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">anyhow</span>::{<span class="ident">bail</span>, <span class="ident">Context</span>, <span class="prelude-ty">Result</span>};
-<span class="kw">use</span> <span class="ident">atty::Stream</span>;
-<span class="kw">use</span> <span class="ident">gfa::optfields</span>::{<span class="ident">OptField</span>, <span class="ident">OptFieldVal</span>::<span class="kw-2">*</span>};
-<span class="kw">use</span> <span class="ident">petgraph::graph::NodeIndex</span>;
-<span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
-<span class="kw">use</span> <span class="ident">std::fmt</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>anyhow::{bail, Context, <span class="prelude-ty">Result</span>};
+<span class="kw">use </span>atty::Stream;
+<span class="kw">use </span>gfa::optfields::{OptField, OptFieldVal::<span class="kw-2">*</span>};
+<span class="kw">use </span>petgraph::graph::NodeIndex;
+<span class="kw">use </span>std::collections::HashMap;
+<span class="kw">use </span>std::fmt;
 
-<span class="doccomment">/// Format a sequence length (`usize`) to kilobases.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">format_usize_to_kb</span>(<span class="ident">num</span>: <span class="ident">usize</span>) -&gt; <span class="ident">String</span> {
-    <span class="kw">let</span> <span class="ident">div</span> <span class="op">=</span> <span class="ident">num</span> <span class="kw">as</span> <span class="ident">f32</span> <span class="op">/</span> <span class="number">1000f32</span>;
-    <span class="macro">format!</span>(<span class="string">&quot;{:.2}Kb&quot;</span>, <span class="ident">div</span>)
+<span class="doccomment">/// Format a sequence length (`usize`) to kilobases.
+</span><span class="kw">pub fn </span>format_usize_to_kb(num: usize) -&gt; String {
+    <span class="kw">let </span>div = num <span class="kw">as </span>f32 / <span class="number">1000f32</span>;
+    <span class="macro">format!</span>(<span class="string">&quot;{:.2}Kb&quot;</span>, div)
 }
 
-<span class="doccomment">/// Check if there is anything coming from STDIN.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_stdin</span>() -&gt; <span class="ident">bool</span> {
-    <span class="op">!</span><span class="ident">atty::is</span>(<span class="ident">Stream::Stdin</span>)
+<span class="doccomment">/// Check if there is anything coming from STDIN.
+</span><span class="kw">pub fn </span>is_stdin() -&gt; bool {
+    !atty::is(Stream::Stdin)
 }
 
-<span class="doccomment">/// Get the coverage associated with an edge (`ec` tag in the GFA).</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_edge_coverage</span>(<span class="ident">options</span>: <span class="kw-2">&amp;</span>[<span class="ident">OptField</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span> {
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">op</span>) <span class="op">=</span> <span class="ident">options</span>.<span class="ident">iter</span>().<span class="ident">next</span>() {
-        <span class="kw">match</span> <span class="ident">op</span>.<span class="ident">tag</span> {
-            <span class="comment">// ec</span>
-            [<span class="number">101</span>, <span class="number">99</span>] =&gt; <span class="kw">match</span> <span class="ident">op</span>.<span class="ident">value</span> {
-                <span class="ident">Int</span>(<span class="ident">i</span>) =&gt; <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">i</span>),
-                <span class="kw">_</span> =&gt; <span class="macro">bail!</span>(<span class="string">&quot;Could not find integer ec:i:&lt;i64&gt; tag.&quot;</span>),
+<span class="doccomment">/// Get the coverage associated with an edge (`ec` tag in the GFA).
+</span><span class="kw">pub fn </span>get_edge_coverage(options: <span class="kw-2">&amp;</span>[OptField]) -&gt; <span class="prelude-ty">Result</span>&lt;i64&gt; {
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(op) = options.iter().next() {
+        <span class="kw">match </span>op.tag {
+            <span class="comment">// ec
+            </span>[<span class="number">101</span>, <span class="number">99</span>] =&gt; <span class="kw">match </span>op.value {
+                Int(i) =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(i),
+                <span class="kw">_ </span>=&gt; <span class="macro">bail!</span>(<span class="string">&quot;Could not find integer ec:i:&lt;i64&gt; tag.&quot;</span>),
             },
-            <span class="kw">_</span> =&gt; <span class="macro">bail!</span>(<span class="string">&quot;Could not find ec (edge coverage) tag.&quot;</span>),
+            <span class="kw">_ </span>=&gt; <span class="macro">bail!</span>(<span class="string">&quot;Could not find ec (edge coverage) tag.&quot;</span>),
         };
     }
     <span class="macro">bail!</span>(<span class="string">&quot;Edge coverage not found.&quot;</span>)
 }
 
-<span class="doccomment">/// Format a GFA option field into a string.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_option_string</span>(<span class="ident">options</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">OptField</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tag_val</span> <span class="op">=</span> <span class="ident">String::new</span>();
-    <span class="kw">for</span> <span class="ident">op</span> <span class="kw">in</span> <span class="ident">options</span> {
-        <span class="kw">let</span> <span class="ident">tag</span> <span class="op">=</span> <span class="ident">std::str::from_utf8</span>(<span class="kw-2">&amp;</span><span class="ident">op</span>.<span class="ident">tag</span>)
-            .<span class="ident">with_context</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">format!</span>(<span class="string">&quot;Malformed UTF8: {:?}&quot;</span>, <span class="ident">op</span>.<span class="ident">tag</span>))<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">op</span>.<span class="ident">value</span> {
-            <span class="ident">Float</span>(<span class="ident">f</span>) =&gt; <span class="macro">format!</span>(<span class="string">&quot;:f:{:.3}&quot;</span>, <span class="ident">f</span>),
-            <span class="ident">A</span>(<span class="ident">a</span>) =&gt; <span class="macro">format!</span>(<span class="string">&quot;:A:{}&quot;</span>, <span class="ident">a</span>),
-            <span class="ident">Int</span>(<span class="ident">i</span>) =&gt; <span class="macro">format!</span>(<span class="string">&quot;:i:{}&quot;</span>, <span class="ident">i</span>),
-            <span class="ident">Z</span>(<span class="ident">z</span>) =&gt; <span class="macro">format!</span>(
+<span class="doccomment">/// Format a GFA option field into a string.
+</span><span class="kw">pub fn </span>get_option_string(options: Vec&lt;OptField&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;String&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>tag_val = String::new();
+    <span class="kw">for </span>op <span class="kw">in </span>options {
+        <span class="kw">let </span>tag = std::str::from_utf8(<span class="kw-2">&amp;</span>op.tag)
+            .with_context(|| <span class="macro">format!</span>(<span class="string">&quot;Malformed UTF8: {:?}&quot;</span>, op.tag))<span class="question-mark">?</span>;
+        <span class="kw">let </span>value = <span class="kw">match </span>op.value {
+            Float(f) =&gt; <span class="macro">format!</span>(<span class="string">&quot;:f:{:.3}&quot;</span>, f),
+            A(a) =&gt; <span class="macro">format!</span>(<span class="string">&quot;:A:{}&quot;</span>, a),
+            Int(i) =&gt; <span class="macro">format!</span>(<span class="string">&quot;:i:{}&quot;</span>, i),
+            Z(z) =&gt; <span class="macro">format!</span>(
                 <span class="string">&quot;:Z:{}&quot;</span>,
-                <span class="ident">std::str::from_utf8</span>(<span class="kw-2">&amp;</span><span class="ident">z</span>).<span class="ident">with_context</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">format!</span>(<span class="string">&quot;Malformed UTF8: {:?}&quot;</span>, <span class="ident">z</span>))<span class="question-mark">?</span>
-            ),
-            <span class="comment">// J(j) =&gt; ???,</span>
-            <span class="comment">// a hexadecimal array</span>
-            <span class="ident">H</span>(<span class="ident">h</span>) =&gt; <span class="macro">format!</span>(<span class="string">&quot;:H:{}&quot;</span>, <span class="ident">h</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">x</span>.<span class="ident">to_string</span>()).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>()),
-            <span class="comment">// B is a general array</span>
-            <span class="comment">// is it capital B?</span>
-            <span class="ident">BInt</span>(<span class="ident">bi</span>) =&gt; <span class="macro">format!</span>(
+                std::str::from_utf8(<span class="kw-2">&amp;</span>z).with_context(|| <span class="macro">format!</span>(<span class="string">&quot;Malformed UTF8: {:?}&quot;</span>, z))<span class="question-mark">?
+            </span>),
+            <span class="comment">// J(j) =&gt; ???,
+            // a hexadecimal array
+            </span>H(h) =&gt; <span class="macro">format!</span>(<span class="string">&quot;:H:{}&quot;</span>, h.iter().map(|x| x.to_string()).collect::&lt;String&gt;()),
+            <span class="comment">// B is a general array
+            // is it capital B?
+            </span>BInt(bi) =&gt; <span class="macro">format!</span>(
                 <span class="string">&quot;:B:{}&quot;</span>,
-                <span class="ident">bi</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">x</span>.<span class="ident">to_string</span>()).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>()
+                bi.iter().map(|x| x.to_string()).collect::&lt;String&gt;()
             ),
-            <span class="ident">BFloat</span>(<span class="ident">bf</span>) =&gt; <span class="macro">format!</span>(
+            BFloat(bf) =&gt; <span class="macro">format!</span>(
                 <span class="string">&quot;:B:{}&quot;</span>,
-                <span class="ident">bf</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="macro">format!</span>(<span class="string">&quot;{:.3}&quot;</span>, <span class="ident">x</span>)).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>()
+                bf.iter().map(|x| <span class="macro">format!</span>(<span class="string">&quot;{:.3}&quot;</span>, x)).collect::&lt;String&gt;()
             ),
-            <span class="kw">_</span> =&gt; <span class="string">&quot;&quot;</span>.<span class="ident">to_string</span>(),
+            <span class="kw">_ </span>=&gt; <span class="string">&quot;&quot;</span>.to_string(),
         };
-        <span class="ident">tag_val</span> <span class="op">+</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;{}{}\t&quot;</span>, <span class="ident">tag</span>, <span class="ident">value</span>);
+        tag_val += <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;{}{}\t&quot;</span>, tag, value);
     }
-    <span class="comment">// should always end in \t ^</span>
-    <span class="kw">let</span> <span class="ident">tag_val_op_un</span> <span class="op">=</span> <span class="ident">tag_val</span>
-        .<span class="ident">strip_suffix</span>(<span class="string">&#39;\t&#39;</span>)
-        .<span class="ident">context</span>(<span class="string">&quot;Could not strip a tab from the suffix of the tag.&quot;</span>)<span class="question-mark">?</span>;
-    <span class="prelude-val">Ok</span>(<span class="ident">tag_val_op_un</span>.<span class="ident">to_string</span>())
+    <span class="comment">// should always end in \t ^
+    </span><span class="kw">let </span>tag_val_op_un = tag_val
+        .strip_suffix(<span class="string">&#39;\t&#39;</span>)
+        .context(<span class="string">&quot;Could not strip a tab from the suffix of the tag.&quot;</span>)<span class="question-mark">?</span>;
+    <span class="prelude-val">Ok</span>(tag_val_op_un.to_string())
 }
 
-<span class="doccomment">/// Parse a CIGAR string slice into an overlap length.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse_cigar</span>(<span class="ident">cigar</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-    <span class="comment">// check it ends with an M</span>
-    <span class="kw">if</span> <span class="op">!</span><span class="ident">cigar</span>.<span class="ident">ends_with</span>(<span class="kw-2">&amp;</span>[<span class="number">77</span>]) {
+<span class="doccomment">/// Parse a CIGAR string slice into an overlap length.
+</span><span class="kw">pub fn </span>parse_cigar(cigar: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
+    <span class="comment">// check it ends with an M
+    </span><span class="kw">if </span>!cigar.ends_with(<span class="kw-2">&amp;</span>[<span class="number">77</span>]) {
         <span class="macro">bail!</span>(
             <span class="string">&quot;CIGAR string did not end with M: {}&quot;</span>,
-            <span class="ident">std::str::from_utf8</span>(<span class="ident">cigar</span>).<span class="ident">with_context</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">format!</span>(<span class="string">&quot;Malformed UTF8: {:?}&quot;</span>, <span class="ident">cigar</span>))<span class="question-mark">?</span>
-        );
+            std::str::from_utf8(cigar).with_context(|| <span class="macro">format!</span>(<span class="string">&quot;Malformed UTF8: {:?}&quot;</span>, cigar))<span class="question-mark">?
+        </span>);
     }
-    <span class="kw">let</span> <span class="ident">stripped</span> <span class="op">=</span> <span class="ident">cigar</span>.<span class="ident">strip_suffix</span>(<span class="kw-2">&amp;</span>[<span class="number">77</span>]);
-    <span class="kw">match</span> <span class="ident">stripped</span> {
-        <span class="prelude-val">Some</span>(<span class="ident">s</span>) =&gt; {
-            <span class="kw">let</span> <span class="ident">string_rep</span> <span class="op">=</span>
-                <span class="ident">std::str::from_utf8</span>(<span class="ident">s</span>).<span class="ident">with_context</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">format!</span>(<span class="string">&quot;Malformed UTF8: {:?}&quot;</span>, <span class="ident">s</span>))<span class="question-mark">?</span>;
-            <span class="prelude-val">Ok</span>(<span class="ident">string_rep</span>
-                .<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>()
-                .<span class="ident">with_context</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">format!</span>(<span class="string">&quot;{} could not be parsed to &lt;usize&gt;&quot;</span>, <span class="ident">string_rep</span>))<span class="question-mark">?</span>)
+    <span class="kw">let </span>stripped = cigar.strip_suffix(<span class="kw-2">&amp;</span>[<span class="number">77</span>]);
+    <span class="kw">match </span>stripped {
+        <span class="prelude-val">Some</span>(s) =&gt; {
+            <span class="kw">let </span>string_rep =
+                std::str::from_utf8(s).with_context(|| <span class="macro">format!</span>(<span class="string">&quot;Malformed UTF8: {:?}&quot;</span>, s))<span class="question-mark">?</span>;
+            <span class="prelude-val">Ok</span>(string_rep
+                .parse::&lt;usize&gt;()
+                .with_context(|| <span class="macro">format!</span>(<span class="string">&quot;{} could not be parsed to &lt;usize&gt;&quot;</span>, string_rep))<span class="question-mark">?</span>)
         }
-        <span class="prelude-val">None</span> =&gt; <span class="macro">bail!</span>(<span class="string">&quot;Could not strip suffix (M) of the CIGAR string.&quot;</span>),
+        <span class="prelude-val">None </span>=&gt; <span class="macro">bail!</span>(<span class="string">&quot;Could not strip suffix (M) of the CIGAR string.&quot;</span>),
     }
 }
 
-<span class="doccomment">/// Reverse complement a string slice.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reverse_complement</span>(<span class="ident">dna</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">dna_vec</span> <span class="op">=</span> <span class="ident">dna</span>.<span class="ident">to_vec</span>();
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">revcomp</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
+<span class="doccomment">/// Reverse complement a string slice.
+</span><span class="kw">pub fn </span>reverse_complement(dna: <span class="kw-2">&amp;</span>[u8]) -&gt; Vec&lt;u8&gt; {
+    <span class="kw">let </span>dna_vec = dna.to_vec();
+    <span class="kw">let </span><span class="kw-2">mut </span>revcomp = Vec::new();
 
-    <span class="kw">for</span> <span class="ident">base</span> <span class="kw">in</span> <span class="ident">dna_vec</span>.<span class="ident">iter</span>() {
-        <span class="ident">revcomp</span>.<span class="ident">push</span>(<span class="ident">switch_base</span>(<span class="kw-2">*</span><span class="ident">base</span>))
+    <span class="kw">for </span>base <span class="kw">in </span>dna_vec.iter() {
+        revcomp.push(switch_base(<span class="kw-2">*</span>base))
     }
-    <span class="ident">revcomp</span>.<span class="ident">as_mut_slice</span>().<span class="ident">reverse</span>();
-    <span class="ident">revcomp</span>
+    revcomp.as_mut_slice().reverse();
+    revcomp
 }
 
-<span class="doccomment">/// Used in `reverse_complement` to switch to a complementary base.</span>
-<span class="kw">fn</span> <span class="ident">switch_base</span>(<span class="ident">c</span>: <span class="ident">u8</span>) -&gt; <span class="ident">u8</span> {
-    <span class="kw">match</span> <span class="ident">c</span> {
-        <span class="string">b&#39;A&#39;</span> =&gt; <span class="string">b&#39;T&#39;</span>,
-        <span class="string">b&#39;a&#39;</span> =&gt; <span class="string">b&#39;t&#39;</span>,
-        <span class="string">b&#39;C&#39;</span> =&gt; <span class="string">b&#39;G&#39;</span>,
-        <span class="string">b&#39;c&#39;</span> =&gt; <span class="string">b&#39;g&#39;</span>,
-        <span class="string">b&#39;T&#39;</span> =&gt; <span class="string">b&#39;A&#39;</span>,
-        <span class="string">b&#39;t&#39;</span> =&gt; <span class="string">b&#39;a&#39;</span>,
-        <span class="string">b&#39;G&#39;</span> =&gt; <span class="string">b&#39;C&#39;</span>,
-        <span class="string">b&#39;g&#39;</span> =&gt; <span class="string">b&#39;c&#39;</span>,
-        <span class="string">b&#39;N&#39;</span> =&gt; <span class="string">b&#39;N&#39;</span>,
-        <span class="string">b&#39;n&#39;</span> =&gt; <span class="string">b&#39;n&#39;</span>,
-        <span class="kw">_</span> =&gt; <span class="string">b&#39;N&#39;</span>,
+<span class="doccomment">/// Used in `reverse_complement` to switch to a complementary base.
+</span><span class="kw">fn </span>switch_base(c: u8) -&gt; u8 {
+    <span class="kw">match </span>c {
+        <span class="string">b&#39;A&#39; </span>=&gt; <span class="string">b&#39;T&#39;</span>,
+        <span class="string">b&#39;a&#39; </span>=&gt; <span class="string">b&#39;t&#39;</span>,
+        <span class="string">b&#39;C&#39; </span>=&gt; <span class="string">b&#39;G&#39;</span>,
+        <span class="string">b&#39;c&#39; </span>=&gt; <span class="string">b&#39;g&#39;</span>,
+        <span class="string">b&#39;T&#39; </span>=&gt; <span class="string">b&#39;A&#39;</span>,
+        <span class="string">b&#39;t&#39; </span>=&gt; <span class="string">b&#39;a&#39;</span>,
+        <span class="string">b&#39;G&#39; </span>=&gt; <span class="string">b&#39;C&#39;</span>,
+        <span class="string">b&#39;g&#39; </span>=&gt; <span class="string">b&#39;c&#39;</span>,
+        <span class="string">b&#39;N&#39; </span>=&gt; <span class="string">b&#39;N&#39;</span>,
+        <span class="string">b&#39;n&#39; </span>=&gt; <span class="string">b&#39;n&#39;</span>,
+        <span class="kw">_ </span>=&gt; <span class="string">b&#39;N&#39;</span>,
     }
 }
 
-<span class="comment">// pinched from past Max</span>
-<span class="comment">// https://github.com/tolkit/fasta_windows/blob/master/src/seq_statsu8.rs</span>
+<span class="comment">// pinched from past Max
+// https://github.com/tolkit/fasta_windows/blob/master/src/seq_statsu8.rs
 
-<span class="doccomment">/// Collect nucleotide counts into a `HashMap`.</span>
-<span class="kw">fn</span> <span class="ident">nucleotide_counts</span>(<span class="ident">dna</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="ident">HashMap</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">u8</span>, <span class="ident">i32</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">map</span> <span class="op">=</span> <span class="ident">HashMap::new</span>();
-    <span class="kw">for</span> <span class="ident">nucleotide</span> <span class="kw">in</span> <span class="ident">dna</span> {
-        <span class="kw">let</span> <span class="ident">count</span> <span class="op">=</span> <span class="ident">map</span>.<span class="ident">entry</span>(<span class="ident">nucleotide</span>).<span class="ident">or_insert</span>(<span class="number">0</span>);
-        <span class="kw-2">*</span><span class="ident">count</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+</span><span class="doccomment">/// Collect nucleotide counts into a `HashMap`.
+</span><span class="kw">fn </span>nucleotide_counts(dna: <span class="kw-2">&amp;</span>[u8]) -&gt; HashMap&lt;<span class="kw-2">&amp;</span>u8, i32&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>map = HashMap::new();
+    <span class="kw">for </span>nucleotide <span class="kw">in </span>dna {
+        <span class="kw">let </span>count = map.entry(nucleotide).or_insert(<span class="number">0</span>);
+        <span class="kw-2">*</span>count += <span class="number">1</span>;
     }
-    <span class="ident">map</span>
+    map
 }
 
-<span class="doccomment">/// Calculate the GC content of a string slice.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">gc_content</span>(<span class="ident">dna</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="ident">f32</span> {
-    <span class="comment">// G/C/A/T counts</span>
-    <span class="comment">// upper + lower</span>
-    <span class="kw">let</span> <span class="ident">counts</span> <span class="op">=</span> <span class="ident">nucleotide_counts</span>(<span class="ident">dna</span>);
-    <span class="kw">let</span> <span class="ident">g_counts</span> <span class="op">=</span> <span class="ident">counts</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="number">71</span>).<span class="ident">unwrap_or</span>(<span class="kw-2">&amp;</span><span class="number">0</span>) <span class="op">+</span> <span class="ident">counts</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="number">103</span>).<span class="ident">unwrap_or</span>(<span class="kw-2">&amp;</span><span class="number">0</span>);
-    <span class="kw">let</span> <span class="ident">c_counts</span> <span class="op">=</span> <span class="ident">counts</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="number">67</span>).<span class="ident">unwrap_or</span>(<span class="kw-2">&amp;</span><span class="number">0</span>) <span class="op">+</span> <span class="ident">counts</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="number">99</span>).<span class="ident">unwrap_or</span>(<span class="kw-2">&amp;</span><span class="number">0</span>);
-    <span class="kw">let</span> <span class="ident">a_counts</span> <span class="op">=</span> <span class="ident">counts</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="number">65</span>).<span class="ident">unwrap_or</span>(<span class="kw-2">&amp;</span><span class="number">0</span>) <span class="op">+</span> <span class="ident">counts</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="number">97</span>).<span class="ident">unwrap_or</span>(<span class="kw-2">&amp;</span><span class="number">0</span>);
-    <span class="kw">let</span> <span class="ident">t_counts</span> <span class="op">=</span> <span class="ident">counts</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="number">84</span>).<span class="ident">unwrap_or</span>(<span class="kw-2">&amp;</span><span class="number">0</span>) <span class="op">+</span> <span class="ident">counts</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="number">116</span>).<span class="ident">unwrap_or</span>(<span class="kw-2">&amp;</span><span class="number">0</span>);
+<span class="doccomment">/// Calculate the GC content of a string slice.
+</span><span class="kw">pub fn </span>gc_content(dna: <span class="kw-2">&amp;</span>[u8]) -&gt; f32 {
+    <span class="comment">// G/C/A/T counts
+    // upper + lower
+    </span><span class="kw">let </span>counts = nucleotide_counts(dna);
+    <span class="kw">let </span>g_counts = counts.get(<span class="kw-2">&amp;</span><span class="number">71</span>).unwrap_or(<span class="kw-2">&amp;</span><span class="number">0</span>) + counts.get(<span class="kw-2">&amp;</span><span class="number">103</span>).unwrap_or(<span class="kw-2">&amp;</span><span class="number">0</span>);
+    <span class="kw">let </span>c_counts = counts.get(<span class="kw-2">&amp;</span><span class="number">67</span>).unwrap_or(<span class="kw-2">&amp;</span><span class="number">0</span>) + counts.get(<span class="kw-2">&amp;</span><span class="number">99</span>).unwrap_or(<span class="kw-2">&amp;</span><span class="number">0</span>);
+    <span class="kw">let </span>a_counts = counts.get(<span class="kw-2">&amp;</span><span class="number">65</span>).unwrap_or(<span class="kw-2">&amp;</span><span class="number">0</span>) + counts.get(<span class="kw-2">&amp;</span><span class="number">97</span>).unwrap_or(<span class="kw-2">&amp;</span><span class="number">0</span>);
+    <span class="kw">let </span>t_counts = counts.get(<span class="kw-2">&amp;</span><span class="number">84</span>).unwrap_or(<span class="kw-2">&amp;</span><span class="number">0</span>) + counts.get(<span class="kw-2">&amp;</span><span class="number">116</span>).unwrap_or(<span class="kw-2">&amp;</span><span class="number">0</span>);
 
-    (<span class="ident">g_counts</span> <span class="op">+</span> <span class="ident">c_counts</span>) <span class="kw">as</span> <span class="ident">f32</span> <span class="op">/</span> (<span class="ident">g_counts</span> <span class="op">+</span> <span class="ident">c_counts</span> <span class="op">+</span> <span class="ident">a_counts</span> <span class="op">+</span> <span class="ident">t_counts</span>) <span class="kw">as</span> <span class="ident">f32</span>
+    (g_counts + c_counts) <span class="kw">as </span>f32 / (g_counts + c_counts + a_counts + t_counts) <span class="kw">as </span>f32
 }
 
-<span class="comment">// convert Node Index to segment ID and vice versa</span>
-<span class="comment">// I rely a lot on this tuple:</span>
-<span class="comment">// (NodeIndex, usize)</span>
-<span class="comment">// which stores the node index and it&#39;s corresponding segment ID</span>
-<span class="comment">// I just realise this should 100000% be a hashmap... change that later.</span>
+<span class="comment">// convert Node Index to segment ID and vice versa
+// I rely a lot on this tuple:
+// (NodeIndex, usize)
+// which stores the node index and it&#39;s corresponding segment ID
+// I just realise this should 100000% be a hashmap... change that later.
 
-<span class="doccomment">/// A pair consisting of a node index and a segment ID.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">GFAGraphPair</span> {
-    <span class="doccomment">/// The node index (petgraph&#39;s `NodeIndex`).</span>
-    <span class="kw">pub</span> <span class="ident">node_index</span>: <span class="ident">NodeIndex</span>,
-    <span class="doccomment">/// The segment ID.</span>
-    <span class="kw">pub</span> <span class="ident">seg_id</span>: <span class="ident">usize</span>,
+</span><span class="doccomment">/// A pair consisting of a node index and a segment ID.
+</span><span class="attribute">#[derive(Clone, Copy, Debug)]
+</span><span class="kw">pub struct </span>GFAGraphPair {
+    <span class="doccomment">/// The node index (petgraph&#39;s `NodeIndex`).
+    </span><span class="kw">pub </span>node_index: NodeIndex,
+    <span class="doccomment">/// The segment ID.
+    </span><span class="kw">pub </span>seg_id: usize,
 }
-<span class="doccomment">/// A vector of `GFAGraphPair`&#39;s.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// This should 100% have been a map-like structure...</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">GFAGraphLookups</span>(<span class="kw">pub</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">GFAGraphPair</span><span class="op">&gt;</span>);
+<span class="doccomment">/// A vector of `GFAGraphPair`&#39;s.
+///
+/// This should 100% have been a map-like structure...
+</span><span class="attribute">#[derive(Clone, Debug)]
+</span><span class="kw">pub struct </span>GFAGraphLookups(<span class="kw">pub </span>Vec&lt;GFAGraphPair&gt;);
 
-<span class="kw">impl</span> <span class="ident">GFAGraphLookups</span> {
-    <span class="doccomment">/// Create a new GFAGraphLookups</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span>(<span class="ident">Vec::new</span>())
+<span class="kw">impl </span>GFAGraphLookups {
+    <span class="doccomment">/// Create a new GFAGraphLookups
+    </span><span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>(Vec::new())
     }
-    <span class="doccomment">/// Push a new `GFAGraphPair` to the end.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">push</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">other</span>: <span class="ident">GFAGraphPair</span>) {
-        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">push</span>(<span class="ident">other</span>);
+    <span class="doccomment">/// Push a new `GFAGraphPair` to the end.
+    </span><span class="kw">pub fn </span>push(<span class="kw-2">&amp;mut </span><span class="self">self</span>, other: GFAGraphPair) {
+        <span class="self">self</span>.<span class="number">0</span>.push(other);
     }
 
-    <span class="doccomment">/// Return segment ID from a node index.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">node_index_to_seg_id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">node_index</span>: <span class="ident">NodeIndex</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">seg_id</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>
-            .<span class="number">0</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">find</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">e</span>.<span class="ident">node_index</span> <span class="op">==</span> <span class="ident">node_index</span>)
-            .<span class="ident">with_context</span>(<span class="op">|</span><span class="op">|</span> {
+    <span class="doccomment">/// Return segment ID from a node index.
+    </span><span class="kw">pub fn </span>node_index_to_seg_id(<span class="kw-2">&amp;</span><span class="self">self</span>, node_index: NodeIndex) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
+        <span class="kw">let </span>seg_id = <span class="kw-2">&amp;</span><span class="self">self
+            </span>.<span class="number">0
+            </span>.iter()
+            .find(|e| e.node_index == node_index)
+            .with_context(|| {
                 <span class="macro">format!</span>(
                     <span class="string">&quot;Node index {:?} could not be converted to segment ID&quot;</span>,
-                    <span class="ident">node_index</span>
+                    node_index
                 )
-            })<span class="question-mark">?</span>
-            .<span class="ident">seg_id</span>;
+            })<span class="question-mark">?
+            </span>.seg_id;
 
-        <span class="prelude-val">Ok</span>(<span class="kw-2">*</span><span class="ident">seg_id</span>)
+        <span class="prelude-val">Ok</span>(<span class="kw-2">*</span>seg_id)
     }
-    <span class="doccomment">/// Return a node index from a segment ID.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">seg_id_to_node_index</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">seg_id</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">NodeIndex</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">node_index</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>
-            .<span class="number">0</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">find</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">e</span>.<span class="ident">seg_id</span> <span class="op">==</span> <span class="ident">seg_id</span>)
-            .<span class="ident">with_context</span>(<span class="op">|</span><span class="op">|</span> {
+    <span class="doccomment">/// Return a node index from a segment ID.
+    </span><span class="kw">pub fn </span>seg_id_to_node_index(<span class="kw-2">&amp;</span><span class="self">self</span>, seg_id: usize) -&gt; <span class="prelude-ty">Result</span>&lt;NodeIndex&gt; {
+        <span class="kw">let </span>node_index = <span class="kw-2">&amp;</span><span class="self">self
+            </span>.<span class="number">0
+            </span>.iter()
+            .find(|e| e.seg_id == seg_id)
+            .with_context(|| {
                 <span class="macro">format!</span>(
                     <span class="string">&quot;Segment ID {:?} could not be converted to NodeIndex&quot;</span>,
-                    <span class="ident">seg_id</span>
+                    seg_id
                 )
-            })<span class="question-mark">?</span>
-            .<span class="ident">node_index</span>;
+            })<span class="question-mark">?
+            </span>.node_index;
 
-        <span class="prelude-val">Ok</span>(<span class="kw-2">*</span><span class="ident">node_index</span>)
+        <span class="prelude-val">Ok</span>(<span class="kw-2">*</span>node_index)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">fmt::Display</span> <span class="kw">for</span> <span class="ident">GFAGraphLookups</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">output</span> <span class="op">=</span> <span class="ident">String::new</span>();
-        <span class="ident">output</span> <span class="op">+</span><span class="op">=</span> <span class="string">&quot;\n\tSegment ID&#39;s:\n\t&quot;</span>;
+<span class="kw">impl </span>fmt::Display <span class="kw">for </span>GFAGraphLookups {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
+        <span class="kw">let </span><span class="kw-2">mut </span>output = String::new();
+        output += <span class="string">&quot;\n\tSegment ID&#39;s:\n\t&quot;</span>;
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">seg_ids</span>: <span class="ident">String</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="number">0</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">pair</span><span class="op">|</span> <span class="ident">pair</span>.<span class="ident">seg_id</span>.<span class="ident">to_string</span>() <span class="op">+</span> <span class="string">&quot;, &quot;</span>)
-            .<span class="ident">collect</span>();
-        <span class="ident">seg_ids</span>.<span class="ident">drain</span>(<span class="ident">seg_ids</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">2</span>..);
+        <span class="kw">let </span><span class="kw-2">mut </span>seg_ids: String = <span class="self">self
+            </span>.<span class="number">0
+            </span>.iter()
+            .map(|pair| pair.seg_id.to_string() + <span class="string">&quot;, &quot;</span>)
+            .collect();
+        seg_ids.drain(seg_ids.len() - <span class="number">2</span>..);
 
-        <span class="ident">output</span> <span class="op">+</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">seg_ids</span>;
+        output += <span class="kw-2">&amp;</span>seg_ids;
 
-        <span class="macro">writeln!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">output</span>)
+        <span class="macro">writeln!</span>(f, <span class="string">&quot;{}&quot;</span>, output)
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
 
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_node_seg_id_indexes</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">gl</span> <span class="op">=</span> <span class="ident">GFAGraphLookups::new</span>();
-        <span class="comment">// just add two pairs</span>
-        <span class="ident">gl</span>.<span class="ident">push</span>(<span class="ident">GFAGraphPair</span> {
-            <span class="ident">node_index</span>: <span class="ident">NodeIndex::new</span>(<span class="number">1</span>),
-            <span class="ident">seg_id</span>: <span class="number">12</span>,
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_node_seg_id_indexes() {
+        <span class="kw">let </span><span class="kw-2">mut </span>gl = GFAGraphLookups::new();
+        <span class="comment">// just add two pairs
+        </span>gl.push(GFAGraphPair {
+            node_index: NodeIndex::new(<span class="number">1</span>),
+            seg_id: <span class="number">12</span>,
         });
 
-        <span class="ident">gl</span>.<span class="ident">push</span>(<span class="ident">GFAGraphPair</span> {
-            <span class="ident">node_index</span>: <span class="ident">NodeIndex::new</span>(<span class="number">2</span>),
-            <span class="ident">seg_id</span>: <span class="number">10</span>,
+        gl.push(GFAGraphPair {
+            node_index: NodeIndex::new(<span class="number">2</span>),
+            seg_id: <span class="number">10</span>,
         });
 
-        <span class="macro">assert_eq!</span>(<span class="number">12</span>, <span class="ident">gl</span>.<span class="ident">node_index_to_seg_id</span>(<span class="ident">NodeIndex::new</span>(<span class="number">1</span>)).<span class="ident">unwrap</span>());
-        <span class="macro">assert_eq!</span>(<span class="ident">NodeIndex::new</span>(<span class="number">2</span>), <span class="ident">gl</span>.<span class="ident">seg_id_to_node_index</span>(<span class="number">10</span>).<span class="ident">unwrap</span>());
+        <span class="macro">assert_eq!</span>(<span class="number">12</span>, gl.node_index_to_seg_id(NodeIndex::new(<span class="number">1</span>)).unwrap());
+        <span class="macro">assert_eq!</span>(NodeIndex::new(<span class="number">2</span>), gl.seg_id_to_node_index(<span class="number">10</span>).unwrap());
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_gc_content</span>() {
-        <span class="kw">let</span> <span class="ident">dna_bytes</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="string">b&#39;A&#39;</span>, <span class="string">b&#39;G&#39;</span>, <span class="string">b&#39;G&#39;</span>, <span class="string">b&#39;T&#39;</span>, <span class="string">b&#39;T&#39;</span>, <span class="string">b&#39;C&#39;</span>];
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_gc_content() {
+        <span class="kw">let </span>dna_bytes = <span class="macro">vec!</span>[<span class="string">b&#39;A&#39;</span>, <span class="string">b&#39;G&#39;</span>, <span class="string">b&#39;G&#39;</span>, <span class="string">b&#39;T&#39;</span>, <span class="string">b&#39;T&#39;</span>, <span class="string">b&#39;C&#39;</span>];
 
-        <span class="kw">let</span> <span class="ident">gc</span> <span class="op">=</span> <span class="ident">gc_content</span>(<span class="kw-2">&amp;</span><span class="ident">dna_bytes</span>);
+        <span class="kw">let </span>gc = gc_content(<span class="kw-2">&amp;</span>dna_bytes);
 
-        <span class="macro">assert_eq!</span>(<span class="ident">gc</span>, <span class="number">0.5</span>);
+        <span class="macro">assert_eq!</span>(gc, <span class="number">0.5</span>);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_cigar_parse</span>() {
-        <span class="kw">let</span> <span class="ident">cigar_ok</span> <span class="op">=</span> <span class="string">&quot;120M&quot;</span>.<span class="ident">as_bytes</span>();
-        <span class="kw">let</span> <span class="ident">cigar_err</span> <span class="op">=</span> <span class="string">&quot;30M10D20M5I10M&quot;</span>.<span class="ident">as_bytes</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_cigar_parse() {
+        <span class="kw">let </span>cigar_ok = <span class="string">&quot;120M&quot;</span>.as_bytes();
+        <span class="kw">let </span>cigar_err = <span class="string">&quot;30M10D20M5I10M&quot;</span>.as_bytes();
 
-        <span class="kw">let</span> <span class="ident">parsed_cigar</span> <span class="op">=</span> <span class="ident">parse_cigar</span>(<span class="ident">cigar_ok</span>).<span class="ident">is_err</span>();
-        <span class="kw">let</span> <span class="ident">parsed_cigar2</span> <span class="op">=</span> <span class="ident">parse_cigar</span>(<span class="ident">cigar_err</span>).<span class="ident">is_err</span>();
+        <span class="kw">let </span>parsed_cigar = parse_cigar(cigar_ok).is_ok();
+        <span class="kw">let </span>parsed_cigar2 = parse_cigar(cigar_err).is_err();
 
-        <span class="macro">assert_eq!</span>(<span class="ident">parsed_cigar</span>, <span class="bool-val">false</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">parsed_cigar2</span>, <span class="bool-val">true</span>);
+        <span class="macro">assert!</span>(parsed_cigar);
+        <span class="macro">assert!</span>(parsed_cigar2);
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="gfatk" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.62.0 (a8314ef7d 2022-06-27)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="gfatk" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0 (69f9c33d7 2022-12-12)" ></div></body></html>
