@@ -198,6 +198,15 @@
 <span id="198">198</span>
 <span id="199">199</span>
 <span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::gfa::gfa::GFAtk;
 <span class="kw">use </span><span class="kw">crate</span>::load::{load_gfa, load_gfa_stdin};
 <span class="kw">use </span><span class="kw">crate</span>::utils;
@@ -234,17 +243,7 @@
     </span><span class="kw">let </span>gfa_file = matches.get_one::&lt;PathBuf&gt;(<span class="string">&quot;GFA&quot;</span>);
     <span class="kw">let </span>path_cli = matches.get_one::&lt;String&gt;(<span class="string">&quot;path_cli&quot;</span>);
     <span class="kw">let </span>path_file = matches.get_one::&lt;PathBuf&gt;(<span class="string">&quot;path_file&quot;</span>);
-
-    <span class="comment">// we need some path specified
-    </span><span class="kw">if </span>path_cli.is_none() &amp;&amp; path_file.is_none() {
-        <span class="macro">bail!</span>(
-            <span class="string">&quot;Please specify either a path as a positional argument string, or as a file `--path`.&quot;
-        </span>)
-    }
-    <span class="comment">// but not both!
-    </span><span class="kw">if </span>path_cli.is_some() &amp;&amp; path_file.is_some() {
-        <span class="macro">bail!</span>(<span class="string">&quot;Specify either &lt;path&gt;, or `--path`, not both.&quot;</span>)
-    }
+    <span class="kw">let </span>all_p_lines = matches.get_flag(<span class="string">&quot;all_paths&quot;</span>);
 
     <span class="kw">let </span>gfa: GFAtk = <span class="kw">match </span>gfa_file {
         <span class="prelude-val">Some</span>(f) =&gt; {
@@ -266,18 +265,37 @@
         },
     };
 
-    <span class="kw">let </span>(path, link_map) = <span class="kw">match </span>path_cli {
-        <span class="prelude-val">Some</span>(p) =&gt; parse_path(p, CLIOpt::String, <span class="kw-2">&amp;</span>gfa),
-        <span class="prelude-val">None </span>=&gt; <span class="kw">match </span>path_file {
-            <span class="prelude-val">Some</span>(f) =&gt; <span class="kw">match </span>f.to_str() {
-                <span class="prelude-val">Some</span>(string) =&gt; parse_path(string, CLIOpt::File, <span class="kw-2">&amp;</span>gfa),
-                <span class="prelude-val">None </span>=&gt; <span class="macro">bail!</span>(<span class="string">&quot;Could not convert &#39;path&#39; file path to string.&quot;</span>),
-            },
-            <span class="prelude-val">None </span>=&gt; <span class="macro">bail!</span>(<span class="string">&quot;Should never reach here.&quot;</span>),
-        },
-    }<span class="question-mark">?</span>;
+    <span class="kw">if </span>all_p_lines {
+        <span class="kw">let </span>paths = gfa.get_path_lines()<span class="question-mark">?</span>;
+        <span class="kw">for </span>(id, path) <span class="kw">in </span>paths {
+            <span class="kw">let </span>(parsed_path, link_map) = parse_path(<span class="kw-2">&amp;</span>path, CLIOpt::String, <span class="kw-2">&amp;</span>gfa)<span class="question-mark">?</span>;
+            gfa.from_path_cli(parsed_path, link_map, <span class="string">&quot;path_all&quot;</span>, <span class="prelude-val">Some</span>(id))<span class="question-mark">?</span>;
+        }
+    } <span class="kw">else </span>{
+        <span class="comment">// we need some path specified
+        </span><span class="kw">if </span>path_cli.is_none() &amp;&amp; path_file.is_none() {
+            <span class="macro">bail!</span>(
+            <span class="string">&quot;Please specify either a path as a positional argument string, or as a file `--path`.&quot;
+        </span>)
+        }
+        <span class="comment">// but not both!
+        </span><span class="kw">if </span>path_cli.is_some() &amp;&amp; path_file.is_some() {
+            <span class="macro">bail!</span>(<span class="string">&quot;Specify either &lt;path&gt;, or `--path`, not both.&quot;</span>)
+        }
 
-    gfa.from_path_cli(path, link_map, <span class="string">&quot;path&quot;</span>, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>(path, link_map) = <span class="kw">match </span>path_cli {
+            <span class="prelude-val">Some</span>(p) =&gt; parse_path(p, CLIOpt::String, <span class="kw-2">&amp;</span>gfa),
+            <span class="prelude-val">None </span>=&gt; <span class="kw">match </span>path_file {
+                <span class="prelude-val">Some</span>(f) =&gt; <span class="kw">match </span>f.to_str() {
+                    <span class="prelude-val">Some</span>(string) =&gt; parse_path(string, CLIOpt::File, <span class="kw-2">&amp;</span>gfa),
+                    <span class="prelude-val">None </span>=&gt; <span class="macro">bail!</span>(<span class="string">&quot;Could not convert &#39;path&#39; file path to string.&quot;</span>),
+                },
+                <span class="prelude-val">None </span>=&gt; <span class="macro">bail!</span>(<span class="string">&quot;Should never reach here.&quot;</span>),
+            },
+        }<span class="question-mark">?</span>;
+
+        gfa.from_path_cli(path, link_map, <span class="string">&quot;path&quot;</span>, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
+    }
 
     <span class="prelude-val">Ok</span>(())
 }

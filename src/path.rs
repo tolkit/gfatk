@@ -34,17 +34,7 @@ pub fn path(matches: &clap::ArgMatches) -> Result<()> {
     let gfa_file = matches.get_one::<PathBuf>("GFA");
     let path_cli = matches.get_one::<String>("path_cli");
     let path_file = matches.get_one::<PathBuf>("path_file");
-
-    // we need some path specified
-    if path_cli.is_none() && path_file.is_none() {
-        bail!(
-            "Please specify either a path as a positional argument string, or as a file `--path`."
-        )
-    }
-    // but not both!
-    if path_cli.is_some() && path_file.is_some() {
-        bail!("Specify either <path>, or `--path`, not both.")
-    }
+    let all_p_lines = matches.get_flag("all_paths");
 
     let gfa: GFAtk = match gfa_file {
         Some(f) => {
@@ -66,18 +56,37 @@ pub fn path(matches: &clap::ArgMatches) -> Result<()> {
         },
     };
 
-    let (path, link_map) = match path_cli {
-        Some(p) => parse_path(p, CLIOpt::String, &gfa),
-        None => match path_file {
-            Some(f) => match f.to_str() {
-                Some(string) => parse_path(string, CLIOpt::File, &gfa),
-                None => bail!("Could not convert 'path' file path to string."),
-            },
-            None => bail!("Should never reach here."),
-        },
-    }?;
+    if all_p_lines {
+        let paths = gfa.get_path_lines()?;
+        for (id, path) in paths {
+            let (parsed_path, link_map) = parse_path(&path, CLIOpt::String, &gfa)?;
+            gfa.from_path_cli(parsed_path, link_map, "path_all", Some(id))?;
+        }
+    } else {
+        // we need some path specified
+        if path_cli.is_none() && path_file.is_none() {
+            bail!(
+            "Please specify either a path as a positional argument string, or as a file `--path`."
+        )
+        }
+        // but not both!
+        if path_cli.is_some() && path_file.is_some() {
+            bail!("Specify either <path>, or `--path`, not both.")
+        }
 
-    gfa.from_path_cli(path, link_map, "path", None)?;
+        let (path, link_map) = match path_cli {
+            Some(p) => parse_path(p, CLIOpt::String, &gfa),
+            None => match path_file {
+                Some(f) => match f.to_str() {
+                    Some(string) => parse_path(string, CLIOpt::File, &gfa),
+                    None => bail!("Could not convert 'path' file path to string."),
+                },
+                None => bail!("Should never reach here."),
+            },
+        }?;
+
+        gfa.from_path_cli(path, link_map, "path", None)?;
+    }
 
     Ok(())
 }

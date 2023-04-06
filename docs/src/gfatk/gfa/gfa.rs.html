@@ -633,6 +633,18 @@
 <span id="633">633</span>
 <span id="634">634</span>
 <span id="635">635</span>
+<span id="636">636</span>
+<span id="637">637</span>
+<span id="638">638</span>
+<span id="639">639</span>
+<span id="640">640</span>
+<span id="641">641</span>
+<span id="642">642</span>
+<span id="643">643</span>
+<span id="644">644</span>
+<span id="645">645</span>
+<span id="646">646</span>
+<span id="647">647</span>
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::gfa::{
     gfa_string,
     graph::{segments_subgraph, GFAdigraph, GFAungraph},
@@ -1068,6 +1080,8 @@
         }
 
         <span class="kw">match </span>call {
+            <span class="comment">// bit of a hack, sorry.
+            </span><span class="string">&quot;path_all&quot; </span>=&gt; <span class="macro">println!</span>(<span class="string">&quot;&gt;{}:{}&quot;</span>, fasta_header.unwrap(), path.to_fasta_header()),
             <span class="string">&quot;path&quot; </span>=&gt; <span class="macro">println!</span>(<span class="string">&quot;&gt;{}&quot;</span>, path.to_fasta_header()),
             <span class="string">&quot;linear&quot; </span>=&gt; <span class="macro">println!</span>(<span class="string">&quot;&gt;{}&quot;</span>, fasta_header.unwrap()),
             <span class="kw">_ </span>=&gt; <span class="macro">bail!</span>(<span class="string">&quot;Should never reach here.&quot;</span>),
@@ -1157,12 +1171,22 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="comment">// pub fn get_path_lines(&amp;self) {
-    //     for path in &amp;self.0.paths {
-    //         for (segment, orientation) in path.iter() {}
-    //     }
-    // }
-</span>}
+    <span class="doccomment">/// Parses the P lines in a GFA
+    </span><span class="kw">pub fn </span>get_path_lines(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;(<span class="kw-2">&amp;</span>str, String)&gt;&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>paths = Vec::new();
+
+        <span class="kw">for </span>path <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>.paths {
+            <span class="kw">let </span>id = std::str::from_utf8(<span class="kw-2">&amp;</span>path.path_name)<span class="question-mark">?</span>;
+            <span class="kw">let </span><span class="kw-2">mut </span>path_string = String::new();
+            <span class="kw">for </span>(seg_id, orientation) <span class="kw">in </span>path.iter() {
+                path_string += <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;{seg_id}{orientation},&quot;</span>);
+            }
+            path_string.pop(); <span class="comment">// remove the last ,
+            </span>paths.push((id, path_string));
+        }
+        <span class="prelude-val">Ok</span>(paths)
+    }
+}
 
 <span class="doccomment">/// Overlap from one segment to another.
 </span><span class="kw">pub struct </span>Overlap {

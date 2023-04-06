@@ -261,7 +261,8 @@ fn main() -> Result<()> {
                     Arg::new("all_paths")
                         .short('a')
                         .long("all")
-                        .help("If there are path (P) lines in the input, output all ")
+                        .action(ArgAction::SetTrue)
+                        .help("If there are path (P) lines in the input, output all paths in fasta format.")
                 ),
         )
         .subcommand(

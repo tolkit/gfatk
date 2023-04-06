@@ -433,6 +433,8 @@ impl GFAtk {
         }
 
         match call {
+            // bit of a hack, sorry.
+            "path_all" => println!(">{}:{}", fasta_header.unwrap(), path.to_fasta_header()),
             "path" => println!(">{}", path.to_fasta_header()),
             "linear" => println!(">{}", fasta_header.unwrap()),
             _ => bail!("Should never reach here."),
@@ -522,11 +524,21 @@ impl GFAtk {
         Ok(())
     }
 
-    // pub fn get_path_lines(&self) {
-    //     for path in &self.0.paths {
-    //         for (segment, orientation) in path.iter() {}
-    //     }
-    // }
+    /// Parses the P lines in a GFA
+    pub fn get_path_lines(&self) -> Result<Vec<(&str, String)>> {
+        let mut paths = Vec::new();
+
+        for path in &self.0.paths {
+            let id = std::str::from_utf8(&path.path_name)?;
+            let mut path_string = String::new();
+            for (seg_id, orientation) in path.iter() {
+                path_string += &format!("{seg_id}{orientation},");
+            }
+            path_string.pop(); // remove the last ,
+            paths.push((id, path_string));
+        }
+        Ok(paths)
+    }
 }
 
 /// Overlap from one segment to another.

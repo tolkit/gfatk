@@ -407,3 +407,27 @@ ACCTT
 
     Ok(())
 }
+
+// Regarding issue #14 - obtain path sequences as specified by P lines
+// in a GFA.
+// Path 1: 11+,12-,13+
+// Path 2: 13-,12+,11- (i.e. reverse comp of path 1)
+
+#[test]
+fn test_gfa_path_all() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = Command::cargo_bin("gfatk")?;
+
+    let flag = "--all";
+
+    cmd.arg("path").arg("./tests/test_path_all.gfa").arg(flag);
+
+    cmd.assert().stdout(predicate::str::contains(
+        ">14:11+,12-,13+
+ACCTTGATT
+>15:13-,12+,11-
+AATCAAGGT
+",
+    ));
+
+    Ok(())
+}
