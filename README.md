@@ -4,7 +4,7 @@
     <img width="300" height="132" src="https://www.darwintreeoflife.org/wp-content/themes/dtol/dist/assets/gfx/dtol-logo-round.png">
 </p>
 
-A command line utility to explore, extract, and linearise plant mitochondrial assemblies. The Graphical Fragment Assembly files (GFA's) used to refine the code in this repository are almost exclusively generated from the assembly program `<a href="https://github.com/maickrau/MBG">`MBG`</a>`. See the testing section below for caveats.
+A command line utility to explore, extract, and linearise plant mitochondrial assemblies. The Graphical Fragment Assembly files (GFA's) used to refine the code in this repository are almost exclusively generated from the assembly program <a href="https://github.com/maickrau/MBG">`MBG`</a>. See the testing section below for caveats.
 
 ## Install
 
