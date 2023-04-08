@@ -1,5 +1,5 @@
 // Max Brown
-// Wellcome Sanger Institute 2022
+// Wellcome Sanger Institute 2023
 
 use std::path::PathBuf;
 
@@ -17,7 +17,7 @@ fn main() -> Result<()> {
         .propagate_version(true)
         .arg_required_else_help(true)
         .author("Max Brown <mb39@sanger.ac.uk>")
-        .about("Explore and linearise (mitochondrial) GFA files.")
+        .about("Explore and linearise (plant organellar) GFA files.")
         .subcommand(
             Command::new("overlap")
                 .about("Extract overlaps from a GFA.")
@@ -236,7 +236,8 @@ fn main() -> Result<()> {
         )
         .subcommand(
             Command::new("path")
-                .about("Supply an input path to evaluate a linear representation of. Input must be a text file of a single comma separated line with node ID's and orientations. E.g.:\n\t1+,2-,3+")
+                .about("Supply an input path to evaluate a linear representation of.
+\r\t\t  Input must be a text file of a single comma separated line with node ID's and orientations. E.g. 1+,2-,3+")
                 .arg(
                     Arg::new("GFA")
                         .value_parser(value_parser!(PathBuf))

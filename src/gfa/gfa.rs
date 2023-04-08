@@ -434,9 +434,8 @@ impl GFAtk {
 
         match call {
             // bit of a hack, sorry.
-            "path_all" => println!(">{}:{}", fasta_header.unwrap(), path.to_fasta_header()),
+            "path_all" | "linear" => println!(">{}", fasta_header.unwrap()),
             "path" => println!(">{}", path.to_fasta_header()),
-            "linear" => println!(">{}", fasta_header.unwrap()),
             _ => bail!("Should never reach here."),
         }
 

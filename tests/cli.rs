@@ -422,9 +422,9 @@ fn test_gfa_path_all() -> Result<(), Box<dyn std::error::Error>> {
     cmd.arg("path").arg("./tests/test_path_all.gfa").arg(flag);
 
     cmd.assert().stdout(predicate::str::contains(
-        ">14:11+,12-,13+
+        ">14
 ACCTTGATT
->15:13-,12+,11-
+>15
 AATCAAGGT
 ",
     ));
