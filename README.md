@@ -23,6 +23,7 @@ Or build from source.
 # e.g. get rustup!
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 # get directly from crates.io
+# currently this is the latest available version 0.2.3XX
 cargo install gfatk
 
 # or clone this repo!
@@ -42,33 +43,29 @@ The features of the toolkit reflect only their usefulness in debugging, visualis
 Current help:
 
 ```
-gfatk 0.2.2
-Max Brown <mb39@sanger.ac.uk>
-Explore and linearise (mitochondrial) GFA files.
+Explore and linearise (plant organellar) GFA files.
 
-USAGE:
-    gfatk [SUBCOMMAND]
+Usage: gfatk [COMMAND]
 
-OPTIONS:
-    -h, --help       Print help information
-    -V, --version    Print version information
+Commands:
+  overlap         Extract overlaps from a GFA.
+  extract         Extract subgraph from a GFA, given a segment name.
+  linear          Force a linear representation of the graph.
+  fasta           Extract a fasta file.
+                      Almost as simple as: awk '/^S/{print ">"$2"\n"$3}'.
+  stats           Some stats about the input GFA.
+  extract-mito    Extract the mitochondria from a GFA.
+  extract-chloro  Extract the plastid from a GFA.
+  dot             Return the dot representation of a GFA.
+  trim            Trim a GFA to remove nodes of degree < 4 (i.e. only has one neighbour).
+  path            Supply an input path to evaluate a linear representation of.
+                  Input must be a text file of a single comma separated line with node ID's and orientations. E.g. 1+,2-,3+
+  rename          Rename the segment ID's of a GFA.
+  help            Print this message or the help of the given subcommand(s)
 
-SUBCOMMANDS:
-    dot               Return the dot representation of a GFA.
-    extract           Extract subgraph from a GFA, given a segment name.
-    extract-chloro    Extract the plastid from a GFA.
-    extract-mito      Extract the mitochondria from a GFA.
-    fasta             Extract a fasta file.
-                          Almost as simple as: awk '/^S/{print ">"$2"\n"$3}'.
-    help              Print this message or the help of the given subcommand(s)
-    linear            Force a linear representation of the graph.
-    overlap           Extract overlaps from a GFA.
-    path              Supply an input path to evaluate a linear representation of. Input must be
-                          a text file of a single comma separated line with node ID's and
-                          orientations. E.g.:
-                                1+,2-,3+
-    stats             Some stats about the input GFA.
-    trim              Trim a GFA to remove nodes of degree < 4 (i.e. only has one neighbour).
+Options:
+  -h, --help     Print help
+  -V, --version  Print version
 ```
 
 To explain each of these briefly:
@@ -108,7 +105,7 @@ Some unit tests are now provided in the `tests` directory. To run these (you'll 
 cargo test --release
 ```
 
-For full functionality of the toolkit, two tags are required, node coverage and edge coverage. Other functionality will fail if the CIGAR string is not purely an overlap; i.e. in the format `<integer>M`. Only GFA version 1 supported. Only header (`H`), segment (`S`), and link (`L`) lines are required. Other lines (e.g. path, `P`), will I think be ignored.
+For full functionality of the toolkit, two tags are required, node coverage and edge coverage. Other functionality will fail if the CIGAR string is not purely an overlap; i.e. in the format `<integer>M`. Only GFA version 1 supported. Only header (`H`), segment (`S`), and link (`L`) lines are required. `P` lines are used in `gfatk path --all <GFA>`.
 
 ```
 H	VN:Z:1.0

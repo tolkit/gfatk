@@ -644,7 +644,6 @@
 <span id="644">644</span>
 <span id="645">645</span>
 <span id="646">646</span>
-<span id="647">647</span>
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::gfa::{
     gfa_string,
     graph::{segments_subgraph, GFAdigraph, GFAungraph},
@@ -1081,9 +1080,8 @@
 
         <span class="kw">match </span>call {
             <span class="comment">// bit of a hack, sorry.
-            </span><span class="string">&quot;path_all&quot; </span>=&gt; <span class="macro">println!</span>(<span class="string">&quot;&gt;{}:{}&quot;</span>, fasta_header.unwrap(), path.to_fasta_header()),
+            </span><span class="string">&quot;path_all&quot; </span>| <span class="string">&quot;linear&quot; </span>=&gt; <span class="macro">println!</span>(<span class="string">&quot;&gt;{}&quot;</span>, fasta_header.unwrap()),
             <span class="string">&quot;path&quot; </span>=&gt; <span class="macro">println!</span>(<span class="string">&quot;&gt;{}&quot;</span>, path.to_fasta_header()),
-            <span class="string">&quot;linear&quot; </span>=&gt; <span class="macro">println!</span>(<span class="string">&quot;&gt;{}&quot;</span>, fasta_header.unwrap()),
             <span class="kw">_ </span>=&gt; <span class="macro">bail!</span>(<span class="string">&quot;Should never reach here.&quot;</span>),
         }
 
