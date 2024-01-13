@@ -50,15 +50,11 @@ impl GFAungraph {
             }
         }
 
-
-        let mut sequences_to_keep = Vec::new();
         // turn node indexes into sequence ID's
-        for index in collect_sequence_names {
-            let t = graph_indices.node_index_to_seg_id(index)?;
-            sequences_to_keep.push(t);
-        }
-
-        Ok(sequences_to_keep)
+        collect_sequence_set
+            .into_iter()
+            .map(|index| graph_indices.node_index_to_seg_id(index))
+            .collect()
     }
 }
 
