@@ -28,7 +28,7 @@ impl GFAungraph {
         &self,
         sequence_id: Vec<usize>,
         iterations: i32,
-        mut collect_sequence_names: Vec<NodeIndex>,
+        collect_sequence_names: Vec<NodeIndex>,
         graph_indices: GFAGraphLookups,
     ) -> Result<Vec<usize>> {
         let gfa_graph = &self.0;
@@ -38,37 +38,23 @@ impl GFAungraph {
             sequence_id, iterations
         );
 
-        let mut iteration = 0;
-        loop {
+        let mut collect_sequence_set: HashSet<_> = collect_sequence_names.iter().copied().collect();
+
+        for _ in 0..iterations {
             // collect all the neighbours of all the current node indices
-            for index in collect_sequence_names.clone() {
+            for index in collect_sequence_set.clone() {
                 for c in gfa_graph.neighbors(index) {
                     // could possibly add a conditional in here.
-                    collect_sequence_names.push(c);
+                    collect_sequence_set.insert(c);
                 }
             }
-            // add sorting and deduping here too
-            // yes otherwise vectors are enormous.
-            collect_sequence_names.sort();
-            collect_sequence_names.dedup();
-
-            iteration += 1;
-            if iteration == iterations {
-                break;
-            }
         }
 
-        collect_sequence_names.sort();
-        collect_sequence_names.dedup();
-
-        let mut sequences_to_keep = Vec::new();
         // turn node indexes into sequence ID's
-        for index in collect_sequence_names {
-            let t = graph_indices.node_index_to_seg_id(index)?;
-            sequences_to_keep.push(t);
-        }
-
-        Ok(sequences_to_keep)
+        collect_sequence_set
+            .into_iter()
+            .map(|index| graph_indices.node_index_to_seg_id(index))
+            .collect()
     }
 }
 
