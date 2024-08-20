@@ -16,7 +16,7 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 
 /// A wrapper of petgraph's undirected `Graph` struct, applied to a GFA. No weights.
-pub struct GFAungraph(pub Graph<usize, (), Undirected>);
+pub struct GFAungraph(pub Graph<Vec<u8>, (), Undirected>);
 
 impl GFAungraph {
     /// The algorithm called in `gfatk extract`.
@@ -26,16 +26,21 @@ impl GFAungraph {
     /// It's a naive algorithm, but it's fast enough for our purposes.
     pub fn recursive_search(
         &self,
-        sequence_id: Vec<usize>,
+        sequence_id: Vec<Vec<u8>>,
         iterations: i32,
         collect_sequence_names: Vec<NodeIndex>,
         graph_indices: GFAGraphLookups,
-    ) -> Result<Vec<usize>> {
+    ) -> Result<Vec<Vec<u8>>> {
         let gfa_graph = &self.0;
 
+        let sequence_id_d = sequence_id
+            .iter()
+            .map(|e| String::from_utf8_lossy(e).to_string())
+            .join(", ");
+
         eprintln!(
-            "[+]\tRecursively searching around nodes {:?} at depth {}",
-            sequence_id, iterations
+            "[+]\tRecursively searching around nodes {} at depth {}",
+            sequence_id_d, iterations
         );
 
         let mut collect_sequence_set: HashSet<_> = collect_sequence_names.iter().copied().collect();
@@ -64,7 +69,7 @@ impl GFAungraph {
 // so digraphs should be where all the functionality lies.
 
 /// A wrapper of petgraph's directed `Graph` struct, applied to a GFA. The edge weights included are the `Orientation`'s of the adjacent segments, and the coverage of this edge.
-pub struct GFAdigraph(pub Graph<usize, (Orientation, Orientation, Option<i64>)>);
+pub struct GFAdigraph(pub Graph<Vec<u8>, (Orientation, Orientation, Option<i64>)>);
 
 impl GFAdigraph {
     /// The main function called from `gfatk dot`.
@@ -82,11 +87,12 @@ impl GFAdigraph {
         for node in gfa_graph.node_references() {
             let e = gfa_graph.to_index(node.id());
             let w = node.weight();
-            let meta = gfa.node_seq_len_and_cov(*w)?;
+            let w_d = std::str::from_utf8(&w)?;
+            let meta = gfa.node_seq_len_and_cov(w.to_vec())?;
             println!(
                 // see https://stackoverflow.com/questions/20516143/graphviz-dot-different-fontsizes-in-same-label
                 "{}{} [ label = <<FONT POINT-SIZE=\'20\'>{}</FONT><br/><FONT POINT-SIZE=\'10\'>L: {}</FONT><br/><FONT POINT-SIZE=\'10\'>C: {}</FONT>> ];",
-                INDENT, e, w, format_usize_to_kb(meta.0), meta.1
+                INDENT, e, w_d, format_usize_to_kb(meta.0), meta.1
             );
         }
         // print edges
@@ -130,10 +136,10 @@ impl GFAdigraph {
     pub fn weakly_connected_components(
         &self,
         graph_indices: GFAGraphLookups,
-    ) -> Result<Vec<Vec<usize>>> {
+    ) -> Result<Vec<Vec<Vec<u8>>>> {
         let graph = &self.0;
         let mut seen: HashSet<NodeIndex> = HashSet::with_capacity(graph.node_count());
-        let mut out_vec: Vec<Vec<usize>> = Vec::new();
+        let mut out_vec: Vec<Vec<Vec<u8>>> = Vec::new();
 
         for node in graph.node_indices() {
             if !seen.contains(&node) {
@@ -180,7 +186,7 @@ impl GFAdigraph {
                         };
                         Ok(seg_id)
                     })
-                    .collect::<Result<Vec<usize>>>();
+                    .collect::<Result<Vec<Vec<u8>>>>();
 
                 out_vec.push(x?);
 
@@ -199,7 +205,7 @@ impl GFAdigraph {
         &self,
         graph_indices: &GFAGraphLookups,
         rel_coverage_map: Option<&HashMap<NodeIndex, usize>>,
-    ) -> Result<(Vec<(NodeIndex, Orientation)>, Vec<usize>, String)> {
+    ) -> Result<(Vec<(NodeIndex, Orientation)>, Vec<Vec<u8>>, String)> {
         let graph = &self.0;
         let nodes = graph.node_identifiers();
 
@@ -422,8 +428,10 @@ impl GFAdigraph {
             let to_orient = pair[1].1;
 
             // get segment ID from Node Indices
-            let from = graph_indices.node_index_to_seg_id(from)?;
-            let to = graph_indices.node_index_to_seg_id(to)?;
+            let from_inner = graph_indices.node_index_to_seg_id(from)?;
+            let to_inner = graph_indices.node_index_to_seg_id(to)?;
+            let from = std::str::from_utf8(&from_inner).unwrap();
+            let to = std::str::from_utf8(&to_inner).unwrap();
 
             // no spaces between the formatted strings
             if index == 0 {
@@ -447,7 +455,7 @@ impl GFAdigraph {
             .filter(|item| !final_path_set.contains(item))
             .collect();
 
-        let difference_ids: Result<Vec<usize>> = difference
+        let difference_ids: Result<Vec<Vec<u8>>> = difference
             .iter()
             .map(|e| graph_indices.node_index_to_seg_id(*e))
             .collect();
@@ -479,7 +487,7 @@ impl GFAdigraph {
     /// Trim a graph to include only nodes connected to two or more other nodes.
     ///
     /// This algorithm will loop for as long as the longest branch in the GFA yields a segment connected to only a single node.
-    pub fn trim(&self, graph_indices: GFAGraphLookups) -> Vec<usize> {
+    pub fn trim(&self, graph_indices: GFAGraphLookups) -> Vec<Vec<u8>> {
         let gfa_graph = &self.0;
 
         let mut all_nodes = HashSet::new();
@@ -526,7 +534,10 @@ impl GFAdigraph {
         // print for user info
         for el in &removed_nodes {
             let seg_id = graph_indices.node_index_to_seg_id(*el).unwrap();
-            eprintln!("[+]\tRemoved segment {} from GFA.", seg_id);
+            eprintln!(
+                "[+]\tRemoved segment {} from GFA.",
+                std::str::from_utf8(&seg_id).unwrap()
+            );
         }
 
         all_nodes
@@ -693,9 +704,9 @@ fn recursive_path_finder_no_coverage<T, U, Ix: IndexType>(
 ///
 /// Taken from <https://github.com/chfi/rs-gfa-utils/blob/master/src/subgraph.rs>
 pub fn segments_subgraph<T: OptFields + Clone>(
-    gfa: &GFA<usize, T>,
-    segment_names: Vec<usize>,
-) -> GFA<usize, T> {
+    gfa: &GFA<Vec<u8>, T>,
+    segment_names: Vec<Vec<u8>>,
+) -> GFA<Vec<u8>, T> {
     let segments = gfa
         .segments
         .iter()
@@ -724,7 +735,7 @@ pub fn segments_subgraph<T: OptFields + Clone>(
     let paths: Vec<_> = gfa
         .paths
         .iter()
-        .filter(|p| p.iter().any(|(s, _)| segment_names.contains(&s)))
+        .filter(|p| p.iter().any(|(s, _)| segment_names.contains(&s.to_vec())))
         .cloned()
         .collect();
 
@@ -747,15 +758,15 @@ mod tests {
     // ./examples/mito_NC_037304.1.MZ323108.1.fasta.BOTH.HiFiMapped.bam.filtered.1k.gfa
 
     fn make_graph() -> GFAdigraph {
-        let mut graph = Graph::<usize, (Orientation, Orientation, Option<i64>)>::new();
+        let mut graph = Graph::<Vec<u8>, (Orientation, Orientation, Option<i64>)>::new();
 
         // node weights are usize
-        let node0 = graph.add_node(0);
-        let node1 = graph.add_node(1);
-        let node2 = graph.add_node(2);
-        let node3 = graph.add_node(3);
-        let node4 = graph.add_node(4);
-        let node5 = graph.add_node(5);
+        let node0 = graph.add_node("0".as_bytes().to_vec());
+        let node1 = graph.add_node("1".as_bytes().to_vec());
+        let node2 = graph.add_node("2".as_bytes().to_vec());
+        let node3 = graph.add_node("3".as_bytes().to_vec());
+        let node4 = graph.add_node("4".as_bytes().to_vec());
+        let node5 = graph.add_node("5".as_bytes().to_vec());
 
         // we create the following graph
         //
@@ -921,27 +932,27 @@ mod tests {
         let lookup = GFAGraphLookups(vec![
             crate::utils::GFAGraphPair {
                 node_index: NodeIndex::new(0),
-                seg_id: 4,
+                seg_id: "4".as_bytes().to_vec(),
             },
             crate::utils::GFAGraphPair {
                 node_index: NodeIndex::new(2),
-                seg_id: 6,
+                seg_id: "6".as_bytes().to_vec(),
             },
             crate::utils::GFAGraphPair {
                 node_index: NodeIndex::new(5),
-                seg_id: 9,
+                seg_id: "9".as_bytes().to_vec(),
             },
             crate::utils::GFAGraphPair {
                 node_index: NodeIndex::new(3),
-                seg_id: 7,
+                seg_id: "7".as_bytes().to_vec(),
             },
             crate::utils::GFAGraphPair {
                 node_index: NodeIndex::new(1),
-                seg_id: 5,
+                seg_id: "5".as_bytes().to_vec(),
             },
             crate::utils::GFAGraphPair {
                 node_index: NodeIndex::new(4),
-                seg_id: 8,
+                seg_id: "8".as_bytes().to_vec(),
             },
         ]);
 

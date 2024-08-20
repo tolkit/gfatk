@@ -33,7 +33,7 @@ pub struct Stat {
     /// The average coverage across a subgraph.
     pub cov: f32,
     /// Names of the segments.
-    pub segments: Vec<usize>,
+    pub segments: Vec<Vec<u8>>,
     /// Total sequence length of all the segments.
     pub total_sequence_length: usize,
     /// Whether the subgraph is circular
@@ -80,7 +80,7 @@ impl Stats {
         {
             let segment_string = segments
                 .iter()
-                .map(|s| s.to_string())
+                .map(|s| String::from_utf8_lossy(s).to_string())
                 .collect::<Vec<String>>()
                 .join(",");
 
@@ -111,7 +111,7 @@ impl Stats {
         mut size_upper: usize,
         gc_lower: f32,
         gc_upper: f32,
-    ) -> Result<Vec<usize>> {
+    ) -> Result<Vec<Vec<u8>>> {
         // just going to hard code these for the moment
         // these values are taken from GoaT
         // these values are within 2 stddevs of the mean,
@@ -179,7 +179,7 @@ impl Stats {
 pub fn stats(
     matches: &clap::ArgMatches,
     genome_type: GenomeType,
-) -> Result<Option<(GFAtk, Vec<usize>)>> {
+) -> Result<Option<(GFAtk, Vec<Vec<u8>>)>> {
     let gfa_file = matches.get_one::<PathBuf>("GFA");
     let tabular = matches.get_flag("tabular");
     // only passed through extract_mito

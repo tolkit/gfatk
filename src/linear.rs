@@ -157,7 +157,8 @@ fn linear_inner(
 
     for (node, orientation) in chosen_path {
         let node_id = graph_indices.node_index_to_seg_id(node)?;
-        chosen_path_as_string += &format!("{}{},", node_id, orientation);
+        let node_id_d = std::str::from_utf8(&node_id)?;
+        chosen_path_as_string += &format!("{}{},", node_id_d, orientation);
     }
     // remove last comma
     chosen_path_as_string.pop();
@@ -173,9 +174,10 @@ fn linear_inner(
             for line in gfa.0.lines_iter() {
                 if let Some(seg) = line.some_segment() {
                     if seg.name == segment {
+                        let segment_d = std::str::from_utf8(&segment)?;
                         println!(
                             ">{}{}\n{}",
-                            segment,
+                            segment_d,
                             subgraph_index_header.clone().unwrap_or("".into()),
                             std::str::from_utf8(&seg.sequence)
                                 .with_context(|| format!("Malformed UTF8: {:?}", &seg.sequence))?

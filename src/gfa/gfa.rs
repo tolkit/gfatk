@@ -16,7 +16,7 @@ use std::collections::HashMap;
 /// A wrapper around GFA from the gfa crate
 /// TODO: make GFAtk generic for any segment name, not just usize.
 #[derive(Clone)]
-pub struct GFAtk(pub GFA<usize, OptionalFields>);
+pub struct GFAtk(pub GFA<Vec<u8>, OptionalFields>);
 
 impl GFAtk {
     /// Returns a tuple of GFAGraphLookups (a struct of indices/node names)
@@ -26,13 +26,13 @@ impl GFAtk {
         let gfa = &self.0;
         // we're reading in now
         eprintln!("[+]\tReading GFA into an undirected graph.");
-        let mut gfa_graph: UnGraph<usize, ()> = Graph::new_undirected();
+        let mut gfa_graph: UnGraph<Vec<u8>, ()> = Graph::new_undirected();
 
         let mut graph_indices = GFAGraphLookups::new();
         // read the segments into graph nodes
         // save the indexes for populating the edges
-        for node in &gfa.segments {
-            let index = gfa_graph.add_node(node.name);
+        for node in gfa.segments.clone() {
+            let index = gfa_graph.add_node(node.name.clone());
             graph_indices.push(GFAGraphPair {
                 node_index: index,
                 seg_id: node.name,
@@ -41,8 +41,8 @@ impl GFAtk {
 
         // populate the edges
         for edge in &gfa.links {
-            let from = edge.from_segment;
-            let to = edge.to_segment;
+            let from = edge.from_segment.clone();
+            let to = edge.to_segment.clone();
 
             // get the node index for a given edge (like a map)
             let from_index = graph_indices.seg_id_to_node_index(from)?;
@@ -61,13 +61,13 @@ impl GFAtk {
     pub fn into_digraph(&self) -> Result<(GFAGraphLookups, GFAdigraph)> {
         let gfa = &self.0;
         // eprintln!("[+]\tReading GFA into a directed graph.");
-        let mut gfa_graph: Graph<usize, (Orientation, Orientation, Option<i64>)> = Graph::new();
+        let mut gfa_graph: Graph<Vec<u8>, (Orientation, Orientation, Option<i64>)> = Graph::new();
 
         let mut graph_indices = GFAGraphLookups::new();
         // read the segments into graph nodes
         // save the indexes for populating the edges
-        for node in &gfa.segments {
-            let index = gfa_graph.add_node(node.name);
+        for node in gfa.segments.clone() {
+            let index = gfa_graph.add_node(node.name.clone());
             graph_indices.push(GFAGraphPair {
                 node_index: index,
                 seg_id: node.name,
@@ -76,8 +76,8 @@ impl GFAtk {
 
         // populate the edges
         for edge in &gfa.links {
-            let from = edge.from_segment;
-            let to = edge.to_segment;
+            let from = edge.from_segment.clone();
+            let to = edge.to_segment.clone();
             let from_orient = edge.from_orient;
             let to_orient = edge.to_orient;
 
@@ -95,7 +95,7 @@ impl GFAtk {
     }
 
     /// A method to print a GFA to STDOUT, given a vector of sequence ID's to keep.
-    pub fn print_extract(&self, sequences_to_keep: Vec<usize>) {
+    pub fn print_extract(&self, sequences_to_keep: Vec<Vec<u8>>) {
         let gfa = &self.0;
         let subgraph_gfa = GFAtk(segments_subgraph(gfa, sequences_to_keep));
 
@@ -110,15 +110,17 @@ impl GFAtk {
         // outer loop over links
         for link in &gfa.links {
             // get all the info out of each link
-            let from_segment = link.from_segment;
+            let from_segment = link.from_segment.clone();
+            let from_segment_d = std::str::from_utf8(&from_segment).unwrap();
             let from_orient = link.from_orient;
-            let to_segment = link.to_segment;
+            let to_segment = link.to_segment.clone();
+            let to_segment_d = std::str::from_utf8(&to_segment).unwrap();
             let to_orient = link.to_orient;
             let overlap = parse_cigar(&link.overlap)?;
 
             eprintln!(
                 "From segment {} ({}) to segment {} ({})\nOverlap: {}",
-                from_segment, from_orient, to_segment, to_orient, overlap
+                from_segment_d, from_orient, to_segment_d, to_orient, overlap
             );
 
             let mut from_seq: &[u8] = &[];
@@ -242,8 +244,9 @@ impl GFAtk {
             if let Some(s) = line.some_segment() {
                 let seq = std::str::from_utf8(&s.sequence)
                     .with_context(|| format!("Malformed UTF8: {:?}", &s.sequence))?;
-                let id = s.name;
-                println!(">{}{}\n{}", id, subgraph_index_header, seq);
+                let id = s.name.clone();
+                let id_d = std::str::from_utf8(&id)?;
+                println!(">{}{}\n{}", id_d, subgraph_index_header, seq);
             }
         }
         Ok(())
@@ -283,7 +286,7 @@ impl GFAtk {
     /// Return the coverage and sequence length for a segment, given a segment name.
     ///
     /// Note segment names are always `usize`.
-    pub fn node_seq_len_and_cov(&self, node: usize) -> Result<(usize, f32)> {
+    pub fn node_seq_len_and_cov(&self, node: Vec<u8>) -> Result<(usize, f32)> {
         let gfa = &self.0;
 
         let ll_tag: [u8; 2] = [108, 108];
@@ -369,7 +372,7 @@ impl GFAtk {
         for seg in &gfa.segments {
             // get the coverage
             let opts = &seg.optional;
-            let node_index = graph_lookup.seg_id_to_node_index(seg.name)?;
+            let node_index = graph_lookup.seg_id_to_node_index(seg.name.clone())?;
 
             for opt in opts {
                 if opt.tag == ll_tag {
@@ -426,7 +429,7 @@ impl GFAtk {
         let mut seg_map = HashMap::new();
 
         for seg in &gfa.segments {
-            let id = seg.name;
+            let id = seg.name.clone();
             let seq = seg.sequence.clone();
 
             seg_map.insert(id, seq);
@@ -463,16 +466,18 @@ impl GFAtk {
         // now iterate over the path itself
         for path_el in path.inner.windows(2) {
             // from
-            let seg_id_from = path_el[0].segment_id;
+            let seg_id_from = path_el[0].segment_id.clone();
+            let seg_id_from_d = std::str::from_utf8(&seg_id_from)?;
             let orientation_from = path_el[0].orientation;
             // to
-            let seg_id_to = path_el[1].segment_id;
+            let seg_id_to = path_el[1].segment_id.clone();
+            let seg_id_to_d = std::str::from_utf8(&seg_id_to)?;
             let orientation_to = path_el[1].orientation;
 
             // format so we can match on the links map
             let cigar_match = format!(
                 "{}{}|{}{}",
-                seg_id_from, orientation_from, seg_id_to, orientation_to
+                seg_id_from_d, orientation_from, seg_id_to_d, orientation_to
             );
 
             let overlap = *link_map.get(&cigar_match).context(format!(
@@ -551,9 +556,9 @@ pub struct Overlap {
     /// To segment reverse.
     pub overlap_str_to_r: Option<String>,
     /// ID of from segment.
-    pub from_segment: usize,
+    pub from_segment: Vec<u8>,
     /// ID of to segment.
-    pub to_segment: usize,
+    pub to_segment: Vec<u8>,
     /// Orientation of from segment.
     pub from_orient: Orientation,
     /// Orientation of to segment.
@@ -582,13 +587,15 @@ impl Overlaps {
             let tf = o.overlap_str_to_f.unwrap_or("".to_string());
             let tr = o.overlap_str_to_r.unwrap_or("".to_string());
             let from_seg = o.from_segment;
+            let from_seg_d = std::str::from_utf8(&from_seg).unwrap();
             let to_seg = o.to_segment;
+            let to_seg_d = std::str::from_utf8(&to_seg).unwrap();
             let from_orient = o.from_orient;
             let to_orient = o.to_orient;
 
             println!(
                 ">{}({})->{}({}): extend = {}\n{}{}{}{}",
-                from_seg, from_orient, to_seg, to_orient, extend_length, ff, fr, tf, tr
+                from_seg_d, from_orient, to_seg_d, to_orient, extend_length, ff, fr, tf, tr
             );
         }
     }
@@ -625,15 +632,15 @@ mod tests {
         let lookup = GFAGraphLookups(vec![
             crate::utils::GFAGraphPair {
                 node_index: NodeIndex::new(0),
-                seg_id: 11,
+                seg_id: "11".as_bytes().to_vec(),
             },
             crate::utils::GFAGraphPair {
                 node_index: NodeIndex::new(1),
-                seg_id: 12,
+                seg_id: "12".as_bytes().to_vec(),
             },
             crate::utils::GFAGraphPair {
                 node_index: NodeIndex::new(2),
-                seg_id: 13,
+                seg_id: "13".as_bytes().to_vec(),
             },
         ]);
 

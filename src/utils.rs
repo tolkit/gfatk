@@ -153,12 +153,12 @@ pub fn gc_content(dna: &[u8]) -> f32 {
 // I just realise this should 100000% be a hashmap... change that later.
 
 /// A pair consisting of a node index and a segment ID.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Debug)]
 pub struct GFAGraphPair {
     /// The node index (petgraph's `NodeIndex`).
     pub node_index: NodeIndex,
     /// The segment ID.
-    pub seg_id: usize,
+    pub seg_id: Vec<u8>,
 }
 /// A vector of `GFAGraphPair`'s.
 ///
@@ -177,7 +177,7 @@ impl GFAGraphLookups {
     }
 
     /// Return segment ID from a node index.
-    pub fn node_index_to_seg_id(&self, node_index: NodeIndex) -> Result<usize> {
+    pub fn node_index_to_seg_id(&self, node_index: NodeIndex) -> Result<Vec<u8>> {
         let seg_id = &self
             .0
             .iter()
@@ -190,10 +190,10 @@ impl GFAGraphLookups {
             })?
             .seg_id;
 
-        Ok(*seg_id)
+        Ok(seg_id.to_owned())
     }
     /// Return a node index from a segment ID.
-    pub fn seg_id_to_node_index(&self, seg_id: usize) -> Result<NodeIndex> {
+    pub fn seg_id_to_node_index(&self, seg_id: Vec<u8>) -> Result<NodeIndex> {
         let node_index = &self
             .0
             .iter()
@@ -218,7 +218,7 @@ impl fmt::Display for GFAGraphLookups {
         let mut seg_ids: String = self
             .0
             .iter()
-            .map(|pair| pair.seg_id.to_string() + ", ")
+            .map(|pair| format!("{}, ", std::str::from_utf8(&pair.seg_id).unwrap()))
             .collect();
         seg_ids.drain(seg_ids.len() - 2..);
 
@@ -239,16 +239,22 @@ mod tests {
         // just add two pairs
         gl.push(GFAGraphPair {
             node_index: NodeIndex::new(1),
-            seg_id: 12,
+            seg_id: "12".as_bytes().to_vec(),
         });
 
         gl.push(GFAGraphPair {
             node_index: NodeIndex::new(2),
-            seg_id: 10,
+            seg_id: "10".as_bytes().to_vec(),
         });
 
-        assert_eq!(12, gl.node_index_to_seg_id(NodeIndex::new(1)).unwrap());
-        assert_eq!(NodeIndex::new(2), gl.seg_id_to_node_index(10).unwrap());
+        assert_eq!(
+            "12".as_bytes().to_vec(),
+            gl.node_index_to_seg_id(NodeIndex::new(1)).unwrap()
+        );
+        assert_eq!(
+            NodeIndex::new(2),
+            gl.seg_id_to_node_index("10".as_bytes().to_vec()).unwrap()
+        );
     }
 
     #[test]

@@ -16,9 +16,8 @@ pub fn extract(matches: &clap::ArgMatches) -> Result<()> {
     // read in path and parse gfa
     let gfa_file = matches.get_one::<PathBuf>("GFA");
     let sequence_ids = matches
-        .get_many::<usize>("sequence-ids")
+        .get_many::<String>("sequence-ids")
         .expect("errored by clap")
-        .copied()
         .collect::<Vec<_>>();
     let iterations = *matches
         .get_one::<i32>("iterations")
@@ -49,14 +48,18 @@ pub fn extract(matches: &clap::ArgMatches) -> Result<()> {
     // get the node index of the target sequence ID.
     let target_indices = sequence_ids
         .iter()
-        .map(|e| graph_indices.seg_id_to_node_index(*e))
+        .map(|e| graph_indices.seg_id_to_node_index(e.as_bytes().to_vec()))
         .collect::<Result<Vec<NodeIndex>>>();
 
     let target_indices =
         target_indices.context("One of your input segment ID's does not exist in the graph.")?;
 
-    let sequences_to_keep =
-        gfa_graph.recursive_search(sequence_ids, iterations, target_indices, graph_indices)?;
+    let sequences_to_keep = gfa_graph.recursive_search(
+        sequence_ids.iter().map(|e| e.as_bytes().to_vec()).collect(),
+        iterations,
+        target_indices,
+        graph_indices,
+    )?;
 
     gfa.print_extract(sequences_to_keep);
 

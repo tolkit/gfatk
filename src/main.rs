@@ -49,7 +49,7 @@ fn main() -> Result<()> {
                         .long("sequence-ids")
                         .required(true)
                         .value_delimiter(',')
-                        .value_parser(value_parser!(usize))
+                        .value_parser(value_parser!(String))
                         .help("Extract subgraph of which this sequence is part of. Specifying multiple segments requires a delimiter, e.g. 1,2,3 - note there should be no spaces between delimited segments."),
                 )
                 .arg(

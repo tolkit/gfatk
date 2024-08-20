@@ -1,10 +1,10 @@
 H	VN:Z:1.0
 S	11	ACCTT
-S	12	TCAAGG
+S	seg12	TCAAGG
 S	13	CTTGATT
-L	11	+	12	-	4M	ec:i:1
-L	12	-	13	+	5M	ec:i:1
+L	11	+	seg12	-	4M	ec:i:1
+L	seg12	-	13	+	5M	ec:i:1
 L	11	+	13	+	3M	ec:i:1
-L	12	+	11	-	4M	ec:i:1
-L	13	-	12	+	5M	ec:i:1
+L	seg12	+	11	-	4M	ec:i:1
+L	13	-	seg12	+	5M	ec:i:1
 L	13	-	11	-	3M	ec:i:1

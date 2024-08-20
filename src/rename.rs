@@ -31,7 +31,7 @@ pub fn rename_gfa(matches: &clap::ArgMatches) -> Result<()> {
     let name_map = NameMap::build_from_gfa(&gfa);
 
     if let Some(new_gfa) = name_map.gfa_bytestring_to_usize(&gfa, false) {
-        let gfa_string = crate::gfa::gfa_string(&new_gfa);
+        let gfa_string = crate::gfa::gfa_string_usize(&new_gfa);
         println!("{}", gfa_string);
     } else {
         bail!("Could not convert segment ID's to usize.")

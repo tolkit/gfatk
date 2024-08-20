@@ -114,11 +114,11 @@ pub fn parse_path(
 }
 
 /// A GFA path element. Of the form `<segment ID><+/->`
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct GFAPathElement {
     /// The ID of the GFA path element.
     /// It must match that of the segments in the GFA.
-    pub segment_id: usize,
+    pub segment_id: Vec<u8>,
     /// The orientation of the segment.
     pub orientation: Orientation,
     /// The index of the struct.
@@ -145,7 +145,8 @@ impl GFAPath {
         let mut output = String::new();
 
         for el in &self.inner {
-            output += &format!("{}{},", el.segment_id, el.orientation);
+            let el_d = std::str::from_utf8(&el.segment_id).unwrap();
+            output += &format!("{}{},", el_d, el.orientation);
         }
         output.pop();
         output
@@ -158,10 +159,9 @@ fn parse_path_string(path_string: &str, gfa: &GFAtk) -> Result<(GFAPath, HashMap
     // make a map of the links
     let mut link_map = HashMap::new();
     for link in &gfa.links {
-        let path_pair = format!(
-            "{}{}|{}{}",
-            link.from_segment, link.from_orient, link.to_segment, link.to_orient
-        );
+        let from_d = std::str::from_utf8(&link.from_segment)?;
+        let to_d = std::str::from_utf8(&link.to_segment)?;
+        let path_pair = format!("{}{}|{}{}", from_d, link.from_orient, to_d, link.to_orient);
         let cigar = utils::parse_cigar(&link.overlap)?;
 
         link_map.insert(path_pair, cigar);
@@ -197,9 +197,7 @@ fn parse_path_string(path_string: &str, gfa: &GFAtk) -> Result<(GFAPath, HashMap
         };
 
         gfa_path.push(GFAPathElement {
-            segment_id: token_string
-                .parse::<usize>()
-                .context("Could not parse the token string as a `usize`.")?,
+            segment_id: token_string.into_bytes(),
             orientation: o_enum,
             index,
         });
