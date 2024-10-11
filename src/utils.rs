@@ -25,6 +25,11 @@ pub fn get_edge_coverage(options: &[OptField]) -> Result<i64> {
                 Int(i) => return Ok(i),
                 _ => bail!("Could not find integer ec:i:<i64> tag."),
             },
+            // EC
+            [69, 67] => match op.value {
+                Int(i) => return Ok(i),
+                _ => bail!("Could not find integer EC:i:<i64> tag."),
+            },
             _ => bail!("Could not find ec (edge coverage) tag."),
         };
     }
