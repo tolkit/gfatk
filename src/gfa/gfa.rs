@@ -14,7 +14,6 @@ use petgraph::graph::{Graph, NodeIndex, UnGraph};
 use std::collections::HashMap;
 
 /// A wrapper around GFA from the gfa crate
-/// TODO: make GFAtk generic for any segment name, not just usize.
 #[derive(Clone)]
 pub struct GFAtk(pub GFA<Vec<u8>, OptionalFields>);
 
@@ -88,7 +87,7 @@ impl GFAtk {
             let to_index = graph_indices.seg_id_to_node_index(to)?;
 
             // add the edges
-            gfa_graph.add_edge(from_index, to_index, (from_orient, to_orient, Some(ec)));
+            gfa_graph.add_edge(from_index, to_index, (from_orient, to_orient, ec));
         }
 
         Ok((graph_indices, GFAdigraph(gfa_graph)))
@@ -119,8 +118,7 @@ impl GFAtk {
             let overlap = parse_cigar(&link.overlap)?;
 
             eprintln!(
-                "From segment {} ({}) to segment {} ({})\nOverlap: {}",
-                from_segment_d, from_orient, to_segment_d, to_orient, overlap
+                "From segment {from_segment_d} ({from_orient}) to segment {to_segment_d} ({to_orient})\nOverlap: {overlap}"
             );
 
             let mut from_seq: &[u8] = &[];
@@ -157,9 +155,9 @@ impl GFAtk {
                     // we hit the start of the sequence, so take full slice.
                     let overlap_str = match overlap_seq {
                         Some(sl) => std::str::from_utf8(sl)
-                            .with_context(|| format!("Malformed UTF8: {:?}", sl))?,
+                            .with_context(|| format!("Malformed UTF8: {sl:?}"))?,
                         None => std::str::from_utf8(from_seq)
-                            .with_context(|| format!("Malformed UTF8: {:?}", from_seq))?,
+                            .with_context(|| format!("Malformed UTF8: {from_seq:?}"))?,
                     };
                     overlap_str_from_f = Some(overlap_str.to_string());
                 }
@@ -172,7 +170,7 @@ impl GFAtk {
 
                     let overlap_str = match overlap_revcomp {
                         Some(sl) => String::from_utf8(sl.to_vec())
-                            .with_context(|| format!("Malformed UTF8: {:?}", sl))?,
+                            .with_context(|| format!("Malformed UTF8: {sl:?}"))?,
                         // take the whole thing.
                         None => String::from_utf8(revcomp).context("Malformed UTF8.")?,
                     };
@@ -191,7 +189,7 @@ impl GFAtk {
 
                     let overlap_str = match overlap_seq {
                         Some(sl) => std::str::from_utf8(sl)
-                            .with_context(|| format!("Malformed UTF8: {:?}", sl))?,
+                            .with_context(|| format!("Malformed UTF8: {sl:?}"))?,
                         // from end of overlap to the end of the sequence
                         None => std::str::from_utf8(&to_seq[overlap..])
                             .with_context(|| format!("Malformed UTF8: {:?}", &to_seq[overlap..]))?,
@@ -209,7 +207,7 @@ impl GFAtk {
                     let overlap_str =
                         match overlap_revcomp {
                             Some(sl) => String::from_utf8(sl.to_vec())
-                                .with_context(|| format!("Malformed UTF8: {:?}", sl))?,
+                                .with_context(|| format!("Malformed UTF8: {sl:?}"))?,
                             None => String::from_utf8(revcomp[overlap..].to_vec()).with_context(
                                 || format!("Malformed UTF8: {:?}", revcomp[overlap..].to_vec()),
                             )?,
@@ -246,7 +244,7 @@ impl GFAtk {
                     .with_context(|| format!("Malformed UTF8: {:?}", &s.sequence))?;
                 let id = s.name.clone();
                 let id_d = std::str::from_utf8(&id)?;
-                println!(">{}{}\n{}", id_d, subgraph_index_header, seq);
+                println!(">{id_d}{subgraph_index_header}\n{seq}");
             }
         }
         Ok(())
@@ -255,9 +253,10 @@ impl GFAtk {
     /// Two internal functions below to parse coverage of a GFA segment.
     ///
     /// Used in `gfatk stats`.
-    fn parse_coverage_opt(opt: &OptFieldVal) -> Result<&f32> {
+    fn parse_coverage_opt(opt: &OptFieldVal) -> Result<f32> {
         let ll = match opt {
-            OptFieldVal::Float(f) => f,
+            OptFieldVal::Float(f) => *f,
+            OptFieldVal::Int(i) => *i as f32,
             _ => bail!("ll: coverage should be Float()"),
         };
         Ok(ll)
@@ -267,18 +266,19 @@ impl GFAtk {
         let gfa = &self.0;
 
         let ll_tag: [u8; 2] = [108, 108];
+        let ec_tag: [u8; 2] = [83, 67];
         let mut ll_tag_vec = Vec::new();
 
         for seg in &gfa.segments {
             let opts = &seg.optional;
             for opt in opts {
-                if opt.tag == ll_tag {
+                if opt.tag == ll_tag || opt.tag == ec_tag {
                     ll_tag_vec.push(Self::parse_coverage_opt(&opt.value)?);
                 }
             }
         }
         let len = ll_tag_vec.len() as f32;
-        let sum: f32 = ll_tag_vec.iter().fold(0.0, |a, b| a + **b);
+        let sum: f32 = ll_tag_vec.iter().fold(0.0, |a, b| a + *b);
 
         Ok(sum / len)
     }
@@ -290,6 +290,7 @@ impl GFAtk {
         let gfa = &self.0;
 
         let ll_tag: [u8; 2] = [108, 108];
+        let ec_tag: [u8; 2] = [83, 67];
         let mut seq_len = None;
         let mut cov = None;
 
@@ -298,8 +299,8 @@ impl GFAtk {
                 seq_len = Some(segment.sequence.len());
                 let opt = &segment.optional;
                 for c in opt {
-                    if c.tag == ll_tag {
-                        cov = Some(*Self::parse_coverage_opt(&c.value)?);
+                    if c.tag == ll_tag || c.tag == ec_tag {
+                        cov = Some(Self::parse_coverage_opt(&c.value)?);
                         break;
                     }
                 }
@@ -343,14 +344,14 @@ impl GFAtk {
         let avg_gc = gc_vec.iter().sum::<f32>() / gc_vec.len() as f32;
 
         if !tabular && genome_type == GenomeType::None {
-            println!("\tTotal sequence length:\t{}", total_sequence_length);
-            println!("\tTotal sequence overlap length:\t{}", total_overlap_length);
+            println!("\tTotal sequence length:\t{total_sequence_length}");
+            println!("\tTotal sequence overlap length:\t{total_overlap_length}");
             println!(
                 "\tSequence length minus overlaps:\t{}",
                 total_sequence_length as i32 - total_overlap_length as i32
             );
-            println!("\tGC content of total sequence:\t{}", avg_gc);
-            println!("\tAverage coverage of total segments:\t{}", cov);
+            println!("\tGC content of total sequence:\t{avg_gc}");
+            println!("\tAverage coverage of total segments:\t{cov}");
         }
 
         Ok((avg_gc, cov, total_sequence_length))
@@ -377,7 +378,7 @@ impl GFAtk {
             for opt in opts {
                 if opt.tag == ll_tag {
                     let cov = Self::parse_coverage_opt(&opt.value)?;
-                    node_cov_map.insert(node_index, *cov);
+                    node_cov_map.insert(node_index, cov);
                 }
             }
         }
@@ -475,14 +476,11 @@ impl GFAtk {
             let orientation_to = path_el[1].orientation;
 
             // format so we can match on the links map
-            let cigar_match = format!(
-                "{}{}|{}{}",
-                seg_id_from_d, orientation_from, seg_id_to_d, orientation_to
-            );
+            let cigar_match =
+                format!("{seg_id_from_d}{orientation_from}|{seg_id_to_d}{orientation_to}");
 
             let overlap = *link_map.get(&cigar_match).context(format!(
-                "This link: {} - does not occur in the input GFA. Perhaps re-consider the input path?",
-                cigar_match
+                "This link: {cigar_match} - does not occur in the input GFA. Perhaps re-consider the input path?"
             ))?;
 
             // for the first element in the path
@@ -594,8 +592,7 @@ impl Overlaps {
             let to_orient = o.to_orient;
 
             println!(
-                ">{}({})->{}({}): extend = {}\n{}{}{}{}",
-                from_seg_d, from_orient, to_seg_d, to_orient, extend_length, ff, fr, tf, tr
+                ">{from_seg_d}({from_orient})->{to_seg_d}({to_orient}): extend = {extend_length}\n{ff}{fr}{tf}{tr}"
             );
         }
     }

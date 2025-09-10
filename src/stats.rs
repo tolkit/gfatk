@@ -4,7 +4,28 @@ use crate::load::load_gfa;
 use crate::utils::{self, GFAGraphLookups};
 use crate::{gfa::gfa::GFAtk, gfa::graph::segments_subgraph, load::load_gfa_stdin};
 use anyhow::{bail, Result};
+use gfa::gfa::Orientation;
 use petgraph::algo::is_cyclic_directed;
+use petgraph::visit::EdgeRef;
+
+#[derive(Clone, Copy)]
+enum NodeEnd {
+    Left,
+    Right,
+}
+
+#[inline]
+fn end_from_orient(node_is_source: bool, o: Orientation) -> NodeEnd {
+    match (node_is_source, o) {
+        // GFA convention:
+        // source + => Right, source - => Left
+        // target + => Left,  target - => Right
+        (true, Orientation::Forward) => NodeEnd::Right,
+        (true, Orientation::Backward) => NodeEnd::Left,
+        (false, Orientation::Forward) => NodeEnd::Left,
+        (false, Orientation::Backward) => NodeEnd::Right,
+    }
+}
 
 /// Enumeration of the genomes we are interested in.
 #[derive(PartialEq, Clone, Copy)]
@@ -39,6 +60,8 @@ pub struct Stat {
     /// Whether the subgraph is circular
     /// (only applies to mitochondrial genomes).
     pub is_circular: bool,
+    /// Number of nodes with exactly one unique neighbor (dead-ends).
+    pub dead_end_count: usize,
 }
 
 /// A vector of `Stat`.
@@ -62,6 +85,7 @@ impl Stats {
             "segments",
             "total_seq_len",
             "is_circular",
+            "dead_end_count",
         ];
         // print headers
         println!("{}", headers.join("\t"));
@@ -76,6 +100,7 @@ impl Stats {
             segments,
             total_sequence_length,
             is_circular,
+            dead_end_count,
         } in &self.0
         {
             let segment_string = segments
@@ -85,7 +110,7 @@ impl Stats {
                 .join(",");
 
             println!(
-                "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+                "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
                 index,
                 gc,
                 node_count,
@@ -93,7 +118,8 @@ impl Stats {
                 cov,
                 segment_string,
                 total_sequence_length,
-                is_circular
+                is_circular,
+                dead_end_count,
             );
         }
     }
@@ -104,7 +130,6 @@ impl Stats {
     /// The upper and lower limits of genome size and GC content are supplied through the
     /// CLI. As the defaults will be different, the same function is accessed entry points
     /// in the CLI.
-
     pub fn extract_organelle(
         &mut self,
         size_lower: usize,
@@ -141,6 +166,7 @@ impl Stats {
                          node_count: _,
                          edge_count: _,
                          graph_indices_subgraph: _,
+                         dead_end_count: _,
                      }| {
                         (gc > &gc_lower && gc < &gc_upper)
                             && (total_sequence_length > &size_lower
@@ -262,12 +288,54 @@ pub fn stats(
         // we want to see if the subgraph is circular.
         let is_circular = is_cyclic_directed(&subgraph.0);
 
+        use petgraph::Direction::{Incoming, Outgoing};
+
+        let dead_end_count = subgraph
+            .0
+            .node_indices()
+            .filter(|&n| {
+                let mut left = 0usize;
+                let mut right = 0usize;
+
+                // Outgoing edges (n is the source)
+                for e in subgraph.0.edges_directed(n, Outgoing) {
+                    let eid = e.id();
+                    let (u, v) = subgraph.0.edge_endpoints(eid).expect("endpoints");
+                    debug_assert_eq!(u, n);
+                    let w = subgraph.0.edge_weight(eid).expect("edge weight");
+                    // w.0 = from-orient, w.1 = to-orient
+                    let end = end_from_orient(true, w.0);
+                    match end {
+                        NodeEnd::Left => left += 1,
+                        NodeEnd::Right => right += 1,
+                    }
+                }
+
+                // Incoming edges (n is the target)
+                for e in subgraph.0.edges_directed(n, Incoming) {
+                    let eid = e.id();
+                    let (u, v) = subgraph.0.edge_endpoints(eid).expect("endpoints");
+                    debug_assert_eq!(v, n);
+                    let w = subgraph.0.edge_weight(eid).expect("edge weight");
+                    let end = end_from_orient(false, w.1);
+                    match end {
+                        NodeEnd::Left => left += 1,
+                        NodeEnd::Right => right += 1,
+                    }
+                }
+
+                // Dead-end if exactly one physical end has ≥1 links and the other is 0
+                (left == 0 && right >= 1) || (right == 0 && left >= 1)
+            })
+            .count();
+
         // print stats
         if !tabular && genome_type == GenomeType::None {
             println!("Subgraph {}:", no_subgraphs + 1);
             println!("\tNumber of nodes/segments: {}", subgraph.node_count());
             println!("\tNumber of edges/links: {}", subgraph.edge_count());
             println!("\tCircular: {}", is_circular);
+            println!("\tDead-end nodes: {}", dead_end_count);
             // equivalent to id_set
             println!("{}", graph_indices_subgraph);
         }
@@ -285,6 +353,7 @@ pub fn stats(
             segments: id_set.clone(),
             total_sequence_length,
             is_circular,
+            dead_end_count,
         });
 
         no_subgraphs += 1;

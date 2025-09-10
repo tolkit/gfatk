@@ -17,23 +17,23 @@ pub fn is_stdin() -> bool {
 }
 
 /// Get the coverage associated with an edge (`ec` tag in the GFA).
-pub fn get_edge_coverage(options: &[OptField]) -> Result<i64> {
+pub fn get_edge_coverage(options: &[OptField]) -> Result<Option<i64>> {
     if let Some(op) = options.iter().next() {
         match op.tag {
             // ec
             [101, 99] => match op.value {
-                Int(i) => return Ok(i),
+                Int(i) => return Ok(Some(i)),
                 _ => bail!("Could not find integer ec:i:<i64> tag."),
             },
             // EC
             [69, 67] => match op.value {
-                Int(i) => return Ok(i),
+                Int(i) => return Ok(Some(i)),
                 _ => bail!("Could not find integer EC:i:<i64> tag."),
             },
-            _ => bail!("Could not find ec (edge coverage) tag."),
+            _ => return Ok(None),
         };
     }
-    bail!("Edge coverage not found.")
+    Ok(None)
 }
 
 /// Format a GFA option field into a string.
