@@ -19,6 +19,8 @@ pub mod extract_chloro;
 pub mod extract_mito;
 /// Print all the sequences in a GFA to fasta format.
 pub mod fasta;
+/// Parsing of GAF (Graph Alignment Format) read-path records.
+pub mod gaf;
 /// A module with all the methods to manipulate GFA's in.
 pub mod gfa;
 /// Coerce a GFA into a fasta, finding the longest path through the graph.
@@ -32,6 +34,9 @@ pub mod overlap;
 pub mod path;
 /// Rename a GFA's segment ID's to a 1-indexed [`usize`].
 pub mod rename;
+/// Resolve a repeat-rich assembly graph into a circular genome using
+/// PacBio HiFi read-path (GAF) evidence.
+pub mod resolve;
 /// Generate statistics about the input GFA file.
 pub mod stats;
 /// Utility to trim a GFA of isolated nodes.

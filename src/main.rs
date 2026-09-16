@@ -6,7 +6,7 @@ use std::path::PathBuf;
 use anyhow::Result;
 use clap::{crate_version, value_parser, Arg, ArgAction, Command};
 use gfatk::{
-    dot, extract, extract_chloro, extract_mito, fasta, linear, overlap, path, rename,
+    dot, extract, extract_chloro, extract_mito, fasta, linear, overlap, path, rename, resolve,
     stats::{self, GenomeType},
     trim,
 };
@@ -87,9 +87,9 @@ fn main() -> Result<()> {
                     Arg::new("node-threshold")
                         .short('n')
                         .long("node-threshold")
-                        .default_value("60")
+                        .default_value("10000")
                         .value_parser(value_parser!(usize))
-                        .help("If a (sub)graph contains too many nodes, `gfatk linear` will hang.")
+                        .help("Skip (sub)graphs with more nodes than this, as a safety cap.")
                 )
         )
         .subcommand(
@@ -267,6 +267,42 @@ fn main() -> Result<()> {
                 ),
         )
         .subcommand(
+            Command::new("resolve")
+                .about("Resolve a repeat-rich assembly graph into a circular genome using PacBio HiFi read-path (GAF) evidence.")
+                .arg(
+                    Arg::new("GFA")
+                        .value_parser(value_parser!(PathBuf))
+                        .help("Input GFA file.")
+                )
+                .arg(
+                    Arg::new("gaf")
+                        .long("gaf")
+                        .required(true)
+                        .value_parser(value_parser!(PathBuf))
+                        .help("GAF file of long reads aligned to the graph (e.g. from GraphAligner).")
+                )
+                .arg(
+                    Arg::new("gff")
+                        .long("gff")
+                        .value_parser(value_parser!(PathBuf))
+                        .help("Optional GFF gene annotation, used to weight gene-bearing segments during resolution.")
+                )
+                .arg(
+                    Arg::new("min-mapq")
+                        .long("min-mapq")
+                        .default_value("1")
+                        .value_parser(value_parser!(u32))
+                        .help("Minimum GAF mapping quality to keep a read.")
+                )
+                .arg(
+                    Arg::new("min-identity")
+                        .long("min-identity")
+                        .default_value("0.90")
+                        .value_parser(value_parser!(f64))
+                        .help("Minimum alignment identity (id:f: tag) to keep a read.")
+                ),
+        )
+        .subcommand(
             Command::new("rename")
                 .about("Rename the segment ID's of a GFA.")
                 .arg(
@@ -310,6 +346,9 @@ fn main() -> Result<()> {
         }
         Some(("rename", matches)) => {
             rename::rename_gfa(matches)?;
+        }
+        Some(("resolve", matches)) => {
+            resolve::resolve(matches)?;
         }
         _ => {
             eprintln!("Subcommand invalid, run with '--help' for subcommand options. Exiting.");

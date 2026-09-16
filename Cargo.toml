@@ -24,6 +24,7 @@ anyhow = "1.0"
 atty = "0.2"
 gfa = "0.10.1"
 clap = { version = "4.2.1", features = ["cargo"] }
+good_lp = { version = "1.15.3", default-features = false, features = ["microlp"] }
 
 [dev-dependencies]
 assert_cmd = "2.0.4"
