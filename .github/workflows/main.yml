@@ -22,6 +22,9 @@ jobs:
         uses: rust-build/rust-build.action@v1.4.5
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # the container's bundled osxcross SDK only supports targeting up
+          # to macOS 10.10; a modern rustc otherwise defaults to 10.12+.
+          MACOSX_DEPLOYMENT_TARGET: "10.10"
         with:
           RUSTTARGET: ${{ matrix.target }}
           ARCHIVE_TYPES: ${{ matrix.archive }}
