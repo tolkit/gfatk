@@ -16,9 +16,9 @@ Grab from the releases (Mac & Linux only):
 
 ```bash
 # for mac
-curl -L "https://github.com/tolkit/gfatk/releases/download/0.2.2/gfatk_mac_0.2.2" > gfatk && chmod +x gfatk
+curl -L "https://github.com/tolkit/gfatk/releases/download/0.3.0/gfatk_mac_0.3.0" > gfatk && chmod +x gfatk
 # and linux (ubuntu)
-curl -L "https://github.com/tolkit/gfatk/releases/download/0.2.2/gfatk_ubuntu_0.2.2" > gfatk && chmod +x gfatk
+curl -L "https://github.com/tolkit/gfatk/releases/download/0.3.0/gfatk_ubuntu_0.3.0" > gfatk && chmod +x gfatk
 ```
 
 Or build from source.
@@ -27,7 +27,6 @@ Or build from source.
 # e.g. get rustup!
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 # get directly from crates.io
-# currently this is the latest available version 0.2.3XX
 cargo install gfatk
 
 # or clone this repo!
@@ -64,6 +63,7 @@ Commands:
   trim            Trim a GFA to remove nodes of degree < 4 (i.e. only has one neighbour).
   path            Supply an input path to evaluate a linear representation of.
                   Input must be a text file of a single comma separated line with node ID's and orientations. E.g. 1+,2-,3+
+  resolve         Resolve a repeat-rich assembly graph into a circular genome using PacBio HiFi read-path (GAF) evidence.
   rename          Rename the segment ID's of a GFA.
   help            Print this message or the help of the given subcommand(s)
 
@@ -79,9 +79,10 @@ To explain each of these briefly:
 - `gfatk extract-chloro <GFA>` - extracts the plastid from the GFA. It has default parameters which seem to work okay.
 - `gfatk extract-mito <GFA>` - extracts the mitochondria from the GFA. It has default parameters which seem to work okay.
 - `gfatk fasta <GFA>` - extracts a fasta file from the GFA. This simply prints each of the segments from the GFA. I say it's almost as simple as the `awk` version, but the toolkit does some checks to see if we are actually dealing with a GFA or not.
-- `gfatk linear <GFA> -e -i -n <node-threshold>` - forces the longest linear legal representation of the graph. You can evaluate within subgraphs (`-e`), or include node coverage information (`-i`).
+- `gfatk linear <GFA> -e -i -n <node-threshold>` - forces the longest linear legal representation of the graph, via a budget-bounded greedy walk. You can evaluate within subgraphs (`-e`), or include node coverage information (`-i`).
 - `gfatk overlap <GFA> -s <size>` - extracts the overlaps from the GFA. These are taken from the CIGAR string from each of the links, and optionally extended (e.g. `-s 1000` to 1000bp either side of the overlap).
 - `gfatk path <GFA> <path> (-p path/to/path.txt)` - evaluates a linear representation of the graph, given an input path. The input path can be on the command line, or a file. Simply, it must be an comma separated list of node ID's and orientations (1+,2-,3+ ... ).
+- `gfatk resolve <GFA> --gaf <reads.gaf> --gff <annot.gff>` - resolves a repeat-rich assembly graph into a circular genome using PacBio HiFi read-path (GAF) evidence, rather than assembly-graph coverage alone. Segment copy number is estimated directly from real read depth, and an integer program selects the best-supported, single-circuit set of graph edges. Segments left out of the main circuit, but with direct read evidence connecting them to it, are reported separately as candidate recombination-mediated structural variants rather than discarded.
 - `gfatk stats <GFA> -t` - some stats about the input GFA. Can be quite verbose for large, unconnected graphs. `-t` outputs tabular data (TSV).
 - `gfatk trim <GFA>` - removes segments if they have only a single neighbour. Useful for trimming GFA's which have segments attached at low coverage.
 
@@ -111,12 +112,14 @@ cargo test --release
 
 For full functionality of the toolkit, two tags are required, node coverage and edge coverage. Other functionality will fail if the CIGAR string is not purely an overlap; i.e. in the format `<integer>M`. Only GFA version 1 supported. Only header (`H`), segment (`S`), and link (`L`) lines are required. `P` lines are used in `gfatk path --all <GFA>`.
 
+`gfatk resolve` additionally requires a GAF file of long reads aligned back to the assembly graph (e.g. from <a href="https://github.com/maickrau/GraphAligner">`GraphAligner`</a>), and optionally a GFF gene annotation to weight gene-bearing segments during resolution.
+
 ```
 H	VN:Z:1.0
 S	11	ACCTT	ll:f:30.0 <- this tag indicates node/segment coverage (here it's 30.0)
 S	12	TCAAGG	ll:f:60.0
 S	13	CTTGATT	ll:f:30.0
-L	11	+	12	-	4M	ec:i:1 <- this tag indicates edge coverage (here it's 1)
+L	11	+	12	-	4M	ec:i:1 <- this tag indicates edge coverage (here it's 1; EC:i is also accepted)
 L	12	-	13	+	5M	ec:i:1
 L	11	+	13	+	3M	ec:i:1
 L	12	+	11	-	4M	ec:i:1
