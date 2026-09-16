@@ -15,10 +15,10 @@ A command line utility to explore, extract, and linearise plant mitochondrial as
 Grab from the releases (Mac & Linux only):
 
 ```bash
-# for mac
-curl -L "https://github.com/tolkit/gfatk/releases/download/0.3.0/gfatk_mac_0.3.0" > gfatk && chmod +x gfatk
-# and linux (ubuntu)
-curl -L "https://github.com/tolkit/gfatk/releases/download/0.3.0/gfatk_ubuntu_0.3.0" > gfatk && chmod +x gfatk
+# for mac (Intel or Apple Silicon, via Rosetta 2)
+curl -L "https://github.com/tolkit/gfatk/releases/download/0.3.0/gfatk_0.3.0_x86_64-apple-darwin.zip" -o gfatk.zip && unzip gfatk.zip && chmod +x gfatk
+# and linux (musl, static binary)
+curl -L "https://github.com/tolkit/gfatk/releases/download/0.3.0/gfatk_0.3.0_x86_64-unknown-linux-musl.tar.zst" | tar --zstd -xf - && chmod +x gfatk
 ```
 
 Or build from source.
