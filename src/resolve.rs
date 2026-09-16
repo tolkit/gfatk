@@ -910,8 +910,11 @@ pub fn resolve(matches: &clap::ArgMatches) -> Result<()> {
                 }
             );
             let seq = &segments[&b.segment];
+            // "_to_" rather than a bare "-" separator: state_str() already
+            // ends in '+' or '-' for the orientation, so "u34--u22-" reads
+            // ambiguously -- "u34-_to_u22-" doesn't.
             let header = format!(
-                "bubble_arm:{}:between={}-{}:support_reads={}",
+                "bubble_arm:{}:between={}_to_{}:support_reads={}",
                 String::from_utf8_lossy(&b.segment),
                 state_str(&b.entry),
                 state_str(&b.exit),
