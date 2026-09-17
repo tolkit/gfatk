@@ -5,10 +5,10 @@
 </p>
 
 > [!IMPORTANT]  
-> This tool is now superceded by the program `oatk`. Please check that out <a href="https://github.com/c-zhou/oatk">here</a>. It's a complete de-novo assembler which built upon the ideas generated from this work, as well as <a href="https://github.com/tolkit/fpma">fpma</a> and <a href="https://github.com/tolkit/fppa">fppa</a>.
-> I will continue to do some minor development and fix issues as they arise.
+> `oatk` (<a href="https://github.com/c-zhou/oatk">here</a>) is a complete de-novo assembler which built upon the ideas generated from this work, as well as <a href="https://github.com/tolkit/fpma">fpma</a> and <a href="https://github.com/tolkit/fppa">fppa</a>.
+> Work still continues here in the space of GFA linearisation, which is an open problem in complex cases, and general maintenance.
 
-A command line utility to explore, extract, and linearise plant mitochondrial assemblies. The Graphical Fragment Assembly files (GFA's) used to refine the code in this repository are almost exclusively generated from the assembly program <a href="https://github.com/maickrau/MBG">`MBG`</a>. See the testing section below for caveats.
+A command line utility to explore, extract, and linearise plant mitochondrial assemblies. The Graphical Fragment Assembly files (GFA's) used to refine the code in this repository are almost exclusively generated from the assembly program <a href="https://github.com/maickrau/MBG">`MBG`</a> or `oatk`. See the testing section below for caveats.
 
 ## Install
 
@@ -41,7 +41,7 @@ cargo install --path .
 
 ## Features
 
-The features of the toolkit reflect only their usefulness in debugging, visualising, and linearising GFA's from (especially) plant mitochondrial genome assemblies output from <a href="https://github.com/maickrau/MBG">`MBG`</a>. These genomes are usually pretty small (up to 2Mb), and in many cases have circular or branching paths.
+The features of the toolkit reflect only their usefulness in debugging, visualising, and linearising GFA's from (especially) plant mitochondrial genome assemblies output from <a href="https://github.com/maickrau/MBG">`MBG`</a> or `oatk`. These genomes are usually pretty small (up to 2Mb), and in many cases have circular or branching paths.
 
 Current help:
 
