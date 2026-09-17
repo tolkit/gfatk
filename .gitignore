@@ -9,3 +9,5 @@ ubuntu_bin
 dtol-samples
 /lewis
 /test-linear
+*.resolved.fasta
+*.resolved.log
