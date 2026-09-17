@@ -310,6 +310,7 @@ fn solve_ilp(
     segments: &HashMap<Seg, Vec<u8>>,
     gene_segs: &HashSet<Seg>,
     enforce_connectivity: bool,
+    time_limit: f64,
 ) -> Result<Vec<(State, State)>> {
     let mut states: HashSet<State> = HashSet::new();
     for e in edges {
@@ -348,31 +349,38 @@ fn solve_ilp(
     // every vertex has equal in/out degree is guaranteed to have a single
     // Eulerian circuit, so adding a connectivity requirement on top of the
     // existing flow conservation is enough to force one circuit: pick the
-    // best-connected segment as a root, and require every other *included*
-    // segment be reachable from it via the selected edges. This is a
+    // best-connected *state* as a root, and require every other visited
+    // state be reachable from it via the selected edges. This is a
     // standard single-commodity-flow subtour-elimination technique -- a
     // second set of continuous flow variables piggybacks on the same edges
-    // (gated by whether x_e is selected) purely to prove reachability. It
-    // reuses the existing per-segment `y` as the consumption indicator
-    // rather than introducing a parallel per-state variable with its own
-    // big-M linking constraints, which made the solver numerically
-    // unstable ("singular matrix") on some inputs.
-    let root = if enforce_connectivity {
-        let mut seg_degree: HashMap<Seg, usize> = HashMap::new();
-        for s in &states {
-            let d = incoming.get(s).map_or(0, |v| v.len()) + outgoing.get(s).map_or(0, |v| v.len());
-            *seg_degree.entry(s.0.clone()).or_insert(0) += d;
-        }
-        seg_degree
+    // (gated by whether x_e is selected) purely to prove reachability.
+    //
+    // This must be bookkept per *state* (segment, orientation), not per
+    // segment: an earlier version aggregated flow across both orientations
+    // of a segment, which let a repeat segment used with budget > 1 "pay"
+    // for two otherwise-disconnected loops out of the same aggregate
+    // consumption -- e.g. segment X used as X+ in one loop and X- in a
+    // completely separate loop could each be individually "reachable"
+    // because the solver was free to route all the flow through whichever
+    // orientation was convenient, without either loop actually connecting
+    // to the other. Requiring each *state's* own selected in-degree
+    // (its actual usage, which can exceed 1 if budget allows the same
+    // orientation to be revisited) to be drawn as flow closes that gap:
+    // every individual visit must trace back to the root, not just "some
+    // orientation of this segment".
+    let root_state: Option<State> = if enforce_connectivity {
+        states
             .iter()
-            .max_by_key(|(_, d)| **d)
-            .map(|(s, _)| s.clone())
+            .max_by_key(|s| {
+                incoming.get(*s).map_or(0, |v| v.len()) + outgoing.get(*s).map_or(0, |v| v.len())
+            })
+            .cloned()
     } else {
         None
     };
 
     let mut flow: HashMap<(State, State), Variable> = HashMap::new();
-    if root.is_some() {
+    if root_state.is_some() {
         for e in edges {
             flow.insert(
                 (e.from.clone(), e.to.clone()),
@@ -400,7 +408,7 @@ fn solve_ilp(
     let mut model = vars
         .maximise(objective)
         .using(good_lp::microlp)
-        .with_time_limit(45.0);
+        .with_time_limit(time_limit);
 
     for s in &states {
         let inc: Expression = incoming
@@ -436,49 +444,72 @@ fn solve_ilp(
         }
     }
 
-    if let Some(root) = root {
-        // a tighter bound than states.len() would give: total connectivity
-        // supply can never exceed the number of segments actually drawing
-        // from it, so this is already a valid (if generous) capacity
-        let capacity = segments.len() as f64;
+    if let Some(root_state) = &root_state {
+        // total connectivity supply can never exceed the sum of every
+        // segment's budget (each unit of usage anywhere costs at most one
+        // unit of flow along the path that reaches it), so this is a
+        // valid, if generous, capacity bound
+        let capacity = budget.values().map(|b| *b as f64).sum::<f64>().max(1.0);
 
-        let mut flow_in: HashMap<Seg, Vec<Variable>> = HashMap::new();
-        let mut flow_out: HashMap<Seg, Vec<Variable>> = HashMap::new();
+        let mut flow_in: HashMap<State, Vec<Variable>> = HashMap::new();
+        let mut flow_out: HashMap<State, Vec<Variable>> = HashMap::new();
         for e in edges {
             let key = (e.from.clone(), e.to.clone());
             let fvar = flow[&key];
             model.add_constraint((1.0 * fvar).leq(capacity * x[&key]));
-            flow_out.entry(e.from.0.clone()).or_default().push(fvar);
-            flow_in.entry(e.to.0.clone()).or_default().push(fvar);
+            flow_out.entry(e.from.clone()).or_default().push(fvar);
+            flow_in.entry(e.to.clone()).or_default().push(fvar);
         }
 
-        model.add_constraint((1.0 * y[&root]).eq(1.0));
-
-        let others_included: Expression = y
-            .iter()
-            .filter(|(seg, _)| **seg != root)
-            .map(|(_, &yvar)| 1.0 * yvar)
+        // force the root state to actually be visited, rather than being a
+        // phantom source that never appears in the solution
+        let root_usage: Expression = incoming
+            .get(root_state)
+            .cloned()
+            .unwrap_or_default()
+            .into_iter()
             .sum();
+        model.add_constraint(root_usage.geq(1.0));
 
-        for seg in segments.keys() {
+        // every non-root state must draw exactly its own usage (its actual
+        // selected in-degree, which can exceed 1 for a revisited state) in
+        // connectivity flow, so a state can only be "reachable" by really
+        // being connected to the root through selected edges
+        let mut others_usage = Expression::from(0.0);
+        for st in &states {
+            if st == root_state {
+                continue;
+            }
+            if let Some(inc) = incoming.get(st) {
+                others_usage += inc.iter().cloned().sum::<Expression>();
+            }
+        }
+
+        for st in &states {
             let inflow: Expression = flow_in
-                .get(seg)
+                .get(st)
                 .cloned()
                 .unwrap_or_default()
                 .into_iter()
                 .sum();
             let outflow: Expression = flow_out
-                .get(seg)
+                .get(st)
                 .cloned()
                 .unwrap_or_default()
                 .into_iter()
                 .sum();
-            if *seg == root {
+            if st == root_state {
                 // the root supplies exactly enough connectivity flow for
-                // every other included segment to draw one unit from it
-                model.add_constraint((inflow - outflow + others_included.clone()).eq(0.0));
+                // every other visited state to draw its own usage from it
+                model.add_constraint((inflow - outflow + others_usage.clone()).eq(0.0));
             } else {
-                model.add_constraint((inflow - outflow - 1.0 * y[seg]).eq(0.0));
+                let usage: Expression = incoming
+                    .get(st)
+                    .cloned()
+                    .unwrap_or_default()
+                    .into_iter()
+                    .sum();
+                model.add_constraint((inflow - outflow - usage).eq(0.0));
             }
         }
     }
@@ -568,6 +599,193 @@ fn decompose_circuits(selected: &[(State, State)]) -> Vec<Vec<State>> {
 /// contention forced apart (the split is a modelling limitation), versus no
 /// direct evidence linking them at all (the split may reflect genuinely
 /// separate structure).
+/// Try to splice `satellite` (a whole closed circuit) into `main` (another
+/// closed circuit, state-disjoint from it) using real read evidence alone --
+/// no solver involved. A satellite is a self-contained loop, so grafting it
+/// into `main` only needs *two* new real edges that share a single junction
+/// state `r` in the satellite: one from some `p` in `main` into `r` (entry),
+/// and one from `r`'s immediate predecessor in the satellite's own cycle
+/// back out to `p`'s original successor `q` in `main` (exit). Walking
+/// `main` up to `p`, across into the satellite at `r`, all the way around
+/// the satellite's existing (already-valid) internal edges back to that
+/// predecessor, then out to `q`, reuses every edge either circuit already
+/// had except the one `main` edge (p, q) being replaced -- so this can
+/// never violate a segment's budget (no state is visited any more or fewer
+/// times than before) and always yields a genuinely valid single circuit,
+/// unlike trusting a single best-evidence edge in isolation.
+fn try_splice(main: &[State], satellite: &[State], edges: &[CandidateEdge]) -> Option<Vec<State>> {
+    let mut real_edge: HashSet<(State, State)> = HashSet::new();
+    for e in edges {
+        if e.tier >= 2 {
+            continue; // bare topology only, not real evidence
+        }
+        real_edge.insert((e.from.clone(), e.to.clone()));
+    }
+
+    let n = main.len();
+    let m = satellite.len();
+    if n == 0 || m == 0 {
+        return None;
+    }
+
+    for i in 0..n {
+        let p = &main[i];
+        let q = &main[(i + 1) % n];
+        for k in 0..m {
+            let r = &satellite[k];
+            let r_prev = &satellite[(k + m - 1) % m];
+            if real_edge.contains(&(p.clone(), r.clone()))
+                && real_edge.contains(&(r_prev.clone(), q.clone()))
+            {
+                let rotated: Vec<State> = satellite[k..]
+                    .iter()
+                    .chain(satellite[..k].iter())
+                    .cloned()
+                    .collect();
+                let mut merged = Vec::with_capacity(n + m);
+                merged.extend_from_slice(&main[..=i]);
+                merged.extend(rotated);
+                merged.extend_from_slice(&main[(i + 1)..]);
+                return Some(merged);
+            }
+        }
+    }
+    None
+}
+
+/// Repeatedly try to splice every circuit but the largest into it, using
+/// [`try_splice`]. Order matters only for which circuit plays the role of
+/// `main` at each step -- always the current largest -- so a satellite that
+/// only attaches to another satellite (not yet-merged into main) still gets
+/// picked up once that satellite has itself been absorbed. Returns the
+/// possibly-reduced set of circuits, largest first, plus how many merges
+/// were made.
+fn splice_circuits(
+    mut circuits: Vec<Vec<State>>,
+    edges: &[CandidateEdge],
+) -> (Vec<Vec<State>>, usize) {
+    let mut merges = 0;
+    loop {
+        circuits.sort_by_key(|c| std::cmp::Reverse(c.len()));
+        if circuits.len() < 2 {
+            break;
+        }
+        let mut spliced_any = false;
+        let mut i = 0;
+        while i < circuits.len() {
+            if i == 0 {
+                i += 1;
+                continue;
+            }
+            if let Some(merged) = try_splice(&circuits[0], &circuits[i], edges) {
+                circuits[0] = merged;
+                circuits.remove(i);
+                merges += 1;
+                spliced_any = true;
+                // restart the sweep against the newly-grown main circuit
+                break;
+            }
+            i += 1;
+        }
+        if !spliced_any {
+            break;
+        }
+    }
+    (circuits, merges)
+}
+
+/// Explain precisely why [`try_splice`] could not graft `satellite` into
+/// `main`, for stderr reporting. A valid graft needs one real edge into some
+/// junction state `r` in the satellite (entry) and one real edge out of
+/// `r`'s own immediate predecessor in the satellite's cycle (exit) -- this
+/// distinguishes that specific, narrow requirement from the coarser "is
+/// there any evidence at all" check, since it's the actual reason a
+/// single-direction bridge (however well-supported) isn't enough on its
+/// own.
+fn explain_unspliceable(main: &[State], satellite: &[State], edges: &[CandidateEdge]) -> String {
+    let mut real_edge: HashMap<(State, State), u32> = HashMap::new();
+    for e in edges {
+        if e.tier >= 2 {
+            continue; // bare topology only, not real evidence
+        }
+        let key = (e.from.clone(), e.to.clone());
+        let best = real_edge.entry(key).or_insert(0);
+        if e.reads > *best {
+            *best = e.reads;
+        }
+    }
+
+    let m = satellite.len();
+    let mut best_entry: Option<(State, State, u32)> = None; // (p, r, reads)
+    let mut best_exit: Option<(State, State, u32)> = None; // (r_prev, q, reads)
+
+    for k in 0..m {
+        let r = &satellite[k];
+        let r_prev = &satellite[(k + m - 1) % m];
+
+        let entry_here = main
+            .iter()
+            .filter_map(|p| {
+                real_edge
+                    .get(&(p.clone(), r.clone()))
+                    .map(|&reads| (p.clone(), reads))
+            })
+            .max_by_key(|(_, reads)| *reads);
+        let exit_here = main
+            .iter()
+            .filter_map(|q| {
+                real_edge
+                    .get(&(r_prev.clone(), q.clone()))
+                    .map(|&reads| (q.clone(), reads))
+            })
+            .max_by_key(|(_, reads)| *reads);
+
+        if let Some((p, reads)) = &entry_here {
+            if best_entry.as_ref().is_none_or(|(_, _, r0)| reads > r0) {
+                best_entry = Some((p.clone(), r.clone(), *reads));
+            }
+        }
+        if let Some((q, reads)) = &exit_here {
+            if best_exit.as_ref().is_none_or(|(_, _, r0)| reads > r0) {
+                best_exit = Some((r_prev.clone(), q.clone(), *reads));
+            }
+        }
+    }
+
+    match (&best_entry, &best_exit) {
+        (None, None) => "no real (non-bare-topology) read evidence connects it to the main \
+             circuit in either direction"
+            .to_string(),
+        (Some((p, r, reads)), None) => format!(
+            "real entry evidence only ({} -> {}, ~{reads} reads): the satellite's own state \
+             immediately before {} has no real edge back out to the main circuit, so grafting \
+             would mean either skipping part of the satellite's own loop or revisiting a \
+             segment -- neither is safe",
+            state_str(p),
+            state_str(r),
+            state_str(r)
+        ),
+        (None, Some((r_prev, q, reads))) => format!(
+            "real exit evidence only ({} -> {}, ~{reads} reads): nothing in the main circuit \
+             has a real edge into the satellite state immediately before {}, so there's no \
+             safe entry point to pair with it",
+            state_str(r_prev),
+            state_str(q),
+            state_str(r_prev)
+        ),
+        (Some((p, r, er)), Some((r_prev, q, xr))) => format!(
+            "entry and exit evidence exist but through different junctions ({} -> {}, ~{er} \
+             reads entering vs {} -> {}, ~{xr} reads leaving): grafting through mismatched \
+             junctions would skip or double-visit part of the satellite's own loop, so this \
+             can't be reconciled into one valid circuit without more/different read evidence",
+            state_str(p),
+            state_str(r),
+            state_str(r_prev),
+            state_str(q)
+        ),
+    }
+}
+
 fn find_inter_circuit_links(
     circuits: &[Vec<State>],
     edges: &[CandidateEdge],
@@ -733,6 +951,9 @@ pub fn resolve(matches: &clap::ArgMatches) -> Result<()> {
     let min_identity = *matches
         .get_one::<f64>("min-identity")
         .expect("defaulted by clap");
+    let time_limit = *matches
+        .get_one::<f64>("time-limit")
+        .expect("defaulted by clap");
 
     let gfa: GFAtk = match gfa_file {
         Some(f) => GFAtk(load_gfa(f)?),
@@ -794,20 +1015,30 @@ pub fn resolve(matches: &clap::ArgMatches) -> Result<()> {
         None => HashSet::new(),
     };
 
-    let selected = match solve_ilp(&edges, &budget, &segments, &gene_segs, true) {
+    let selected = match solve_ilp(&edges, &budget, &segments, &gene_segs, true, time_limit) {
         Ok(selected) => selected,
         Err(e) => {
             eprintln!(
                 "[-]\tCould not solve for a single connected circuit within the time budget ({e}); \
                  falling back to the unconstrained solve, which may report multiple circuits."
             );
-            solve_ilp(&edges, &budget, &segments, &gene_segs, false)?
+            solve_ilp(&edges, &budget, &segments, &gene_segs, false, time_limit)?
         }
     };
     let circuits = {
-        let mut c = decompose_circuits(&selected);
-        c.sort_by_key(|c| std::cmp::Reverse(c.len()));
-        c
+        let c = decompose_circuits(&selected);
+        let n_before = c.len();
+        let (spliced, merges) = splice_circuits(c, &edges);
+        if merges > 0 {
+            eprintln!(
+                "[+]\t{merges} satellite circuit(s) grafted into a larger one using real \
+                 entry/exit read evidence ({n_before} circuit(s) -> {}), with no solver \
+                 involved -- this can never be wrong when it succeeds, only unable to find \
+                 a valid splice point.",
+                spliced.len()
+            );
+        }
+        spliced
     };
 
     let included: HashSet<Seg> = circuits.iter().flatten().map(|(s, _)| s.clone()).collect();
@@ -850,10 +1081,10 @@ pub fn resolve(matches: &clap::ArgMatches) -> Result<()> {
 
     if circuits.len() > 1 {
         eprintln!(
-            "[-]\t{} separate circuits were resolved -- flow conservation alone guarantees a valid \
-             decomposition into closed loops, not that they merge into one, so this can happen even \
-             when the underlying GFA graph is a single connected component. Checking for direct \
-             evidence between each pair:",
+            "[-]\t{} separate circuits remain after automatic grafting -- flow conservation alone \
+             guarantees a valid decomposition into closed loops, not that they merge into one, and \
+             the read evidence available did not support a safe graft for the rest. Checking for \
+             direct evidence between each pair:",
             circuits.len()
         );
         for (i, j, link) in find_inter_circuit_links(&circuits, &edges) {
@@ -865,8 +1096,7 @@ pub fn resolve(matches: &clap::ArgMatches) -> Result<()> {
                         "pairwise read"
                     };
                     eprintln!(
-                        "[-]\t  Circuit {} <-> Circuit {}: real {} evidence between {} and {} (~{} reads) -- \
-                         budget contention likely forced these apart, not a lack of connecting evidence.",
+                        "[-]\t  Circuit {} <-> Circuit {}: real {} evidence between {} and {} (~{} reads).",
                         i + 1,
                         j + 1,
                         tier_name,
@@ -884,6 +1114,14 @@ pub fn resolve(matches: &clap::ArgMatches) -> Result<()> {
                     );
                 }
             }
+        }
+        eprintln!("[-]\tWhy the automatic graft (2 real edges through a matching junction) couldn't absorb these into Circuit 1:");
+        for (idx, satellite) in circuits.iter().enumerate().skip(1) {
+            eprintln!(
+                "[-]\t  Circuit {}: {}",
+                idx + 1,
+                explain_unspliceable(&circuits[0], satellite, &edges)
+            );
         }
     }
 
@@ -1044,5 +1282,122 @@ mod tests {
         assert_eq!(circuits[0].len(), 4);
         let repeat_visits = circuits[0].iter().filter(|st| st.0 == b"repeat").count();
         assert_eq!(repeat_visits, 2);
+    }
+
+    #[test]
+    fn test_try_splice_basic() {
+        use Orientation::Forward as F;
+        let main = vec![s("a", F), s("b", F), s("c", F)];
+        let satellite = vec![s("x", F), s("y", F)];
+        let edges = vec![
+            edge(s("b", F), s("x", F), 0, 10), // entry
+            edge(s("y", F), s("c", F), 0, 10), // exit
+        ];
+        let merged = try_splice(&main, &satellite, &edges).expect("splice should succeed");
+        assert_eq!(
+            merged,
+            vec![s("a", F), s("b", F), s("x", F), s("y", F), s("c", F)]
+        );
+    }
+
+    #[test]
+    fn test_try_splice_returns_none_without_matching_evidence() {
+        use Orientation::Forward as F;
+        let main = vec![s("a", F), s("b", F), s("c", F)];
+        let satellite = vec![s("x", F), s("y", F)];
+        // an entry edge exists, but nothing exits back out -- not spliceable
+        let edges = vec![edge(s("b", F), s("x", F), 0, 10)];
+        assert!(try_splice(&main, &satellite, &edges).is_none());
+    }
+
+    #[test]
+    fn test_try_splice_ignores_bare_topology_evidence() {
+        use Orientation::Forward as F;
+        let main = vec![s("a", F), s("b", F), s("c", F)];
+        let satellite = vec![s("x", F), s("y", F)];
+        // both edges present, but only as bare graph topology (tier 2) --
+        // that's not real evidence, so this must not be treated as spliceable
+        let edges = vec![
+            edge(s("b", F), s("x", F), 2, 0),
+            edge(s("y", F), s("c", F), 2, 0),
+        ];
+        assert!(try_splice(&main, &satellite, &edges).is_none());
+    }
+
+    #[test]
+    fn test_splice_circuits_chain_through_growing_main() {
+        // C only has real evidence attaching to states that live in B, not
+        // in main directly -- it should still get absorbed once B has
+        // already been grafted into main and those states are part of it.
+        use Orientation::Forward as F;
+        let main = vec![s("a", F), s("b", F), s("c", F)];
+        let b_sat = vec![s("x", F), s("y", F)];
+        let c_sat = vec![s("m", F), s("n", F)];
+        let edges = vec![
+            edge(s("b", F), s("x", F), 0, 10), // main <-> B entry
+            edge(s("y", F), s("c", F), 0, 10), // main <-> B exit
+            edge(s("y", F), s("m", F), 0, 10), // B <-> C entry
+            edge(s("n", F), s("c", F), 0, 10), // B <-> C exit
+        ];
+        let (circuits, merges) = splice_circuits(vec![main, b_sat, c_sat], &edges);
+        assert_eq!(merges, 2);
+        assert_eq!(circuits.len(), 1);
+        assert_eq!(circuits[0].len(), 7);
+    }
+
+    fn edge(from: State, to: State, tier: u8, reads: u32) -> CandidateEdge {
+        CandidateEdge {
+            from,
+            to,
+            tier,
+            reads,
+        }
+    }
+
+    #[test]
+    fn test_solve_ilp_rejects_orientation_disconnected_repeat() {
+        // A budget-2 hub segment used via two *different* orientations in
+        // two otherwise-unconnected 2-cycles. The connectivity constraint
+        // must not be satisfiable by aggregating flow across both
+        // orientations of the same segment -- each orientation's loop has
+        // to be genuinely reachable from the root on its own, or the
+        // solver should refuse rather than hand back a result that
+        // decomposes into two circuits despite claiming success.
+        use Orientation::Backward as B;
+        use Orientation::Forward as F;
+        let edges = vec![
+            edge(s("h", F), s("s1", F), 0, 10),
+            edge(s("s1", F), s("h", F), 0, 10),
+            edge(s("h", B), s("s2", F), 0, 10),
+            edge(s("s2", F), s("h", B), 0, 10),
+        ];
+        let mut budget = HashMap::new();
+        budget.insert(b"h".to_vec(), 2u32);
+        budget.insert(b"s1".to_vec(), 1u32);
+        budget.insert(b"s2".to_vec(), 1u32);
+        let mut segments = HashMap::new();
+        segments.insert(b"h".to_vec(), b"A".to_vec());
+        segments.insert(b"s1".to_vec(), b"A".to_vec());
+        segments.insert(b"s2".to_vec(), b"A".to_vec());
+        let gene_segs = HashSet::new();
+
+        match solve_ilp(&edges, &budget, &segments, &gene_segs, true, 5.0) {
+            Ok(selected) => {
+                let circuits = decompose_circuits(&selected);
+                assert_eq!(
+                    circuits.len(),
+                    1,
+                    "connectivity constraint claimed success but produced {} disjoint circuits: {:?}",
+                    circuits.len(),
+                    circuits
+                );
+            }
+            Err(_) => {
+                // refusing is also an acceptable outcome -- there is no
+                // single-circuit solution available at all here, since s1
+                // and s2 only ever attach through opposite orientations of
+                // h with no edge between them.
+            }
+        }
     }
 }

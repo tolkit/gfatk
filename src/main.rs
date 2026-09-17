@@ -300,6 +300,13 @@ fn main() -> Result<()> {
                         .default_value("0.90")
                         .value_parser(value_parser!(f64))
                         .help("Minimum alignment identity (id:f: tag) to keep a read.")
+                )
+                .arg(
+                    Arg::new("time-limit")
+                        .long("time-limit")
+                        .default_value("45.0")
+                        .value_parser(value_parser!(f64))
+                        .help("Solver time budget in seconds for the single-circuit connectivity constraint, per attempt. Larger/more tangled graphs may need more.")
                 ),
         )
         .subcommand(
