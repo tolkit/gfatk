@@ -626,7 +626,7 @@ mod tests {
     fn test_gen_cov_hash() {
         let gfa = make_gfa("./tests/test_linear.gfa");
 
-        let lookup = GFAGraphLookups(vec![
+        let lookup = GFAGraphLookups::from_pairs(vec![
             crate::utils::GFAGraphPair {
                 node_index: NodeIndex::new(0),
                 seg_id: "11".as_bytes().to_vec(),

@@ -151,11 +151,10 @@ pub fn gc_content(dna: &[u8]) -> f32 {
     (g_counts + c_counts) as f32 / (g_counts + c_counts + a_counts + t_counts) as f32
 }
 
-// convert Node Index to segment ID and vice versa
-// I rely a lot on this tuple:
-// (NodeIndex, usize)
-// which stores the node index and it's corresponding segment ID
-// I just realise this should 100000% be a hashmap... change that later.
+// convert Node Index to segment ID and vice versa.
+// Backed by a pair of hashmaps for O(1) lookups in both directions -- this
+// used to be a linear scan over a Vec, which was fine for small mitochondrial
+// graphs but became a real bottleneck on much larger inputs (see issue #16).
 
 /// A pair consisting of a node index and a segment ID.
 #[derive(Clone, Debug)]
@@ -165,53 +164,57 @@ pub struct GFAGraphPair {
     /// The segment ID.
     pub seg_id: Vec<u8>,
 }
-/// A vector of `GFAGraphPair`'s.
-///
-/// This should 100% have been a map-like structure...
-#[derive(Clone, Debug)]
-pub struct GFAGraphLookups(pub Vec<GFAGraphPair>);
+
+/// A bidirectional lookup between `NodeIndex` and segment ID.
+#[derive(Clone, Debug, Default)]
+pub struct GFAGraphLookups {
+    by_node_index: HashMap<NodeIndex, Vec<u8>>,
+    by_seg_id: HashMap<Vec<u8>, NodeIndex>,
+}
 
 impl GFAGraphLookups {
     /// Create a new GFAGraphLookups
     pub fn new() -> Self {
-        Self(Vec::new())
+        Self {
+            by_node_index: HashMap::new(),
+            by_seg_id: HashMap::new(),
+        }
     }
-    /// Push a new `GFAGraphPair` to the end.
+    /// Build a `GFAGraphLookups` from a collection of pairs.
+    pub fn from_pairs(pairs: Vec<GFAGraphPair>) -> Self {
+        let mut lookups = Self::new();
+        for pair in pairs {
+            lookups.push(pair);
+        }
+        lookups
+    }
+    /// Push a new `GFAGraphPair` in.
     pub fn push(&mut self, other: GFAGraphPair) {
-        self.0.push(other);
+        self.by_seg_id
+            .insert(other.seg_id.clone(), other.node_index);
+        self.by_node_index.insert(other.node_index, other.seg_id);
     }
 
     /// Return segment ID from a node index.
     pub fn node_index_to_seg_id(&self, node_index: NodeIndex) -> Result<Vec<u8>> {
-        let seg_id = &self
-            .0
-            .iter()
-            .find(|e| e.node_index == node_index)
+        self.by_node_index
+            .get(&node_index)
+            .cloned()
             .with_context(|| {
                 format!(
                     "Node index {:?} could not be converted to segment ID",
                     node_index
                 )
-            })?
-            .seg_id;
-
-        Ok(seg_id.to_owned())
+            })
     }
     /// Return a node index from a segment ID.
     pub fn seg_id_to_node_index(&self, seg_id: Vec<u8>) -> Result<NodeIndex> {
-        let node_index = &self
-            .0
-            .iter()
-            .find(|e| e.seg_id == seg_id)
-            .with_context(|| {
-                format!(
-                    "Segment ID {:?} could not be converted to NodeIndex",
-                    seg_id
-                )
-            })?
-            .node_index;
-
-        Ok(*node_index)
+        self.by_seg_id.get(&seg_id).copied().with_context(|| {
+            format!(
+                "Segment ID {:?} could not be converted to NodeIndex",
+                seg_id
+            )
+        })
     }
 }
 
@@ -221,11 +224,13 @@ impl fmt::Display for GFAGraphLookups {
         output += "\n\tSegment ID's:\n\t";
 
         let mut seg_ids: String = self
-            .0
-            .iter()
-            .map(|pair| format!("{}, ", std::str::from_utf8(&pair.seg_id).unwrap()))
+            .by_seg_id
+            .keys()
+            .map(|seg_id| format!("{}, ", std::str::from_utf8(seg_id).unwrap()))
             .collect();
-        seg_ids.drain(seg_ids.len() - 2..);
+        if seg_ids.len() >= 2 {
+            seg_ids.drain(seg_ids.len() - 2..);
+        }
 
         output += &seg_ids;
 

@@ -673,7 +673,7 @@ mod tests {
 
         let gfa_graph = GFAdigraph(graph);
 
-        let lookup = GFAGraphLookups(
+        let lookup = GFAGraphLookups::from_pairs(
             nodes
                 .iter()
                 .enumerate()
@@ -703,7 +703,7 @@ mod tests {
         map.insert(NodeIndex::new(4), 1);
         map.insert(NodeIndex::new(5), 1);
 
-        let lookup = GFAGraphLookups(vec![
+        let lookup = GFAGraphLookups::from_pairs(vec![
             crate::utils::GFAGraphPair {
                 node_index: NodeIndex::new(0),
                 seg_id: "4".as_bytes().to_vec(),
