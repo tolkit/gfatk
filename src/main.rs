@@ -307,6 +307,12 @@ fn main() -> Result<()> {
                         .default_value("45.0")
                         .value_parser(value_parser!(f64))
                         .help("Solver time budget in seconds for the single-circuit connectivity constraint, per attempt. Larger/more tangled graphs may need more.")
+                )
+                .arg(
+                    Arg::new("no-bubble-fasta")
+                        .long("no-bubble-fasta")
+                        .action(ArgAction::SetTrue)
+                        .help("Don't write bubble-arm sequences to the FASTA output. They are still reported (counts and evidence) on stderr.")
                 ),
         )
         .subcommand(

@@ -954,6 +954,7 @@ pub fn resolve(matches: &clap::ArgMatches) -> Result<()> {
     let time_limit = *matches
         .get_one::<f64>("time-limit")
         .expect("defaulted by clap");
+    let no_bubble_fasta = matches.get_flag("no-bubble-fasta");
 
     let gfa: GFAtk = match gfa_file {
         Some(f) => GFAtk(load_gfa(f)?),
@@ -1127,10 +1128,15 @@ pub fn resolve(matches: &clap::ArgMatches) -> Result<()> {
 
     let bubbles = detect_bubbles(&edges, &excluded, &circuit_states);
     if !bubbles.is_empty() {
+        let fasta_note = if no_bubble_fasta {
+            "not written to the FASTA output (--no-bubble-fasta), but not treated as missing either"
+        } else {
+            "reported as separate records below, not treated as missing"
+        };
         eprintln!(
             "[-]\t{} segment(s) excluded from the resolved circuit(s) are recombination-bubble arms \
              (real read evidence connects them to the main circuit on both sides, but the dominant \
-             conformation won out) -- reported as separate records below, not treated as missing.",
+             conformation won out) -- {fasta_note}.",
             bubbles.len()
         );
         for b in &bubbles {
@@ -1147,18 +1153,20 @@ pub fn resolve(matches: &clap::ArgMatches) -> Result<()> {
                     ""
                 }
             );
-            let seq = &segments[&b.segment];
-            // "_to_" rather than a bare "-" separator: state_str() already
-            // ends in '+' or '-' for the orientation, so "u34--u22-" reads
-            // ambiguously -- "u34-_to_u22-" doesn't.
-            let header = format!(
-                "bubble_arm:{}:between={}_to_{}:support_reads={}",
-                String::from_utf8_lossy(&b.segment),
-                state_str(&b.entry),
-                state_str(&b.exit),
-                b.support_reads
-            );
-            write_fasta_record(&header, seq);
+            if !no_bubble_fasta {
+                let seq = &segments[&b.segment];
+                // "_to_" rather than a bare "-" separator: state_str()
+                // already ends in '+' or '-' for the orientation, so
+                // "u34--u22-" reads ambiguously -- "u34-_to_u22-" doesn't.
+                let header = format!(
+                    "bubble_arm:{}:between={}_to_{}:support_reads={}",
+                    String::from_utf8_lossy(&b.segment),
+                    state_str(&b.entry),
+                    state_str(&b.exit),
+                    b.support_reads
+                );
+                write_fasta_record(&header, seq);
+            }
         }
     }
 
