@@ -938,6 +938,73 @@ fn circuit_sequence(circuit: &[State], segments: &HashMap<Seg, Vec<u8>>) -> Vec<
     seq
 }
 
+/// Levenshtein edit distance, space-optimised to two rolling rows. Guards
+/// against a pathologically large comparison (bubble segments are normally
+/// small, but a main-path detour spanning several segments could in
+/// principle be large) by refusing to run past `max_cells` total DP cells,
+/// returning `None` rather than eating memory/time on an unbounded input.
+fn levenshtein(a: &[u8], b: &[u8], max_cells: usize) -> Option<usize> {
+    if a.len().saturating_mul(b.len()) > max_cells {
+        return None;
+    }
+    let mut prev: Vec<usize> = (0..=b.len()).collect();
+    let mut cur = vec![0usize; b.len() + 1];
+    for (i, &ac) in a.iter().enumerate() {
+        cur[0] = i + 1;
+        for (j, &bc) in b.iter().enumerate() {
+            let cost = if ac == bc { 0 } else { 1 };
+            cur[j + 1] = (prev[j + 1] + 1).min(cur[j] + 1).min(prev[j] + cost);
+        }
+        std::mem::swap(&mut prev, &mut cur);
+    }
+    Some(prev[b.len()])
+}
+
+const MAX_DETOUR_HOPS: usize = 12;
+const LEVENSHTEIN_MAX_CELLS: usize = 50_000_000;
+
+/// Find the shortest run of states a resolved circuit actually uses between
+/// `entry` and `exit` -- i.e. what the main path does instead of a bubble
+/// arm at that same graph position -- searching every occurrence of `entry`
+/// across all circuits (a repeat segment can appear more than once) up to
+/// `max_hops` forward steps. Returns the states strictly between `entry`
+/// and `exit` (empty if `exit` immediately follows `entry`: the main path
+/// has no sequence there at all, i.e. the bubble is a pure insertion
+/// relative to it). `None` means no occurrence of `entry` reaches `exit`
+/// within the hop bound -- the local structure is too tangled (usually
+/// repeat-heavy) to isolate a single comparable detour.
+fn find_main_detour(
+    circuits: &[Vec<State>],
+    entry: &State,
+    exit: &State,
+    max_hops: usize,
+) -> Option<Vec<State>> {
+    let mut best: Option<Vec<State>> = None;
+    for circuit in circuits {
+        let n = circuit.len();
+        if n == 0 {
+            continue;
+        }
+        for (i, s) in circuit.iter().enumerate() {
+            if s != entry {
+                continue;
+            }
+            for hop in 1..=max_hops.min(n) {
+                let j = (i + hop) % n;
+                if &circuit[j] == exit {
+                    let detour: Vec<State> =
+                        (1..hop).map(|h| circuit[(i + h) % n].clone()).collect();
+                    if best.as_ref().is_none_or(|b| detour.len() < b.len()) {
+                        best = Some(detour);
+                    }
+                    break;
+                }
+            }
+        }
+    }
+    best
+}
+
 /// The main entry point for `gfatk resolve`.
 pub fn resolve(matches: &clap::ArgMatches) -> Result<()> {
     let gfa_file = matches.get_one::<PathBuf>("GFA");
@@ -1141,8 +1208,43 @@ pub fn resolve(matches: &clap::ArgMatches) -> Result<()> {
         );
         for b in &bubbles {
             let genes = gene_segs.contains(&b.segment);
+            let seq = &segments[&b.segment];
+
+            // How different is this bubble arm from whatever the main
+            // path actually does between the same entry/exit points?
+            // Purely informational -- doesn't affect what gets written.
+            let (diff_summary, diff_header) =
+                match find_main_detour(&circuits, &b.entry, &b.exit, MAX_DETOUR_HOPS) {
+                    Some(detour) => {
+                        let detour_seq = circuit_sequence(&detour, &segments);
+                        match levenshtein(seq, &detour_seq, LEVENSHTEIN_MAX_CELLS) {
+                            Some(dist) => {
+                                let longer = seq.len().max(detour_seq.len()).max(1);
+                                let pct_identity = 100.0 * (1.0 - dist as f64 / longer as f64);
+                                (
+                                    format!(
+                                    ", vs main path: {dist}bp edit distance, {pct_identity:.1}% \
+                                     identity over {}bp",
+                                    longer
+                                ),
+                                    format!(":edit_distance={dist}:pct_identity={pct_identity:.1}"),
+                                )
+                            }
+                            None => (
+                                ", vs main path: too large to diff, skipped".to_string(),
+                                ":main_path_comparison=too_large".to_string(),
+                            ),
+                        }
+                    }
+                    None => (
+                        ", vs main path: no comparable detour found within local structure"
+                            .to_string(),
+                        ":main_path_comparison=unavailable".to_string(),
+                    ),
+                };
+
             eprintln!(
-                "[-]\t  {} (between {} and {}, ~{} supporting reads{})",
+                "[-]\t  {} (between {} and {}, ~{} supporting reads{}{})",
                 String::from_utf8_lossy(&b.segment),
                 state_str(&b.entry),
                 state_str(&b.exit),
@@ -1151,19 +1253,20 @@ pub fn resolve(matches: &clap::ArgMatches) -> Result<()> {
                     ", carries an annotated gene"
                 } else {
                     ""
-                }
+                },
+                diff_summary
             );
             if !no_bubble_fasta {
-                let seq = &segments[&b.segment];
                 // "_to_" rather than a bare "-" separator: state_str()
                 // already ends in '+' or '-' for the orientation, so
                 // "u34--u22-" reads ambiguously -- "u34-_to_u22-" doesn't.
                 let header = format!(
-                    "bubble_arm:{}:between={}_to_{}:support_reads={}",
+                    "bubble_arm:{}:between={}_to_{}:support_reads={}{}",
                     String::from_utf8_lossy(&b.segment),
                     state_str(&b.entry),
                     state_str(&b.exit),
-                    b.support_reads
+                    b.support_reads,
+                    diff_header
                 );
                 write_fasta_record(&header, seq);
             }
@@ -1360,6 +1463,66 @@ mod tests {
             tier,
             reads,
         }
+    }
+
+    #[test]
+    fn test_levenshtein_basic() {
+        assert_eq!(levenshtein(b"ACGT", b"ACGT", 1000), Some(0));
+        assert_eq!(levenshtein(b"ACGT", b"ACGA", 1000), Some(1)); // substitution
+        assert_eq!(levenshtein(b"ACGT", b"ACGTT", 1000), Some(1)); // insertion
+        assert_eq!(levenshtein(b"ACGT", b"ACG", 1000), Some(1)); // deletion
+        assert_eq!(levenshtein(b"", b"ACGT", 1000), Some(4));
+        assert_eq!(levenshtein(b"ACGT", b"", 1000), Some(4));
+    }
+
+    #[test]
+    fn test_levenshtein_respects_cell_cap() {
+        // 100x100 = 10_000 cells, over a cap of 100
+        let a = vec![b'A'; 100];
+        let b = vec![b'C'; 100];
+        assert_eq!(levenshtein(&a, &b, 100), None);
+    }
+
+    #[test]
+    fn test_find_main_detour_basic() {
+        use Orientation::Forward as F;
+        let circuit = vec![s("a", F), s("b", F), s("c", F), s("d", F)];
+        let detour = find_main_detour(&[circuit], &s("a", F), &s("d", F), 12).unwrap();
+        assert_eq!(detour, vec![s("b", F), s("c", F)]);
+    }
+
+    #[test]
+    fn test_find_main_detour_adjacent_is_empty() {
+        // exit immediately follows entry -- main path has no sequence
+        // there at all, i.e. the bubble is a pure insertion
+        use Orientation::Forward as F;
+        let circuit = vec![s("a", F), s("b", F), s("c", F)];
+        let detour = find_main_detour(&[circuit], &s("a", F), &s("b", F), 12).unwrap();
+        assert!(detour.is_empty());
+    }
+
+    #[test]
+    fn test_find_main_detour_none_beyond_hop_bound() {
+        use Orientation::Forward as F;
+        let circuit = vec![s("a", F), s("b", F), s("c", F), s("d", F)];
+        assert!(find_main_detour(&[circuit], &s("a", F), &s("d", F), 1).is_none());
+    }
+
+    #[test]
+    fn test_find_main_detour_picks_shortest_across_repeat_occurrences() {
+        // "a" (a repeat) occurs twice; the occurrence right before "d"
+        // should win over the one that's much further away
+        use Orientation::Forward as F;
+        let circuit = vec![
+            s("a", F),
+            s("x", F),
+            s("y", F),
+            s("z", F),
+            s("a", F),
+            s("d", F),
+        ];
+        let detour = find_main_detour(&[circuit], &s("a", F), &s("d", F), 12).unwrap();
+        assert!(detour.is_empty());
     }
 
     #[test]
