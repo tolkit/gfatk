@@ -960,8 +960,108 @@ fn levenshtein(a: &[u8], b: &[u8], max_cells: usize) -> Option<usize> {
     Some(prev[b.len()])
 }
 
-const MAX_DETOUR_HOPS: usize = 12;
-const LEVENSHTEIN_MAX_CELLS: usize = 50_000_000;
+// No real hop cap: a repeat segment's nearest recurrence of the matching
+// exit state is often tens to hundreds of positions away in a tangled,
+// repeat-heavy tour purely because of how many times other repeats get
+// revisited in between -- that's not the same as the bubble being
+// structurally distant. `find_main_detour` already bounds this to the
+// circuit's own length, so usize::MAX just means "search the whole
+// circuit". The real cost control is `LEVENSHTEIN_MAX_CELLS` below, since
+// that's what actually scales with how much sequence a long detour pulls
+// in.
+const MAX_DETOUR_HOPS: usize = usize::MAX;
+// A single DP cell is trivial work, so this comfortably covers even a
+// small bubble compared against a detour spanning most of a several-
+// hundred-kb circuit while still refusing a truly unbounded comparison.
+const LEVENSHTEIN_MAX_CELLS: usize = 2_000_000_000;
+// A genuine local (two-allele-style) bubble's detour is roughly the same
+// size as the bubble arm itself. When the nearest matching detour is many
+// times larger, it's evidence of something else going on structurally
+// (e.g. the same evidence that leaves circuits un-spliceable), and an edit
+// distance dominated by that length gap reads as "very different" no
+// matter what the actual sequence looks like -- not a useful signal.
+const MAX_DETOUR_SIZE_RATIO: usize = 5;
+
+/// How a bubble arm's sequence compares to whatever the main path actually
+/// does between the same entry/exit points -- purely informational, never
+/// affects what gets included or written.
+enum BubbleDiff {
+    /// A genuinely local, size-comparable detour was found and diffed.
+    Compared {
+        edit_distance: usize,
+        pct_identity: f64,
+        compared_bp: usize,
+    },
+    /// A detour exists, but it's many times larger than the bubble arm
+    /// itself -- not the same local two-allele structure this metric is
+    /// meant for, so diffing it would just report the length gap dressed
+    /// up as sequence divergence.
+    DetourTooLarge { detour_bp: usize, ratio: usize },
+    /// A size-comparable detour was found, but the comparison itself was
+    /// too large to run within `LEVENSHTEIN_MAX_CELLS`.
+    TooLargeToDiff,
+    /// No occurrence of the bubble's entry state reaches its exit state
+    /// within the resolved circuit(s) at all (e.g. the entry/exit states
+    /// sit in different, un-merged circuits).
+    NoDetourFound,
+}
+
+impl BubbleDiff {
+    /// (stderr summary suffix, FASTA header suffix)
+    fn describe(&self) -> (String, String) {
+        match self {
+            BubbleDiff::Compared {
+                edit_distance,
+                pct_identity,
+                compared_bp,
+            } => (
+                format!(
+                    ", vs main path: {edit_distance}bp edit distance, {pct_identity:.1}% \
+                     identity over {compared_bp}bp"
+                ),
+                format!(":edit_distance={edit_distance}:pct_identity={pct_identity:.1}"),
+            ),
+            BubbleDiff::DetourTooLarge { detour_bp, ratio } => (
+                format!(
+                    ", vs main path: nearest matching detour is {detour_bp}bp ({ratio}x this \
+                     bubble's own length) -- too large relative to the bubble to be a \
+                     meaningful local comparison, not diffed"
+                ),
+                format!(":main_path_comparison=detour_too_large:detour_bp={detour_bp}"),
+            ),
+            BubbleDiff::TooLargeToDiff => (
+                ", vs main path: too large to diff, skipped".to_string(),
+                ":main_path_comparison=too_large".to_string(),
+            ),
+            BubbleDiff::NoDetourFound => (
+                ", vs main path: no comparable detour found within local structure".to_string(),
+                ":main_path_comparison=unavailable".to_string(),
+            ),
+        }
+    }
+}
+
+fn diff_bubble_arm(bubble_seq: &[u8], detour_seq: &[u8]) -> BubbleDiff {
+    let bubble_len = bubble_seq.len().max(1);
+    if detour_seq.len() > bubble_len * MAX_DETOUR_SIZE_RATIO {
+        return BubbleDiff::DetourTooLarge {
+            detour_bp: detour_seq.len(),
+            ratio: detour_seq.len() / bubble_len,
+        };
+    }
+    match levenshtein(bubble_seq, detour_seq, LEVENSHTEIN_MAX_CELLS) {
+        Some(dist) => {
+            let longer = bubble_seq.len().max(detour_seq.len()).max(1);
+            let pct_identity = 100.0 * (1.0 - dist as f64 / longer as f64);
+            BubbleDiff::Compared {
+                edit_distance: dist,
+                pct_identity,
+                compared_bp: longer,
+            }
+        }
+        None => BubbleDiff::TooLargeToDiff,
+    }
+}
 
 /// Find the shortest run of states a resolved circuit actually uses between
 /// `entry` and `exit` -- i.e. what the main path does instead of a bubble
@@ -1213,35 +1313,11 @@ pub fn resolve(matches: &clap::ArgMatches) -> Result<()> {
             // How different is this bubble arm from whatever the main
             // path actually does between the same entry/exit points?
             // Purely informational -- doesn't affect what gets written.
-            let (diff_summary, diff_header) =
-                match find_main_detour(&circuits, &b.entry, &b.exit, MAX_DETOUR_HOPS) {
-                    Some(detour) => {
-                        let detour_seq = circuit_sequence(&detour, &segments);
-                        match levenshtein(seq, &detour_seq, LEVENSHTEIN_MAX_CELLS) {
-                            Some(dist) => {
-                                let longer = seq.len().max(detour_seq.len()).max(1);
-                                let pct_identity = 100.0 * (1.0 - dist as f64 / longer as f64);
-                                (
-                                    format!(
-                                    ", vs main path: {dist}bp edit distance, {pct_identity:.1}% \
-                                     identity over {}bp",
-                                    longer
-                                ),
-                                    format!(":edit_distance={dist}:pct_identity={pct_identity:.1}"),
-                                )
-                            }
-                            None => (
-                                ", vs main path: too large to diff, skipped".to_string(),
-                                ":main_path_comparison=too_large".to_string(),
-                            ),
-                        }
-                    }
-                    None => (
-                        ", vs main path: no comparable detour found within local structure"
-                            .to_string(),
-                        ":main_path_comparison=unavailable".to_string(),
-                    ),
-                };
+            let diff = match find_main_detour(&circuits, &b.entry, &b.exit, MAX_DETOUR_HOPS) {
+                Some(detour) => diff_bubble_arm(seq, &circuit_sequence(&detour, &segments)),
+                None => BubbleDiff::NoDetourFound,
+            };
+            let (diff_summary, diff_header) = diff.describe();
 
             eprintln!(
                 "[-]\t  {} (between {} and {}, ~{} supporting reads{}{})",
@@ -1523,6 +1599,49 @@ mod tests {
         ];
         let detour = find_main_detour(&[circuit], &s("a", F), &s("d", F), 12).unwrap();
         assert!(detour.is_empty());
+    }
+
+    #[test]
+    fn test_diff_bubble_arm_reports_comparison_for_similar_sized_sequences() {
+        let bubble = b"ACGTACGTAC";
+        let detour = b"ACGTACGTAA"; // 1bp different, same length
+        match diff_bubble_arm(bubble, detour) {
+            BubbleDiff::Compared {
+                edit_distance,
+                pct_identity,
+                compared_bp,
+            } => {
+                assert_eq!(edit_distance, 1);
+                assert_eq!(compared_bp, 10);
+                assert!((pct_identity - 90.0).abs() < 1e-9);
+            }
+            _ => panic!("expected Compared, got a different variant"),
+        }
+    }
+
+    #[test]
+    fn test_diff_bubble_arm_flags_wildly_larger_detour_instead_of_diffing() {
+        let bubble = vec![b'A'; 100];
+        // 10x the bubble's length -- over the 5x ratio cap
+        let detour = vec![b'C'; 1000];
+        match diff_bubble_arm(&bubble, &detour) {
+            BubbleDiff::DetourTooLarge { detour_bp, ratio } => {
+                assert_eq!(detour_bp, 1000);
+                assert_eq!(ratio, 10);
+            }
+            _ => panic!("expected DetourTooLarge"),
+        }
+    }
+
+    #[test]
+    fn test_diff_bubble_arm_within_ratio_cap_still_compares() {
+        // exactly at the 5x cap should still be compared, not flagged
+        let bubble = vec![b'A'; 100];
+        let detour = vec![b'A'; 500];
+        assert!(matches!(
+            diff_bubble_arm(&bubble, &detour),
+            BubbleDiff::Compared { .. }
+        ));
     }
 
     #[test]
