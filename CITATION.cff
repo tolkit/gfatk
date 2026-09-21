@@ -22,19 +22,3 @@ authors:
     given-names: Max R
     orcid: "https://orcid.org/0000-0003-2561-516X"
     affiliation: "Anglia Ruskin University"
-  - family-names: Downie
-    given-names: Jim
-    affiliation: "Wellcome Sanger Institute"
-  - family-names: Riley
-    given-names: Nathan
-    affiliation: "Wellcome Sanger Institute"
-  - family-names: Craig
-    given-names: Rory
-    affiliation: "University of Melbourne"
-  - family-names: Campos
-    given-names: Lucía
-    affiliation: "Institut Botànic de Barcelona"
-  - family-names: Twyford
-    given-names: Alex D.
-    affiliation: "University of Edinburgh"
-  - name: "Darwin Tree of Life Consortium"

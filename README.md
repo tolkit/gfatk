@@ -1,6 +1,6 @@
 # gfatk
 
-[![DOI](https://zenodo.org/badge/429096801.svg)](https://doi.org/10.5281/zenodo.22870219)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22870219.svg)](https://doi.org/10.5281/zenodo.22870219)
 
 <p align="center">
     <img width="300" height="132" src="https://www.darwintreeoflife.org/wp-content/themes/dtol/dist/assets/gfx/dtol-logo-w.png">
