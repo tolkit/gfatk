@@ -18,9 +18,9 @@ Grab from the releases (Mac & Linux only):
 
 ```bash
 # for mac (Intel or Apple Silicon, via Rosetta 2)
-curl -L "https://github.com/tolkit/gfatk/releases/download/0.5.2/gfatk_0.5.2_x86_64-apple-darwin.zip" -o gfatk.zip && unzip gfatk.zip && chmod +x gfatk
+curl -L "https://github.com/tolkit/gfatk/releases/download/0.5.3/gfatk_0.5.3_x86_64-apple-darwin.zip" -o gfatk.zip && unzip gfatk.zip && chmod +x gfatk
 # and linux (musl, static binary)
-curl -L "https://github.com/tolkit/gfatk/releases/download/0.5.2/gfatk_0.5.2_x86_64-unknown-linux-musl.tar.zst" | tar --zstd -xf - && chmod +x gfatk
+curl -L "https://github.com/tolkit/gfatk/releases/download/0.5.3/gfatk_0.5.3_x86_64-unknown-linux-musl.tar.zst" | tar --zstd -xf - && chmod +x gfatk
 ```
 
 Or build from source.
