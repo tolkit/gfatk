@@ -1,6 +1,6 @@
 # gfatk
 
-[![DOI](https://zenodo.org/badge/429096801.svg)](https://doi.org/10.5281/zenodo.22870218)
+[![DOI](https://zenodo.org/badge/429096801.svg)](https://doi.org/10.5281/zenodo.22870219)
 
 <p align="center">
     <img width="300" height="132" src="https://www.darwintreeoflife.org/wp-content/themes/dtol/dist/assets/gfx/dtol-logo-w.png">
@@ -18,9 +18,9 @@ Grab from the releases (Mac & Linux only):
 
 ```bash
 # for mac (Intel or Apple Silicon, via Rosetta 2)
-curl -L "https://github.com/tolkit/gfatk/releases/download/0.3.0/gfatk_0.3.0_x86_64-apple-darwin.zip" -o gfatk.zip && unzip gfatk.zip && chmod +x gfatk
+curl -L "https://github.com/tolkit/gfatk/releases/download/0.5.1/gfatk_0.5.1_x86_64-apple-darwin.zip" -o gfatk.zip && unzip gfatk.zip && chmod +x gfatk
 # and linux (musl, static binary)
-curl -L "https://github.com/tolkit/gfatk/releases/download/0.3.0/gfatk_0.3.0_x86_64-unknown-linux-musl.tar.zst" | tar --zstd -xf - && chmod +x gfatk
+curl -L "https://github.com/tolkit/gfatk/releases/download/0.5.1/gfatk_0.5.1_x86_64-unknown-linux-musl.tar.zst" | tar --zstd -xf - && chmod +x gfatk
 ```
 
 Or build from source.

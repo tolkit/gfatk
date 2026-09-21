@@ -4,7 +4,7 @@ title: "gfatk"
 type: software
 version: 0.5.1
 date-released: "2026-09-21"
-doi: 10.5281/zenodo.22870218
+doi: 10.5281/zenodo.22870219
 license: MIT
 repository-code: "https://github.com/tolkit/gfatk"
 url: "https://github.com/tolkit/gfatk"
@@ -30,9 +30,10 @@ authors:
     affiliation: "Wellcome Sanger Institute"
   - family-names: Craig
     given-names: Rory
-    affiliation: "Melbourne, Australia"
+    affiliation: "University of Melbourne"
   - family-names: Campos
     given-names: Lucía
+    affiliation: "Institut Botànic de Barcelona"
   - family-names: Twyford
     given-names: Alex D.
     affiliation: "University of Edinburgh"
