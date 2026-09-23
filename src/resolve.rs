@@ -1349,15 +1349,28 @@ pub fn resolve(matches: &clap::ArgMatches) -> Result<()> {
         }
     }
 
-    let truly_missing: Vec<&Seg> = excluded
+    let mut truly_missing: Vec<&Seg> = excluded
         .iter()
         .filter(|s| !bubbles.iter().any(|b| &b.segment == *s))
         .collect();
     if !truly_missing.is_empty() {
+        truly_missing.sort();
         eprintln!(
-            "[-]\t{} segment(s) excluded with no bubble evidence either (genuinely unresolved, not just an alternate conformation)",
+            "[-]\t{} segment(s) excluded with no bubble evidence either (genuinely unresolved, \
+             not just an alternate conformation) -- written out below as separate, unplaced \
+             records rather than dropped, the way an assembler would report an unplaced contig.",
             truly_missing.len()
         );
+        for seg in &truly_missing {
+            let seq = &segments[*seg];
+            eprintln!("[-]\t  {} ({}bp)", String::from_utf8_lossy(seg), seq.len());
+            let header = format!(
+                "unresolved_segment:{}:bp={}",
+                String::from_utf8_lossy(seg),
+                seq.len()
+            );
+            write_fasta_record(&header, seq);
+        }
     }
 
     Ok(())
