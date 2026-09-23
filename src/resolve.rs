@@ -915,6 +915,45 @@ fn parse_gff_gene_segments(path: &PathBuf) -> Result<HashMap<Seg, Vec<String>>> 
     Ok(out)
 }
 
+/// oatk-style BED score is capped at this value; a hit reaching the cap is
+/// treated the same way GFF's `coverage=full` is -- a confident,
+/// (near-)complete gene model, not a partial fragment. Several lower-
+/// scoring fragment hits typically overlap a real gene in this format
+/// (partial matches, near-duplicate tRNA calls, etc.), so this filter
+/// matters for the same reason it does for GFF: without it, "carries a
+/// gene" would trigger on any fragmentary hit.
+const BED_FULL_SCORE: u32 = 1000;
+
+/// Parse an oatk-style BED annotation directly -- `seq_name align_from
+/// align_to gene_name score_capped_at_1000 strand`, tab-separated, `seq_name`
+/// already referencing the GFA's own segment IDs -- so no GFF conversion
+/// step is needed between oatk's own gene calls and `gfatk resolve`.
+fn parse_bed_gene_segments(path: &PathBuf) -> Result<HashMap<Seg, Vec<String>>> {
+    let file = File::open(path).with_context(|| format!("Failed to open BED file: {path:?}"))?;
+    let reader = BufReader::new(file);
+    let mut out: HashMap<Seg, Vec<String>> = HashMap::new();
+
+    for line in reader.lines() {
+        let line = line?;
+        if line.starts_with('#') || line.trim().is_empty() {
+            continue;
+        }
+        let fields: Vec<&str> = line.split('\t').collect();
+        if fields.len() < 5 {
+            continue;
+        }
+        let seg = fields[0].as_bytes().to_vec();
+        let gene_name = fields[3];
+        let Ok(score) = fields[4].parse::<u32>() else {
+            continue;
+        };
+        if score >= BED_FULL_SCORE {
+            out.entry(seg).or_default().push(gene_name.to_string());
+        }
+    }
+    Ok(out)
+}
+
 fn state_str(s: &State) -> String {
     format!("{}{}", String::from_utf8_lossy(&s.0), orient_char(s.1))
 }
@@ -1112,6 +1151,7 @@ pub fn resolve(matches: &clap::ArgMatches) -> Result<()> {
         .get_one::<PathBuf>("gaf")
         .context("`--gaf` is required for `gfatk resolve`")?;
     let gff_file = matches.get_one::<PathBuf>("gff");
+    let bed_file = matches.get_one::<PathBuf>("bed");
     let min_mapq = *matches
         .get_one::<u32>("min-mapq")
         .expect("defaulted by clap");
@@ -1171,17 +1211,23 @@ pub fn resolve(matches: &clap::ArgMatches) -> Result<()> {
         edges.len()
     );
 
-    let gene_segs: HashSet<Seg> = match gff_file {
-        Some(path) => {
-            let genes = parse_gff_gene_segments(path)?;
-            eprintln!(
-                "[+]\t{} segments carry a high-confidence annotated gene (from {path:?})",
-                genes.len()
-            );
-            genes.into_keys().collect()
-        }
-        None => HashSet::new(),
-    };
+    let mut gene_segs: HashSet<Seg> = HashSet::new();
+    if let Some(path) = gff_file {
+        let genes = parse_gff_gene_segments(path)?;
+        eprintln!(
+            "[+]\t{} segments carry a high-confidence annotated gene (from {path:?})",
+            genes.len()
+        );
+        gene_segs.extend(genes.into_keys());
+    }
+    if let Some(path) = bed_file {
+        let genes = parse_bed_gene_segments(path)?;
+        eprintln!(
+            "[+]\t{} segments carry a high-confidence annotated gene (from {path:?})",
+            genes.len()
+        );
+        gene_segs.extend(genes.into_keys());
+    }
 
     let selected = match solve_ilp(&edges, &budget, &segments, &gene_segs, true, time_limit) {
         Ok(selected) => selected,
@@ -1379,6 +1425,23 @@ pub fn resolve(matches: &clap::ArgMatches) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_parse_bed_gene_segments_keeps_only_full_score_hits() {
+        let bed = "#seq_name\talign_from\talign_to\tgene_name\tscore_capped_at_1000\tstrand\n\
+                    u2\t6877\t7492\tccmFc\t755\t-\n\
+                    u5\t1\t939\tatp1\t1000\t+\n\
+                    u5\t36404\t36477\trps10\t95\t-\n";
+        let path = std::env::temp_dir().join("gfatk_test_parse_bed_gene_segments.bed");
+        std::fs::write(&path, bed).unwrap();
+        let genes = parse_bed_gene_segments(&path).unwrap();
+        std::fs::remove_file(&path).ok();
+
+        // u2's ccmFc (755) is below the cap, so u2 must not appear at all
+        assert!(!genes.contains_key(&b"u2".to_vec()));
+        // u5's atp1 (1000) clears the cap; its rps10 (95) does not
+        assert_eq!(genes[&b"u5".to_vec()], vec!["atp1".to_string()]);
+    }
 
     #[test]
     fn test_flip() {

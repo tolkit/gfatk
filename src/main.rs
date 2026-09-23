@@ -288,6 +288,12 @@ fn main() -> Result<()> {
                         .help("Optional GFF gene annotation, used to weight gene-bearing segments during resolution.")
                 )
                 .arg(
+                    Arg::new("bed")
+                        .long("bed")
+                        .value_parser(value_parser!(PathBuf))
+                        .help("Optional oatk-style BED gene annotation (seq_name, align_from, align_to, gene_name, score_capped_at_1000, strand), used the same way as --gff. Can be given alongside --gff; segments from both are combined.")
+                )
+                .arg(
                     Arg::new("min-mapq")
                         .long("min-mapq")
                         .default_value("1")
