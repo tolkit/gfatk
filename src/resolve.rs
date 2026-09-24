@@ -1275,10 +1275,11 @@ pub fn resolve(matches: &clap::ArgMatches) -> Result<()> {
             .map(|s| s.to_string_lossy().to_string())
             .unwrap_or_else(|| "gfatk_resolve".to_string());
         let header = format!(
-            "{species_tag}_circuit{}:n_segments={}:bp={}",
+            "{species_tag}_circuit{}:n_segments={}:bp={}:circular=true:path={}",
             idx + 1,
             circuit.len(),
-            seq.len()
+            seq.len(),
+            path_str
         );
         write_fasta_record(&header, &seq);
     }
