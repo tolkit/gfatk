@@ -204,10 +204,14 @@ fn build_triple_lookup(
             .entry((a.clone(), ao, seg.clone(), so))
             .or_default()
             .insert((b.clone(), bo), cnt);
+        // the same molecule read from the other strand walks
+        // b' -> seg' -> a', so *every* state is flipped -- including `a`.
+        // Leaving `a` unflipped registers a transition `seg' -> a` that
+        // no GFA link licenses.
         lookup
             .entry((b, flip(bo), seg, flip(so)))
             .or_default()
-            .insert((a, ao), cnt);
+            .insert((a, flip(ao)), cnt);
     }
     lookup
 }
@@ -234,15 +238,22 @@ fn build_edge_support(records: &[GafRecord]) -> HashMap<State, HashMap<State, u3
     edge_support
 }
 
+/// The bare GFA topology. A link `L A oA B oB` licenses two traversals:
+/// `A(oA) -> B(oB)` as written, and its reverse-complement equivalent
+/// `B(flip oB) -> A(flip oA)` -- both are registered.
 fn build_links_index(
     links: &[(Seg, Orientation, Seg, Orientation)],
 ) -> HashMap<State, HashMap<State, u32>> {
     let mut idx: HashMap<State, HashMap<State, u32>> = HashMap::new();
     for (fs, fo, ts, to) in links {
-        *idx.entry((fs.clone(), *fo))
-            .or_default()
-            .entry((ts.clone(), *to))
-            .or_insert(0) += 1;
+        let fwd = ((fs.clone(), *fo), (ts.clone(), *to));
+        let rev = ((ts.clone(), flip(*to)), (fs.clone(), flip(*fo)));
+        // a link that is its own reverse complement (e.g. `L x + x -`)
+        // is still only one link
+        let traversals = if fwd == rev { vec![fwd] } else { vec![fwd, rev] };
+        for (u, v) in traversals {
+            *idx.entry(u).or_default().entry(v).or_insert(0) += 1;
+        }
     }
     idx
 }
@@ -261,22 +272,43 @@ fn consider(best: &mut HashMap<(State, State), (u8, u32)>, u: State, v: State, c
 /// Union every evidence tier into one candidate-edge pool, keeping the best
 /// (strongest tier, then highest read count) evidence for each distinct
 /// (from, to) state transition.
+///
+/// Read-derived transitions (tiers 0 and 1) are only accepted when the GFA
+/// itself licenses them: a read can't walk a junction that doesn't exist in
+/// the graph it was aligned to, so one that claims to (a GAF aligned to a
+/// different graph, or a parsing slip) must not reach the solver. Returns
+/// the edges alongside the number of distinct read-derived transitions
+/// rejected this way.
 fn build_candidate_edges(
     triple_lookup: &HashMap<(Seg, Orientation, Seg, Orientation), HashMap<State, u32>>,
     edge_support: &HashMap<State, HashMap<State, u32>>,
     links_index: &HashMap<State, HashMap<State, u32>>,
-) -> Vec<CandidateEdge> {
+) -> (Vec<CandidateEdge>, usize) {
     let mut best: HashMap<(State, State), (u8, u32)> = HashMap::new();
+    let mut unlicensed: HashSet<(State, State)> = HashSet::new();
+    let licensed = |u: &State, v: &State| links_index.get(u).is_some_and(|m| m.contains_key(v));
+
+    let mut consider_read_edge = |best: &mut HashMap<(State, State), (u8, u32)>,
+                                  u: State,
+                                  v: State,
+                                  cnt: u32,
+                                  tier: u8| {
+        if licensed(&u, &v) {
+            consider(best, u, v, cnt, tier);
+        } else {
+            unlicensed.insert((u, v));
+        }
+    };
 
     for ((a, ao, seg, so), ctr) in triple_lookup {
         for (&(ref b, bo), &cnt) in ctr {
-            consider(&mut best, (a.clone(), *ao), (seg.clone(), *so), cnt, 0);
-            consider(&mut best, (seg.clone(), *so), (b.clone(), bo), cnt, 0);
+            consider_read_edge(&mut best, (a.clone(), *ao), (seg.clone(), *so), cnt, 0);
+            consider_read_edge(&mut best, (seg.clone(), *so), (b.clone(), bo), cnt, 0);
         }
     }
     for (state, ctr) in edge_support {
         for (next, &cnt) in ctr {
-            consider(&mut best, state.clone(), next.clone(), cnt, 1);
+            consider_read_edge(&mut best, state.clone(), next.clone(), cnt, 1);
         }
     }
     for (state, ctr) in links_index {
@@ -285,14 +317,16 @@ fn build_candidate_edges(
         }
     }
 
-    best.into_iter()
+    let edges = best
+        .into_iter()
         .map(|((from, to), (tier, reads))| CandidateEdge {
             from,
             to,
             tier,
             reads,
         })
-        .collect()
+        .collect();
+    (edges, unlicensed.len())
 }
 
 /// Solve the integer program: pick the subset of candidate edges maximising
@@ -1195,11 +1229,16 @@ pub fn resolve(matches: &clap::ArgMatches) -> Result<()> {
     let triple_lookup = build_triple_lookup(&records);
     let edge_support = build_edge_support(&records);
     let links_index = build_links_index(&links);
-    let edges = build_candidate_edges(&triple_lookup, &edge_support, &links_index);
+    let (edges, n_unlicensed) = build_candidate_edges(&triple_lookup, &edge_support, &links_index);
     eprintln!(
         "[+]\t{} candidate edges from read/graph evidence",
         edges.len()
     );
+    if n_unlicensed > 0 {
+        eprintln!(
+            "[-]\t{n_unlicensed} read-derived transition(s) not licensed by any GFA link were discarded -- was the GAF aligned to this exact GFA?"
+        );
+    }
 
     let mut gene_segs: HashSet<Seg> = HashSet::new();
     if let Some(path) = gff_file {
@@ -1710,6 +1749,121 @@ mod tests {
             diff_bubble_arm(&bubble, &detour),
             BubbleDiff::Compared { .. }
         ));
+    }
+
+    fn rec(path: &[State]) -> GafRecord {
+        GafRecord {
+            path: path.to_vec(),
+            path_start: 0,
+            path_end: 0,
+            mapq: 60,
+            identity: None,
+        }
+    }
+
+    fn reads(path: &[State], n: usize) -> Vec<GafRecord> {
+        (0..n).map(|_| rec(path)).collect()
+    }
+
+    fn is_licensed(links_index: &HashMap<State, HashMap<State, u32>>, e: &CandidateEdge) -> bool {
+        links_index
+            .get(&e.from)
+            .is_some_and(|m| m.contains_key(&e.to))
+    }
+
+    /// The u14 shape from vpJunScop1 (Juniperus scopulorum): u72 and u96
+    /// both attach only to u14's *minus* end (`L u14 - u72 -`,
+    /// `L u14 - u96 -`), and nothing attaches to u14's plus end.
+    fn u14_links() -> Vec<(Seg, Orientation, Seg, Orientation)> {
+        use Orientation::Backward as B;
+        vec![
+            (b"u14".to_vec(), B, b"u72".to_vec(), B),
+            (b"u14".to_vec(), B, b"u96".to_vec(), B),
+            (b"u72".to_vec(), B, b"p".to_vec(), B),
+            (b"u96".to_vec(), B, b"q".to_vec(), B),
+        ]
+    }
+
+    #[test]
+    fn test_build_links_index_registers_both_traversals() {
+        use Orientation::Backward as B;
+        use Orientation::Forward as F;
+        let idx = build_links_index(&u14_links());
+        // as written: u14- -> u72-
+        assert!(idx[&s("u14", B)].contains_key(&s("u72", B)));
+        // reverse-complement equivalent: u72+ -> u14+
+        assert!(idx[&s("u72", F)].contains_key(&s("u14", F)));
+        // and never the cross-orientation u72+ -> u14-
+        assert!(!idx[&s("u72", F)].contains_key(&s("u14", B)));
+    }
+
+    #[test]
+    fn test_build_links_index_self_reverse_complement_link_counted_once() {
+        use Orientation::Backward as B;
+        use Orientation::Forward as F;
+        let idx = build_links_index(&[(b"x".to_vec(), F, b"x".to_vec(), B)]);
+        assert_eq!(idx[&s("x", F)][&s("x", B)], 1);
+    }
+
+    #[test]
+    fn test_build_triple_lookup_reverse_strand_flips_every_state() {
+        // a real read walking u14- -> u72- -> p- must, read from the other
+        // strand, register p+ -> u72+ -> u14+ -- not -> u14-
+        use Orientation::Backward as B;
+        use Orientation::Forward as F;
+        let records = reads(&[s("u14", B), s("u72", B), s("p", B)], MIN_EDGE_READS as usize);
+        let lookup = build_triple_lookup(&records);
+        let ctr = &lookup[&(b"p".to_vec(), F, b"u72".to_vec(), F)];
+        assert!(ctr.contains_key(&s("u14", F)));
+        assert!(!ctr.contains_key(&s("u14", B)));
+    }
+
+    #[test]
+    fn test_build_candidate_edges_only_emits_gfa_licensed_transitions() {
+        // regression: vpJunScop1 resolved `u72+,u14-,u96-`, where
+        // u72+ -> u14- is not a valid move in the graph. Real reads in
+        // both directions, plus a chimeric read claiming the impossible
+        // cross-traversal u72+ -> u14- -> u96- often enough to clear
+        // MIN_EDGE_READS.
+        use Orientation::Backward as B;
+        use Orientation::Forward as F;
+        let n = MIN_EDGE_READS as usize;
+        let mut records = Vec::new();
+        records.extend(reads(&[s("u14", B), s("u72", B), s("p", B)], n));
+        records.extend(reads(&[s("u14", B), s("u96", B), s("q", B)], n));
+        records.extend(reads(&[s("p", F), s("u72", F), s("u14", F)], n));
+        records.extend(reads(&[s("u72", F), s("u14", B), s("u96", B)], n));
+
+        let links_index = build_links_index(&u14_links());
+        let (edges, n_unlicensed) = build_candidate_edges(
+            &build_triple_lookup(&records),
+            &build_edge_support(&records),
+            &links_index,
+        );
+
+        for e in &edges {
+            assert!(
+                is_licensed(&links_index, e),
+                "unlicensed candidate edge {} -> {} (tier {})",
+                state_str(&e.from),
+                state_str(&e.to),
+                e.tier
+            );
+        }
+        assert!(!edges
+            .iter()
+            .any(|e| e.from == s("u72", F) && e.to == s("u14", B)));
+        assert!(n_unlicensed > 0);
+        // the real junctions survive, in both traversal directions, with
+        // read support rather than falling back to bare topology
+        for (u, v) in [
+            (s("u14", B), s("u72", B)),
+            (s("u72", F), s("u14", F)),
+            (s("u14", B), s("u96", B)),
+        ] {
+            let e = edges.iter().find(|e| e.from == u && e.to == v).unwrap();
+            assert!(e.tier < 2, "{} -> {} lost its read support", state_str(&u), state_str(&v));
+        }
     }
 
     #[test]
