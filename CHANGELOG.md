@@ -4,6 +4,35 @@ All notable changes to gfatk are listed here, newest first. Versions follow
 [semantic versioning](https://semver.org/); release binaries are on the
 [GitHub releases page](https://github.com/tolkit/gfatk/releases).
 
+## [0.6.3] - unreleased
+
+### Fixed
+
+- `gfatk resolve` wrote each circuit as its segments joined end to end, so
+  the bases two linked segments share (the link's overlap, `41M` say) came
+  out twice at every junction. Each segment after the first is now written
+  without its overlap with the one before, as `gfatk path` and `gfatk linear`
+  already do, and the closing overlap, from the last segment back to the
+  first, is trimmed off the start of the first segment. That is where oatk
+  puts the origin of a circular contig, so a `path=` gives the same
+  coordinates in either tool's output. `bp=` in the header and the length on
+  stderr are those of the trimmed sequence. The path chosen is unchanged.
+- The main-path sequence a bubble arm is compared with is trimmed the same
+  way.
+
+### Added
+
+- `gfatk resolve` reports on stderr each junction of a circuit where the two
+  segments differ within their link's overlap (an overlap of `41M` is 41
+  aligned bases, not necessarily 41 identical ones). The earlier segment's
+  bases are the ones written.
+
+### Changed
+
+- `gfatk resolve` now needs every link's overlap to be `<integer>M` or `*`
+  (read as no overlap), as the rest of gfatk does, and stops with an error
+  naming the link otherwise.
+
 ## [0.6.2] - 2026-10-15
 
 ### Fixed

@@ -989,16 +989,129 @@ fn write_fasta_record(header: &str, seq: &[u8]) {
     }
 }
 
-fn circuit_sequence(circuit: &[State], segments: &HashMap<Seg, Vec<u8>>) -> Vec<u8> {
+/// The overlap, in bases, a GFA link's CIGAR declares between its two
+/// segments. `*` (overlap not given) counts as no overlap.
+fn link_overlap(cigar: &[u8]) -> Result<usize> {
+    if cigar == b"*" {
+        return Ok(0);
+    }
+    utils::parse_cigar(cigar)
+}
+
+/// Overlap length for every traversal the GFA's links license: each link
+/// as written, and its reverse-complement equivalent (the same pairs
+/// [`build_links_index`] registers).
+fn build_overlaps(
+    links: &[(Seg, Orientation, Seg, Orientation)],
+    cigars: &[Vec<u8>],
+) -> Result<HashMap<(State, State), usize>> {
+    let mut overlaps = HashMap::new();
+    for ((fs, fo, ts, to), cigar) in links.iter().zip(cigars) {
+        let overlap = link_overlap(cigar).with_context(|| {
+            format!(
+                "link {}{} -> {}{}",
+                String::from_utf8_lossy(fs),
+                orient_char(*fo),
+                String::from_utf8_lossy(ts),
+                orient_char(*to)
+            )
+        })?;
+        overlaps.insert(((fs.clone(), *fo), (ts.clone(), *to)), overlap);
+        overlaps.insert(((ts.clone(), flip(*to)), (fs.clone(), flip(*fo))), overlap);
+    }
+    Ok(overlaps)
+}
+
+/// The sequence a walk through the graph spells out. Two linked segments
+/// share the bases of their link's overlap, so each segment after the first
+/// is written without its first `overlap` bases -- as `gfatk path` and
+/// `gfatk linear` do.
+///
+/// A circuit (`circular`) also has a closing junction, from its last
+/// segment back to its first. That overlap is trimmed off the start of the
+/// first segment, so the record begins `overlap` bases into it. This is
+/// where oatk puts the origin of a circular contig, so the same `path=`
+/// maps to the same coordinates in either tool's output.
+fn path_sequence(
+    path: &[State],
+    segments: &HashMap<Seg, Vec<u8>>,
+    overlaps: &HashMap<(State, State), usize>,
+    circular: bool,
+) -> Result<Vec<u8>> {
     let mut seq = Vec::new();
-    for (seg, o) in circuit {
+    for (i, state) in path.iter().enumerate() {
+        let prev = match i {
+            0 if circular => path.last(),
+            0 => None,
+            _ => Some(&path[i - 1]),
+        };
+        let trim = match prev {
+            Some(prev) => *overlaps
+                .get(&(prev.clone(), state.clone()))
+                .with_context(|| {
+                    format!(
+                        "no GFA link for the transition {} -> {}",
+                        state_str(prev),
+                        state_str(state)
+                    )
+                })?,
+            None => 0,
+        };
+        let (seg, o) = state;
         let s = &segments[seg];
+        anyhow::ensure!(
+            trim <= s.len(),
+            "the link {} -> {} overlaps by {trim} bases, more than the {} in {}",
+            state_str(prev.unwrap()),
+            state_str(state),
+            s.len(),
+            String::from_utf8_lossy(seg)
+        );
         match o {
-            Orientation::Forward => seq.extend_from_slice(s),
-            Orientation::Backward => seq.extend(revcomp(s)),
+            Orientation::Forward => seq.extend_from_slice(&s[trim..]),
+            Orientation::Backward => seq.extend_from_slice(&revcomp(s)[trim..]),
         }
     }
-    seq
+    Ok(seq)
+}
+
+/// A segment's sequence as read in the given orientation.
+fn oriented(state: &State, segments: &HashMap<Seg, Vec<u8>>) -> Vec<u8> {
+    match state.1 {
+        Orientation::Forward => segments[&state.0].clone(),
+        Orientation::Backward => revcomp(&segments[&state.0]),
+    }
+}
+
+/// Junctions of a circuit where the two segments do not read the same over
+/// their link's overlap, as `(from, to, overlap, differing bases)`. A GFA
+/// overlap of `41M` promises 41 aligned bases, not 41 identical ones, and
+/// [`path_sequence`] keeps the earlier segment's copy of them.
+fn inexact_junctions(
+    circuit: &[State],
+    segments: &HashMap<Seg, Vec<u8>>,
+    overlaps: &HashMap<(State, State), usize>,
+) -> Vec<(State, State, usize, usize)> {
+    let mut out = Vec::new();
+    for (i, to) in circuit.iter().enumerate() {
+        let from = &circuit[(i + circuit.len() - 1) % circuit.len()];
+        let Some(&overlap) = overlaps.get(&(from.clone(), to.clone())) else {
+            continue;
+        };
+        let (a, b) = (oriented(from, segments), oriented(to, segments));
+        if overlap == 0 || overlap > a.len() || overlap > b.len() {
+            continue;
+        }
+        let differing = a[a.len() - overlap..]
+            .iter()
+            .zip(&b[..overlap])
+            .filter(|(x, y)| !x.eq_ignore_ascii_case(y))
+            .count();
+        if differing > 0 {
+            out.push((from.clone(), to.clone(), overlap, differing));
+        }
+    }
+    out
 }
 
 /// Levenshtein edit distance, space-optimised to two rolling rows. Guards
@@ -1229,6 +1342,8 @@ pub fn resolve(matches: &clap::ArgMatches) -> Result<()> {
     let triple_lookup = build_triple_lookup(&records);
     let edge_support = build_edge_support(&records);
     let links_index = build_links_index(&links);
+    let cigars: Vec<Vec<u8>> = gfa.0.links.iter().map(|l| l.overlap.clone()).collect();
+    let overlaps = build_overlaps(&links, &cigars)?;
     let (edges, n_unlicensed) = build_candidate_edges(&triple_lookup, &edge_support, &links_index);
     eprintln!(
         "[+]\t{} candidate edges from read/graph evidence",
@@ -1300,7 +1415,7 @@ pub fn resolve(matches: &clap::ArgMatches) -> Result<()> {
     );
 
     for (idx, circuit) in circuits.iter().enumerate() {
-        let seq = circuit_sequence(circuit, &segments);
+        let seq = path_sequence(circuit, &segments, &overlaps, true)?;
         let path_str = circuit.iter().map(state_str).collect::<Vec<_>>().join(",");
         eprintln!(
             "[+]\tCircuit {}: {} segments, {} bp, path={}",
@@ -1309,6 +1424,28 @@ pub fn resolve(matches: &clap::ArgMatches) -> Result<()> {
             seq.len(),
             path_str
         );
+        let inexact = inexact_junctions(circuit, &segments, &overlaps);
+        if !inexact.is_empty() {
+            let shown: Vec<String> = inexact
+                .iter()
+                .take(5)
+                .map(|(from, to, overlap, differing)| {
+                    format!(
+                        "{} -> {} ({differing} of {overlap} bp differ)",
+                        state_str(from),
+                        state_str(to)
+                    )
+                })
+                .collect();
+            eprintln!(
+                "[-]\tCircuit {}: at {} junction(s) the two segments differ within their link's \
+                 overlap; the earlier segment's bases are kept there: {}{}",
+                idx + 1,
+                inexact.len(),
+                shown.join(", "),
+                if inexact.len() > shown.len() { ", ..." } else { "" }
+            );
+        }
         let species_tag = gfa_file
             .and_then(|p| p.file_stem())
             .map(|s| s.to_string_lossy().to_string())
@@ -1390,7 +1527,7 @@ pub fn resolve(matches: &clap::ArgMatches) -> Result<()> {
             // path actually does between the same entry/exit points?
             // Purely informational -- doesn't affect what gets written.
             let diff = match find_main_detour(&circuits, &b.entry, &b.exit, MAX_DETOUR_HOPS) {
-                Some(detour) => diff_bubble_arm(seq, &circuit_sequence(&detour, &segments)),
+                Some(detour) => diff_bubble_arm(seq, &path_sequence(&detour, &segments, &overlaps, false)?),
                 None => BubbleDiff::NoDetourFound,
             };
             let (diff_summary, diff_header) = diff.describe();
@@ -1749,6 +1886,111 @@ mod tests {
             diff_bubble_arm(&bubble, &detour),
             BubbleDiff::Compared { .. }
         ));
+    }
+
+    /// Three segments in a ring with 3-base overlaps:
+    /// a = AAACCCGGG, b = GGGTTTACG, c = ACGTGCAAA, so a+ -> b+ shares GGG,
+    /// b+ -> c+ shares ACG and c+ -> a+ shares AAA. The circle they spell,
+    /// each overlap written once, is CCCGGGTTTACGTGCAAA (18 bases).
+    fn ring() -> (HashMap<Seg, Vec<u8>>, HashMap<(State, State), usize>) {
+        use Orientation::Forward as F;
+        let segments: HashMap<Seg, Vec<u8>> = [
+            (b"a".to_vec(), b"AAACCCGGG".to_vec()),
+            (b"b".to_vec(), b"GGGTTTACG".to_vec()),
+            (b"c".to_vec(), b"ACGTGCAAA".to_vec()),
+        ]
+        .into_iter()
+        .collect();
+        let links = vec![
+            (b"a".to_vec(), F, b"b".to_vec(), F),
+            (b"b".to_vec(), F, b"c".to_vec(), F),
+            (b"c".to_vec(), F, b"a".to_vec(), F),
+        ];
+        let cigars = vec![b"3M".to_vec(); 3];
+        (segments, build_overlaps(&links, &cigars).unwrap())
+    }
+
+    #[test]
+    fn test_link_overlap() {
+        assert_eq!(link_overlap(b"41M").unwrap(), 41);
+        assert_eq!(link_overlap(b"0M").unwrap(), 0);
+        assert_eq!(link_overlap(b"*").unwrap(), 0);
+        assert!(link_overlap(b"3M1I2M").is_err());
+    }
+
+    #[test]
+    fn test_path_sequence_circuit_writes_each_overlap_once() {
+        use Orientation::Forward as F;
+        let (segments, overlaps) = ring();
+        let circuit = [s("a", F), s("b", F), s("c", F)];
+        let seq = path_sequence(&circuit, &segments, &overlaps, true).unwrap();
+        // the closing c -> a overlap (AAA) comes off the start of a
+        assert_eq!(seq, b"CCCGGGTTTACGTGCAAA".to_vec());
+        // 27 bases of segment, less three 3-base overlaps
+        assert_eq!(seq.len(), 27 - 9);
+    }
+
+    #[test]
+    fn test_path_sequence_circuit_is_the_same_circle_from_any_start() {
+        use Orientation::Forward as F;
+        let (segments, overlaps) = ring();
+        let from_a = path_sequence(&[s("a", F), s("b", F), s("c", F)], &segments, &overlaps, true).unwrap();
+        let from_b = path_sequence(&[s("b", F), s("c", F), s("a", F)], &segments, &overlaps, true).unwrap();
+        assert_eq!(from_a.len(), from_b.len());
+        let doubled = [from_a.clone(), from_a].concat();
+        assert!(doubled.windows(from_b.len()).any(|w| w == from_b.as_slice()));
+    }
+
+    #[test]
+    fn test_path_sequence_reverse_strand_is_the_reverse_complement() {
+        use Orientation::Backward as B;
+        use Orientation::Forward as F;
+        let (segments, overlaps) = ring();
+        let fwd = path_sequence(&[s("a", F), s("b", F), s("c", F)], &segments, &overlaps, true).unwrap();
+        // the same circle walked on the other strand: a- -> c- -> b-
+        let rev = path_sequence(&[s("a", B), s("c", B), s("b", B)], &segments, &overlaps, true).unwrap();
+        let rc = revcomp(&fwd);
+        let doubled = [rc.clone(), rc].concat();
+        assert_eq!(rev.len(), fwd.len());
+        assert!(doubled.windows(rev.len()).any(|w| w == rev.as_slice()));
+    }
+
+    #[test]
+    fn test_path_sequence_linear_keeps_the_first_segment_whole() {
+        use Orientation::Forward as F;
+        let (segments, overlaps) = ring();
+        let seq = path_sequence(&[s("a", F), s("b", F)], &segments, &overlaps, false).unwrap();
+        assert_eq!(seq, b"AAACCCGGGTTTACG".to_vec());
+        assert!(path_sequence(&[], &segments, &overlaps, false).unwrap().is_empty());
+    }
+
+    #[test]
+    fn test_path_sequence_single_segment_circuit_trims_its_self_link() {
+        use Orientation::Forward as F;
+        let segments: HashMap<Seg, Vec<u8>> = [(b"x".to_vec(), b"ACGTTTGGCACG".to_vec())].into_iter().collect();
+        let overlaps = build_overlaps(&[(b"x".to_vec(), F, b"x".to_vec(), F)], &[b"3M".to_vec()]).unwrap();
+        let seq = path_sequence(&[s("x", F)], &segments, &overlaps, true).unwrap();
+        assert_eq!(seq, b"TTTGGCACG".to_vec());
+    }
+
+    #[test]
+    fn test_inexact_junctions_reports_only_overlaps_that_differ() {
+        use Orientation::Forward as F;
+        let (mut segments, overlaps) = ring();
+        let circuit = [s("a", F), s("b", F), s("c", F)];
+        assert!(inexact_junctions(&circuit, &segments, &overlaps).is_empty());
+        // b now starts GTG where a ends GGG
+        segments.insert(b"b".to_vec(), b"GTGTTTACG".to_vec());
+        let found = inexact_junctions(&circuit, &segments, &overlaps);
+        assert_eq!(found, vec![(s("a", F), s("b", F), 3, 1)]);
+    }
+
+    #[test]
+    fn test_path_sequence_errors_on_a_transition_with_no_link() {
+        use Orientation::Backward as B;
+        use Orientation::Forward as F;
+        let (segments, overlaps) = ring();
+        assert!(path_sequence(&[s("a", F), s("b", B)], &segments, &overlaps, false).is_err());
     }
 
     fn rec(path: &[State]) -> GafRecord {
