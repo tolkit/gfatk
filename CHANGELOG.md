@@ -64,8 +64,26 @@ All notable changes to gfatk are listed here, newest first. Versions follow
   identity reported for a reverse-strand arm was meaningless), and its
   header gains `:strand=+` or `:strand=-` after `support_reads`.
 
+- `gfatk resolve` measured read depth, and from it each segment's copy
+  number, wrongly in three ways, now fixed together. Segments were placed
+  along a read's path end to end, though GAF path coordinates count the
+  bases two linked segments share once, so bases were credited to the
+  wrong segment. Reads lying within a single segment were ignored, which
+  left long segments (few junction-crossing reads for their length) at
+  0.4x the depth of the rest. And single-copy depth was the median over
+  segments, which the many short ones set; it is now the median weighted
+  by segment length. Only reads aligned over at least 90% of their length
+  count for depth (`--min-read-aligned`): on mitochondrial graphs two
+  recruited reads in three are only partly organellar, and counting their
+  aligned pieces puts depth out again. Against the graphs' k-mer coverage
+  on 54 oatk graphs, the copy number agrees for 90% of segments (77%
+  before), and a single-copy segment is called two-copy in 3% of cases
+  (17% before), a two-copy one single-copy in 8% (16%).
+
 ### Added
 
+- `gfatk resolve --min-read-aligned` (default 0.90; 0 counts every
+  alignment), and a line on stderr saying how many reads count for depth.
 - `gfatk resolve` reports on stderr each junction of a circuit where the two
   segments differ within their link's overlap (an overlap of `41M` is 41
   aligned bases, not necessarily 41 identical ones). The earlier segment's

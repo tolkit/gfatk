@@ -38,7 +38,7 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
 
-use crate::gaf::{read_gaf_records, GafRecord};
+use crate::gaf::{read_gaf_evidence, GafRecord};
 use crate::gfa::gfa::GFAtk;
 use crate::load::{load_gfa, load_gfa_stdin};
 use crate::utils;
@@ -99,15 +99,38 @@ fn orient_char(o: Orientation) -> char {
 /// Per-segment read depth (aligned bases within that segment / its length),
 /// attributing each read's aligned span to the specific segments of its
 /// path it actually overlaps, not just segments the path merely touches.
-fn compute_depth(records: &[GafRecord], seg_len: &HashMap<Seg, usize>) -> HashMap<Seg, f64> {
-    let mut aligned_bases: HashMap<Seg, u64> = HashMap::new();
+///
+/// A GAF's path coordinates count the bases two linked segments share once,
+/// so each segment starts its link's overlap before the previous one ends.
+/// (Laying segments end to end instead puts every later segment too far
+/// along, by all the overlaps before it, and credits bases to the wrong
+/// segment.) Reads lying within a single segment count too: leaving them
+/// out, as versions up to 0.6.3 did, measures only reads that cross a
+/// junction, which a long segment has few of for its length - segments over
+/// 30 kb read at 0.4x the depth of the rest. Only reads aligned over most
+/// of their length count (`counts_for_depth`, `single_segment_bases`; see
+/// [`crate::gaf::read_gaf_evidence`]).
+fn compute_depth(
+    records: &[GafRecord],
+    single_segment_bases: &HashMap<Seg, u64>,
+    seg_len: &HashMap<Seg, usize>,
+    overlaps: &HashMap<(State, State), usize>,
+) -> HashMap<Seg, f64> {
+    let mut aligned_bases: HashMap<Seg, u64> = single_segment_bases.clone();
 
-    for rec in records {
+    for rec in records.iter().filter(|r| r.counts_for_depth) {
         let mut offset: usize = 0;
-        for (seg, _o) in &rec.path {
+        for (i, (seg, _o)) in rec.path.iter().enumerate() {
             let Some(&len) = seg_len.get(seg) else {
                 continue;
             };
+            if i > 0 {
+                let shared = overlaps
+                    .get(&(rec.path[i - 1].clone(), rec.path[i].clone()))
+                    .copied()
+                    .unwrap_or(0);
+                offset = offset.saturating_sub(shared);
+            }
             let seg_start = offset;
             let seg_end = offset + len;
             let ov_start = seg_start.max(rec.path_start);
@@ -128,25 +151,32 @@ fn compute_depth(records: &[GafRecord], seg_len: &HashMap<Seg, usize>) -> HashMa
         .collect()
 }
 
-/// The depth of a "typical" single-copy segment (the median of all nonzero
-/// depths), and each segment's estimated copy number relative to it,
-/// floored at 1 for segments with too little evidence to say otherwise.
-fn estimate_budget(depth: &HashMap<Seg, f64>) -> (f64, HashMap<Seg, u32>) {
-    let mut values: Vec<f64> = depth.values().copied().filter(|v| *v > 0.0).collect();
-    values.sort_by(|a, b| a.partial_cmp(b).unwrap());
-    let baseline = if values.is_empty() {
-        1.0
-    } else if values.len() % 2 == 1 {
-        values[values.len() / 2]
-    } else {
-        let mid = values.len() / 2;
-        (values[mid - 1] + values[mid]) / 2.0
-    };
-    let baseline = if baseline > 0.0 {
-        baseline
-    } else {
-        values.last().copied().unwrap_or(1.0)
-    };
+/// The depth of single-copy sequence, and each segment's estimated copy
+/// number relative to it, floored at 1 for segments with too little
+/// evidence to say otherwise.
+///
+/// The baseline is the depth at the middle base of the graph: the median
+/// over segments with reads, each weighted by its length. Most of an
+/// organelle genome is single-copy, so most *bases* are at single-copy
+/// depth - which is not true of most *segments* in a graph with many short
+/// repeat or low-coverage pieces, and those would set an unweighted median.
+fn estimate_budget(depth: &HashMap<Seg, f64>, seg_len: &HashMap<Seg, usize>) -> (f64, HashMap<Seg, u32>) {
+    let mut values: Vec<(f64, usize, &Seg)> = depth
+        .iter()
+        .filter(|(_, d)| **d > 0.0)
+        .map(|(seg, &d)| (d, seg_len.get(seg).copied().unwrap_or(1).max(1), seg))
+        .collect();
+    values.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap().then_with(|| a.2.cmp(b.2)));
+    let total: usize = values.iter().map(|v| v.1).sum();
+    let mut baseline = 1.0;
+    let mut seen = 0usize;
+    for (d, len, _) in &values {
+        seen += len;
+        if 2 * seen >= total {
+            baseline = *d;
+            break;
+        }
+    }
 
     let budget = depth
         .iter()
@@ -1505,6 +1535,9 @@ pub fn resolve(matches: &clap::ArgMatches) -> Result<()> {
     let min_identity = *matches
         .get_one::<f64>("min-identity")
         .expect("defaulted by clap");
+    let min_read_aligned = *matches
+        .get_one::<f64>("min-read-aligned")
+        .expect("defaulted by clap");
     let time_limit = *matches
         .get_one::<f64>("time-limit")
         .expect("defaulted by clap");
@@ -1539,21 +1572,28 @@ pub fn resolve(matches: &clap::ArgMatches) -> Result<()> {
         .collect();
 
     eprintln!("[+]\tReading GAF alignments from {gaf_file:?}");
-    let records = read_gaf_records(gaf_file, min_mapq, min_identity)?;
+    let evidence = read_gaf_evidence(gaf_file, min_mapq, min_identity, min_read_aligned)?;
+    let records = evidence.records;
     eprintln!(
         "[+]\t{} usable read-path records after quality filtering",
         records.len()
     );
+    eprintln!(
+        "[+]\t{} of {} reads are aligned over at least {:.0}% of their length and count for depth",
+        evidence.n_reads_for_depth,
+        evidence.n_reads,
+        100.0 * min_read_aligned
+    );
 
-    let depth = compute_depth(&records, &seg_len);
-    let (baseline, budget) = estimate_budget(&depth);
-    eprintln!("[+]\tBaseline (single-copy) read depth: {baseline:.1}x");
 
     let triple_lookup = build_triple_lookup(&records);
     let edge_support = build_edge_support(&records);
     let links_index = build_links_index(&links);
     let cigars: Vec<Vec<u8>> = gfa.0.links.iter().map(|l| l.overlap.clone()).collect();
     let overlaps = build_overlaps(&links, &cigars)?;
+    let depth = compute_depth(&records, &evidence.single_segment_bases, &seg_len, &overlaps);
+    let (baseline, budget) = estimate_budget(&depth, &seg_len);
+    eprintln!("[+]\tBaseline (single-copy) read depth: {baseline:.1}x");
     let (edges, n_unlicensed) = build_candidate_edges(&triple_lookup, &edge_support, &links_index);
     eprintln!(
         "[+]\t{} candidate edges from read/graph evidence",
@@ -1863,7 +1903,8 @@ mod tests {
         depth.insert(b"b".to_vec(), 100.0);
         depth.insert(b"c".to_vec(), 100.0);
         depth.insert(b"repeat".to_vec(), 300.0);
-        let (baseline, budget) = estimate_budget(&depth);
+        let len: HashMap<Seg, usize> = depth.keys().map(|k| (k.clone(), 1000)).collect();
+        let (baseline, budget) = estimate_budget(&depth, &len);
         assert!((baseline - 100.0).abs() < 1e-9);
         assert_eq!(budget[&b"a".to_vec()], 1);
         assert_eq!(budget[&b"repeat".to_vec()], 3);
@@ -1877,8 +1918,51 @@ mod tests {
         depth.insert(b"a".to_vec(), 100.0);
         depth.insert(b"b".to_vec(), 100.0);
         depth.insert(b"weak".to_vec(), 5.0);
-        let (_, budget) = estimate_budget(&depth);
+        let len: HashMap<Seg, usize> = depth.keys().map(|k| (k.clone(), 1000)).collect();
+        let (_, budget) = estimate_budget(&depth, &len);
         assert_eq!(budget[&b"weak".to_vec()], 1);
+    }
+
+    #[test]
+    fn test_estimate_budget_baseline_is_weighted_by_length() {
+        // one long single-copy segment and four short two-copy repeats:
+        // most segments are at 200x, most bases at 100x
+        let mut depth = HashMap::new();
+        let mut len = HashMap::new();
+        depth.insert(b"unique".to_vec(), 100.0);
+        len.insert(b"unique".to_vec(), 100_000);
+        for name in ["r1", "r2", "r3", "r4"] {
+            depth.insert(name.as_bytes().to_vec(), 200.0);
+            len.insert(name.as_bytes().to_vec(), 2_000);
+        }
+        let (baseline, budget) = estimate_budget(&depth, &len);
+        assert!((baseline - 100.0).abs() < 1e-9);
+        assert_eq!(budget[&b"unique".to_vec()], 1);
+        assert_eq!(budget[&b"r1".to_vec()], 2);
+    }
+
+    #[test]
+    fn test_compute_depth_uses_trimmed_path_coordinates_and_single_segment_reads() {
+        use Orientation::Forward as F;
+        // a (10 bp) and b (10 bp) overlap by 4: the path a,b is 16 long and
+        // b covers path positions 6..16
+        let seg_len: HashMap<Seg, usize> = [(b"a".to_vec(), 10), (b"b".to_vec(), 10)].into_iter().collect();
+        let mut overlaps = HashMap::new();
+        overlaps.insert((s("a", F), s("b", F)), 4usize);
+        let spanning = GafRecord { path: vec![s("a", F), s("b", F)], path_start: 8, path_end: 16, mapq: 60, identity: None, counts_for_depth: true };
+        let depth = compute_depth(std::slice::from_ref(&spanning), &HashMap::new(), &seg_len, &overlaps);
+        // a: 8..10 = 2 bases; b: 8..16 = 8 bases (laid end to end, b would
+        // start at 10 and get only 6)
+        assert_eq!(depth[&b"a".to_vec()], 0.2);
+        assert_eq!(depth[&b"b".to_vec()], 0.8);
+        // a read inside b alone (5 aligned bases) adds to b's depth
+        let within: HashMap<Seg, u64> = [(b"b".to_vec(), 5)].into_iter().collect();
+        let depth = compute_depth(std::slice::from_ref(&spanning), &within, &seg_len, &overlaps);
+        assert_eq!(depth[&b"b".to_vec()], 1.3);
+        // a junction-crossing read that is mostly unaligned is not depth
+        let partial = GafRecord { counts_for_depth: false, ..spanning };
+        let depth = compute_depth(&[partial], &HashMap::new(), &seg_len, &overlaps);
+        assert_eq!(depth[&b"b".to_vec()], 0.0);
     }
 
     fn s(name: &str, o: Orientation) -> State {
@@ -2436,6 +2520,7 @@ mod tests {
             path_end: 0,
             mapq: 60,
             identity: None,
+            counts_for_depth: true,
         }
     }
 

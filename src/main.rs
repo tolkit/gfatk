@@ -308,6 +308,13 @@ fn main() -> Result<()> {
                         .help("Minimum alignment identity (id:f: tag) to keep a read.")
                 )
                 .arg(
+                    Arg::new("min-read-aligned")
+                        .long("min-read-aligned")
+                        .default_value("0.90")
+                        .value_parser(value_parser!(f64))
+                        .help("Minimum fraction of a read its alignments must cover, together, for the read to count towards read depth (and so segment copy number). Reads that are only partly from the organelle - nuclear copies of organelle DNA, say - are not depth of its genome. Adjacency evidence uses every read. 0 counts every alignment.")
+                )
+                .arg(
                     Arg::new("time-limit")
                         .long("time-limit")
                         .default_value("45.0")

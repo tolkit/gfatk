@@ -10,6 +10,7 @@
 
 use anyhow::{bail, Context, Result};
 use gfa::gfa::Orientation;
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
@@ -20,8 +21,9 @@ pub struct GafRecord {
     /// The segments the read traversed, each with the orientation it was
     /// walked in.
     pub path: Vec<(Vec<u8>, Orientation)>,
-    /// Start of the aligned region, in path-length coordinates (i.e. summed
-    /// segment lengths along `path`, ignoring link overlaps).
+    /// Start of the aligned region, in path coordinates: positions along
+    /// `path` with the bases two linked segments share counted once (the
+    /// path is as long as its segments less the overlaps between them).
     pub path_start: usize,
     /// End of the aligned region, in path-length coordinates.
     pub path_end: usize,
@@ -29,6 +31,10 @@ pub struct GafRecord {
     pub mapq: u32,
     /// Alignment identity, from the `id:f:` optional tag, when present.
     pub identity: Option<f64>,
+    /// Whether the read is aligned over enough of its length for this
+    /// alignment to count towards read depth (see [`read_gaf_evidence`]).
+    /// Adjacency evidence uses every record regardless.
+    pub counts_for_depth: bool,
 }
 
 /// Parse a GAF path field, e.g. `>u66<u67>u28`, into segment/orientation
@@ -66,9 +72,10 @@ pub fn parse_gaf_path(path_str: &str) -> Vec<(Vec<u8>, Orientation)> {
 
 /// Parse one tab-delimited GAF line, applying the mapping-quality and
 /// identity thresholds. Returns `Ok(None)` for a record that fails the
-/// quality filter or has too short a path to be useful (fewer than 2
-/// segments), rather than an error -- most GAF lines will legitimately be
-/// filtered this way.
+/// quality filter or has no path, rather than an error. A read lying
+/// within one segment is kept: it says nothing about adjacency, but it is
+/// read depth like any other, and most of it - on long segments nearly all
+/// reads start and end inside the segment.
 pub fn parse_gaf_line(line: &str, min_mapq: u32, min_identity: f64) -> Result<Option<GafRecord>> {
     let fields: Vec<&str> = line.trim_end().split('\t').collect();
     if fields.len() < 12 {
@@ -90,7 +97,7 @@ pub fn parse_gaf_line(line: &str, min_mapq: u32, min_identity: f64) -> Result<Op
     }
 
     let path = parse_gaf_path(fields[5]);
-    if path.len() < 2 {
+    if path.is_empty() {
         return Ok(None);
     }
 
@@ -103,35 +110,156 @@ pub fn parse_gaf_line(line: &str, min_mapq: u32, min_identity: f64) -> Result<Op
         path_end,
         mapq,
         identity,
+        counts_for_depth: true,
     }))
 }
 
+/// What a GAF says about a graph: the reads that cross at least one
+/// junction, kept whole, and - for read depth - how many bases the reads
+/// lying within a single segment align to each segment. Those are most of
+/// the reads (over 90% on an organelle graph) and say nothing about
+/// adjacency, so they are tallied as they are read, not stored.
+#[derive(Debug, Default)]
+pub struct GafEvidence {
+    /// Reads whose path has two or more segments.
+    pub records: Vec<GafRecord>,
+    /// Aligned bases of single-segment alignments that count for depth,
+    /// per segment.
+    pub single_segment_bases: HashMap<Vec<u8>, u64>,
+    /// Reads with at least one alignment passing the quality filter.
+    pub n_reads: usize,
+    /// Of those, the reads aligned over enough of their length to count
+    /// for depth.
+    pub n_reads_for_depth: usize,
+}
+
 /// Read and quality-filter every usable record from a GAF file.
-pub fn read_gaf_records<P: AsRef<Path>>(
+///
+/// A read counts for depth only if its alignments, together, cover at
+/// least `min_read_aligned` of its length. Reads recruited to an organelle
+/// graph are often only partly organellar - a nuclear read carrying an
+/// organelle-derived insert, say - and the piece that aligns is not depth
+/// of the organelle genome: on mitochondrial graphs two reads in three can
+/// be like this, and counting them puts depth out by segment (most of all
+/// against short segments, which few of them reach). Alignments of one
+/// read are taken to be consecutive lines, as GraphAligner writes them.
+pub fn read_gaf_evidence<P: AsRef<Path>>(
     path: P,
     min_mapq: u32,
     min_identity: f64,
-) -> Result<Vec<GafRecord>> {
+    min_read_aligned: f64,
+) -> Result<GafEvidence> {
     let file = File::open(path.as_ref())
         .with_context(|| format!("Failed to open GAF file: {:?}", path.as_ref()))?;
     let reader = BufReader::new(file);
 
-    let mut records = Vec::new();
+    let mut evidence = GafEvidence::default();
+    let mut read_name = String::new();
+    let mut read_len: usize = 0;
+    // this read's alignments: (query start, query end, record)
+    let mut pending: Vec<(usize, usize, GafRecord)> = Vec::new();
+
+    fn flush(
+        pending: &mut Vec<(usize, usize, GafRecord)>,
+        read_len: usize,
+        min_read_aligned: f64,
+        evidence: &mut GafEvidence,
+    ) {
+        if pending.is_empty() {
+            return;
+        }
+        // bases of the read covered by any of its alignments
+        let mut spans: Vec<(usize, usize)> = pending.iter().map(|(s, e, _)| (*s, *e)).collect();
+        spans.sort_unstable();
+        let (mut covered, mut reached) = (0usize, 0usize);
+        for (s, e) in spans {
+            if e > reached {
+                covered += e - s.max(reached);
+                reached = e;
+            }
+        }
+        let counts = covered as f64 >= min_read_aligned * read_len as f64;
+        evidence.n_reads += 1;
+        if counts {
+            evidence.n_reads_for_depth += 1;
+        }
+        for (_, _, mut rec) in pending.drain(..) {
+            if rec.path.len() == 1 {
+                if counts {
+                    let (seg, _) = rec.path.pop().expect("one segment");
+                    *evidence.single_segment_bases.entry(seg).or_insert(0) +=
+                        rec.path_end.saturating_sub(rec.path_start) as u64;
+                }
+            } else {
+                rec.counts_for_depth = counts;
+                evidence.records.push(rec);
+            }
+        }
+    }
+
     for line in reader.lines() {
         let line = line?;
         if line.is_empty() {
             continue;
         }
+        let mut fields = line.splitn(5, '\t');
+        let name = fields.next().unwrap_or("");
+        let len: usize = fields.next().and_then(|f| f.parse().ok()).unwrap_or(0);
+        let start: usize = fields.next().and_then(|f| f.parse().ok()).unwrap_or(0);
+        let end: usize = fields.next().and_then(|f| f.parse().ok()).unwrap_or(0);
+        if name != read_name {
+            flush(&mut pending, read_len, min_read_aligned, &mut evidence);
+            read_name.clear();
+            read_name.push_str(name);
+            read_len = len;
+        }
         if let Some(rec) = parse_gaf_line(&line, min_mapq, min_identity)? {
-            records.push(rec);
+            pending.push((start, end, rec));
         }
     }
-    Ok(records)
+    flush(&mut pending, read_len, min_read_aligned, &mut evidence);
+    Ok(evidence)
+}
+
+/// Read and quality-filter the records of a GAF file whose path crosses at
+/// least one junction (two or more segments).
+pub fn read_gaf_records<P: AsRef<Path>>(
+    path: P,
+    min_mapq: u32,
+    min_identity: f64,
+) -> Result<Vec<GafRecord>> {
+    Ok(read_gaf_evidence(path, min_mapq, min_identity, 0.0)?.records)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_read_gaf_evidence_counts_only_well_aligned_reads_for_depth() {
+        // read1 (1000 bp): two alignments covering 0-600 and 500-1000 = all of it
+        // read2 (1000 bp): one 300 bp alignment = 30% of it
+        // read3 (1000 bp): crosses a junction but only 40% aligned
+        let gaf = "\
+read1\t1000\t0\t600\t+\t>u1\t5000\t100\t700\t600\t600\t60\tid:f:0.99
+read1\t1000\t500\t1000\t+\t>u2>u3\t9000\t0\t500\t500\t500\t60\tid:f:0.99
+read2\t1000\t0\t300\t+\t>u1\t5000\t0\t300\t300\t300\t60\tid:f:0.99
+read3\t1000\t0\t400\t+\t>u2>u3\t9000\t0\t400\t400\t400\t60\tid:f:0.99
+";
+        let path = std::env::temp_dir().join(format!("gfatk_test_{}.gaf", std::process::id()));
+        std::fs::write(&path, gaf).unwrap();
+        let ev = read_gaf_evidence(&path, 1, 0.9, 0.9).unwrap();
+        let all = read_gaf_evidence(&path, 1, 0.9, 0.0).unwrap();
+        std::fs::remove_file(&path).unwrap();
+        assert_eq!((ev.n_reads, ev.n_reads_for_depth), (3, 1));
+        assert_eq!(ev.single_segment_bases[&b"u1".to_vec()], 600);
+        // both junction-crossing reads are kept as adjacency evidence
+        assert_eq!(ev.records.len(), 2);
+        assert_eq!(ev.records.iter().filter(|r| r.counts_for_depth).count(), 1);
+        // with no threshold every alignment counts
+        assert_eq!(all.single_segment_bases[&b"u1".to_vec()], 900);
+        assert!(all.records.iter().all(|r| r.counts_for_depth));
+    }
 
     #[test]
     fn test_parse_gaf_path() {
@@ -167,9 +295,16 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_gaf_line_drops_short_paths() {
+    fn test_parse_gaf_line_keeps_single_segment_reads() {
         let line = "read1\t1000\t0\t998\t+\t>u1\t2000\t100\t1098\t900\t998\t60\tid:f:0.99";
-        let rec = parse_gaf_line(line, 1, 0.9).unwrap();
-        assert!(rec.is_none());
+        let rec = parse_gaf_line(line, 1, 0.9).unwrap().unwrap();
+        assert_eq!(rec.path.len(), 1);
+        assert_eq!((rec.path_start, rec.path_end), (100, 1098));
+    }
+
+    #[test]
+    fn test_parse_gaf_line_drops_empty_paths() {
+        let line = "read1\t1000\t0\t998\t+\t*\t2000\t100\t1098\t900\t998\t60\tid:f:0.99";
+        assert!(parse_gaf_line(line, 1, 0.9).unwrap().is_none());
     }
 }
