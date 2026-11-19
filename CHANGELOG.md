@@ -19,6 +19,27 @@ All notable changes to gfatk are listed here, newest first. Versions follow
   stderr are those of the trimmed sequence. The path chosen is unchanged.
 - The main-path sequence a bubble arm is compared with is trimmed the same
   way.
+- `gfatk resolve` gave a different answer each time it was run on the same
+  input: the order of candidate edges, of the solver's variables and of the
+  walk through the chosen edges all followed hash-map order. Everything is
+  now in sorted order, and each circuit is written in one fixed form (of all
+  its rotations on either strand, the one that sorts first, so it starts at
+  its first segment by name). The same GFA and GAF always give the same
+  FASTA, byte for byte.
+- Where a circuit passes through a segment more than once, which way it
+  leaves after each entry was arbitrary. It is now chosen by the reads: at
+  each state, entries and exits are paired to maximise the support of the
+  `(previous, segment, next)` triples walked, and closed walks sharing a
+  state are joined where that costs the least support.
+- A circuit of a single segment (a circular unitig linked to itself) was
+  dropped, and the segment written as `unresolved_segment` with its overlap
+  untrimmed. It is now a circuit like any other.
+- The single-circuit constraint was rooted at the best-connected state of
+  the whole graph, which forced that state into the circuit whether or not
+  the best circuit passes through it, and could cost segments (or leave no
+  solution, and several circuits). The root is now the best-connected state
+  of the largest circuit found without the constraint; if that is already a
+  single circuit, the constrained solve is skipped.
 
 ### Added
 
@@ -26,12 +47,16 @@ All notable changes to gfatk are listed here, newest first. Versions follow
   segments differ within their link's overlap (an overlap of `41M` is 41
   aligned bases, not necessarily 41 identical ones). The earlier segment's
   bases are the ones written.
+- `gfatk resolve` says so on stderr when the solver stopped at `--time-limit`
+  without proving its answer the best one. Before, such an answer was used
+  without comment.
 
 ### Changed
 
 - `gfatk resolve` now needs every link's overlap to be `<integer>M` or `*`
-  (read as no overlap), as the rest of gfatk does, and stops with an error
-  naming the link otherwise.
+  (read as no overlap), and stops with an error naming the link otherwise.
+- Tests: `linear`, `trim` and `stats` on a GFA without edge coverage are
+  expected to succeed, as they have since edge coverage became optional.
 
 ## [0.6.2] - 2026-10-15
 

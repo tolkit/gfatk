@@ -273,14 +273,15 @@ CTTGATT
 // test for no edge coverage tags
 // if user wants to use:
 // `gfatk linear`, `gfatk dot`, `gfatk trim` or `gfatk stats`
-// Edge coverage must be present.
+// Edge coverage must be present for `dot`. `linear`, `trim` and `stats`
+// have run without it since 0.5.x (edges then all weigh the same).
 
 #[test]
-fn test_gfa_edge_coverage_failure_linear() -> Result<(), Box<dyn std::error::Error>> {
+fn test_gfa_no_edge_coverage_linear() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = Command::cargo_bin("gfatk")?;
 
     cmd.arg("linear").arg("./tests/test_no_ec.gfa");
-    cmd.assert().failure();
+    cmd.assert().success();
 
     Ok(())
 }
@@ -296,21 +297,21 @@ fn test_gfa_edge_coverage_failure_dot() -> Result<(), Box<dyn std::error::Error>
 }
 
 #[test]
-fn test_gfa_edge_coverage_failure_trim() -> Result<(), Box<dyn std::error::Error>> {
+fn test_gfa_no_edge_coverage_trim() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = Command::cargo_bin("gfatk")?;
 
     cmd.arg("trim").arg("./tests/test_no_ec.gfa");
-    cmd.assert().failure();
+    cmd.assert().success();
 
     Ok(())
 }
 
 #[test]
-fn test_gfa_edge_coverage_failure_stats() -> Result<(), Box<dyn std::error::Error>> {
+fn test_gfa_no_edge_coverage_stats() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = Command::cargo_bin("gfatk")?;
 
     cmd.arg("stats").arg("./tests/test_no_ec.gfa");
-    cmd.assert().failure();
+    cmd.assert().success();
 
     Ok(())
 }

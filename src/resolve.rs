@@ -30,9 +30,10 @@
 use anyhow::{Context, Result};
 use gfa::gfa::Orientation;
 use good_lp::{
-    variable, Expression, ProblemVariables, Solution, SolverModel, Variable, WithTimeLimit,
+    variable, Expression, ProblemVariables, Solution, SolutionStatus, SolverModel, Variable,
+    WithTimeLimit,
 };
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
@@ -44,6 +45,9 @@ use crate::utils;
 
 type Seg = Vec<u8>;
 type State = (Seg, Orientation);
+/// Read support for each `(prev, segment) -> next` triple; see
+/// [`build_triple_lookup`].
+type TripleLookup = HashMap<(Seg, Orientation, Seg, Orientation), HashMap<State, u32>>;
 
 /// A candidate transition between two (segment, orientation) states, with
 /// the strength of evidence backing it.
@@ -159,9 +163,7 @@ fn estimate_budget(depth: &HashMap<Seg, f64>) -> (f64, HashMap<Seg, u32>) {
 /// The most specific evidence tier: an exact `(prev, segment, next)` triple
 /// actually seen in a read, canonicalised so a read sequenced from either
 /// strand of the same molecule counts as the same evidence.
-fn build_triple_lookup(
-    records: &[GafRecord],
-) -> HashMap<(Seg, Orientation, Seg, Orientation), HashMap<State, u32>> {
+fn build_triple_lookup(records: &[GafRecord]) -> TripleLookup {
     let mut raw: HashMap<(Seg, Orientation, Seg, Orientation, Seg, Orientation), u32> =
         HashMap::new();
     for rec in records {
@@ -194,8 +196,7 @@ fn build_triple_lookup(
         canon.insert(canon_key, cnt + rev_cnt);
     }
 
-    let mut lookup: HashMap<(Seg, Orientation, Seg, Orientation), HashMap<State, u32>> =
-        HashMap::new();
+    let mut lookup: TripleLookup = HashMap::new();
     for ((a, ao, seg, so, b, bo), cnt) in canon {
         if cnt < MIN_EDGE_READS {
             continue;
@@ -280,7 +281,7 @@ fn consider(best: &mut HashMap<(State, State), (u8, u32)>, u: State, v: State, c
 /// the edges alongside the number of distinct read-derived transitions
 /// rejected this way.
 fn build_candidate_edges(
-    triple_lookup: &HashMap<(Seg, Orientation, Seg, Orientation), HashMap<State, u32>>,
+    triple_lookup: &TripleLookup,
     edge_support: &HashMap<State, HashMap<State, u32>>,
     links_index: &HashMap<State, HashMap<State, u32>>,
 ) -> (Vec<CandidateEdge>, usize) {
@@ -317,7 +318,7 @@ fn build_candidate_edges(
         }
     }
 
-    let edges = best
+    let mut edges: Vec<CandidateEdge> = best
         .into_iter()
         .map(|((from, to), (tier, reads))| CandidateEdge {
             from,
@@ -326,27 +327,36 @@ fn build_candidate_edges(
             reads,
         })
         .collect();
+    // a fixed order: everything downstream (the solver's variables and
+    // constraints, tie-breaks between equally supported edges) follows it,
+    // so the same input always resolves the same way
+    edges.sort_by(|a, b| (&a.from, &a.to).cmp(&(&b.from, &b.to)));
     (edges, unlicensed.len())
 }
 
 /// Solve the integer program: pick the subset of candidate edges maximising
 /// segment coverage (weighted towards genes), subject to each segment's
-/// depth budget and flow conservation at every state. When `enforce_connectivity`
-/// is set, an additional single-commodity-flow constraint forces the result
-/// into one circuit rather than however many disjoint ones flow conservation
-/// alone happens to allow -- see the comment further down for why that's
-/// needed. This is the harder problem to solve, and on a few inputs proved
+/// depth budget and flow conservation at every state. Given a `root` state,
+/// an additional single-commodity-flow constraint forces the result into
+/// one circuit through it rather than however many disjoint ones flow
+/// conservation alone happens to allow -- see the comment further down for
+/// why that's needed. This is the harder problem to solve, and on a few inputs proved
 /// too slow for microlp within a reasonable time budget, so the caller
 /// retries without it on failure rather than leaving the tool hanging.
+///
+/// Returns the selected edges and whether the solver proved them optimal;
+/// if it ran out of time instead, they are only the best found so far.
 fn solve_ilp(
     edges: &[CandidateEdge],
     budget: &HashMap<Seg, u32>,
     segments: &HashMap<Seg, Vec<u8>>,
     gene_segs: &HashSet<Seg>,
-    enforce_connectivity: bool,
+    root: Option<&State>,
     time_limit: f64,
-) -> Result<Vec<(State, State)>> {
-    let mut states: HashSet<State> = HashSet::new();
+) -> Result<(Vec<(State, State)>, bool)> {
+    // states and segments in sorted order, so the model is built the same
+    // way on every run
+    let mut states: BTreeSet<State> = BTreeSet::new();
     for e in edges {
         states.insert(e.from.clone());
         states.insert(e.to.clone());
@@ -361,8 +371,8 @@ fn solve_ilp(
             vars.add(variable().binary()),
         );
     }
-    let mut y: HashMap<Seg, Variable> = HashMap::new();
-    for seg in segments.keys() {
+    let mut y: BTreeMap<Seg, Variable> = BTreeMap::new();
+    for seg in segments.keys().collect::<BTreeSet<_>>() {
         y.insert(seg.clone(), vars.add(variable().binary()));
     }
 
@@ -382,9 +392,9 @@ fn solve_ilp(
     // the main one with strong read evidence). A connected graph where
     // every vertex has equal in/out degree is guaranteed to have a single
     // Eulerian circuit, so adding a connectivity requirement on top of the
-    // existing flow conservation is enough to force one circuit: pick the
-    // best-connected *state* as a root, and require every other visited
-    // state be reachable from it via the selected edges. This is a
+    // existing flow conservation is enough to force one circuit: require
+    // every visited state be reachable from a root *state* via the
+    // selected edges. This is a
     // standard single-commodity-flow subtour-elimination technique -- a
     // second set of continuous flow variables piggybacks on the same edges
     // (gated by whether x_e is selected) purely to prove reachability.
@@ -402,17 +412,13 @@ fn solve_ilp(
     // orientation to be revisited) to be drawn as flow closes that gap:
     // every individual visit must trace back to the root, not just "some
     // orientation of this segment".
-    let root_state: Option<State> = if enforce_connectivity {
-        states
-            .iter()
-            .max_by_key(|s| {
-                incoming.get(*s).map_or(0, |v| v.len()) + outgoing.get(*s).map_or(0, |v| v.len())
-            })
-            .cloned()
-    } else {
-        None
-    };
-
+    //
+    // The root is forced into the circuit, so it has to be a state the
+    // best circuit really passes through: the caller takes it from the
+    // solution without this constraint (see `choose_root`). Leaving the
+    // choice to the solver (a root variable per state) is exact but, with
+    // microlp, too slow to be usable.
+    let root_state: Option<&State> = root.filter(|r| states.contains(*r));
     let mut flow: HashMap<(State, State), Variable> = HashMap::new();
     if root_state.is_some() {
         for e in edges {
@@ -478,7 +484,7 @@ fn solve_ilp(
         }
     }
 
-    if let Some(root_state) = &root_state {
+    if let Some(root_state) = root_state {
         // total connectivity supply can never exceed the sum of every
         // segment's budget (each unit of usage anywhere costs at most one
         // unit of flow along the path that reaches it), so this is a
@@ -549,77 +555,244 @@ fn solve_ilp(
     }
 
     let solution = model.solve().context("ILP solve failed")?;
+    let optimal = matches!(solution.status(), SolutionStatus::Optimal);
 
     let selected = edges
         .iter()
         .filter(|e| solution.value(x[&(e.from.clone(), e.to.clone())]) > 0.5)
         .map(|e| (e.from.clone(), e.to.clone()))
         .collect();
-    Ok(selected)
+    Ok((selected, optimal))
 }
 
-/// Split a flow-conserving edge multiset into disjoint closed circuits
-/// (Hierholzer's algorithm). Each returned circuit lists every visited
-/// state once; the closing return-to-start edge is not duplicated.
-fn decompose_circuits(selected: &[(State, State)]) -> Vec<Vec<State>> {
-    let mut adj: HashMap<State, Vec<State>> = HashMap::new();
-    let mut remaining: HashMap<(State, State), i64> = HashMap::new();
-    for (u, v) in selected {
-        adj.entry(u.clone()).or_default().push(v.clone());
-        *remaining.entry((u.clone(), v.clone())).or_insert(0) += 1;
+/// The state to force a single circuit through: the best-connected state
+/// (most candidate edges in and out; the first in sorted order on a tie)
+/// of the largest circuit found without the connectivity constraint.
+/// Versions up to 0.6.2 took the best-connected state of the whole graph,
+/// whether or not a good circuit passes through it - and where the best
+/// one doesn't, forcing it in cost segments.
+fn choose_root(circuits: &[Vec<State>], edges: &[CandidateEdge]) -> Option<State> {
+    let largest = circuits
+        .iter()
+        .max_by(|a, b| a.len().cmp(&b.len()).then_with(|| b.cmp(a)))?;
+    let mut degree: HashMap<&State, usize> = HashMap::new();
+    for e in edges {
+        *degree.entry(&e.from).or_insert(0) += 1;
+        *degree.entry(&e.to).or_insert(0) += 1;
+    }
+    let mut states: Vec<&State> = largest.iter().collect();
+    states.sort();
+    states.dedup();
+    let mut root: Option<&State> = None;
+    for s in states {
+        let d = |s: &State| degree.get(s).copied().unwrap_or(0);
+        if root.is_none_or(|r| d(s) > d(r)) {
+            root = Some(s);
+        }
+    }
+    root.cloned()
+}
+
+/// How many reads walk `a -> s -> b` (0 if fewer than [`MIN_EDGE_READS`]).
+fn triple_reads(triples: &TripleLookup, a: &State, s: &State, b: &State) -> u32 {
+    triples
+        .get(&(a.0.clone(), a.1, s.0.clone(), s.1))
+        .and_then(|m| m.get(b))
+        .copied()
+        .unwrap_or(0)
+}
+
+/// Pair each of a state's `k` incoming edges with one of its `k` outgoing
+/// edges so the pairs' total `support[i][j]` is as large as possible:
+/// `result[i]` is the outgoing edge for incoming edge `i`. Exhaustive up to
+/// 8 visits (the first best pairing in lexicographic order wins a tie),
+/// best-pair-first beyond that.
+fn pair_through_state(support: &[Vec<u32>]) -> Vec<usize> {
+    let k = support.len();
+    if k <= 8 {
+        fn search(
+            i: usize,
+            support: &[Vec<u32>],
+            used: &mut Vec<bool>,
+            current: &mut Vec<usize>,
+            total: u64,
+            best: &mut Option<(u64, Vec<usize>)>,
+        ) {
+            if i == support.len() {
+                if best.as_ref().is_none_or(|(b, _)| total > *b) {
+                    *best = Some((total, current.clone()));
+                }
+                return;
+            }
+            for j in 0..support.len() {
+                if !used[j] {
+                    used[j] = true;
+                    current.push(j);
+                    search(i + 1, support, used, current, total + support[i][j] as u64, best);
+                    current.pop();
+                    used[j] = false;
+                }
+            }
+        }
+        let mut best = None;
+        search(0, support, &mut vec![false; k], &mut Vec::with_capacity(k), 0, &mut best);
+        return best.map(|(_, p)| p).unwrap_or_default();
+    }
+    let mut pairs: Vec<(u32, usize, usize)> = (0..k)
+        .flat_map(|i| (0..k).map(move |j| (i, j)))
+        .map(|(i, j)| (support[i][j], i, j))
+        .collect();
+    pairs.sort_by(|a, b| b.0.cmp(&a.0).then(a.1.cmp(&b.1)).then(a.2.cmp(&b.2)));
+    let mut result = vec![usize::MAX; k];
+    let mut used = vec![false; k];
+    for (_, i, j) in pairs {
+        if result[i] == usize::MAX && !used[j] {
+            result[i] = j;
+            used[j] = true;
+        }
+    }
+    result
+}
+
+/// Split a flow-conserving set of edges into closed circuits, one per
+/// connected group of edges. Each returned circuit lists the state every
+/// one of its edges leaves from, in order; the closing return-to-start edge
+/// is implied. A state the edges pass through more than once (a repeat)
+/// appears that many times.
+///
+/// Which way a circuit leaves a repeat after each entry is decided by the
+/// reads: at every state the incoming and outgoing edges are paired to
+/// maximise the support of the `(prev, state, next)` triples walked. That
+/// can leave several closed walks through the same state; they are joined
+/// (by swapping the exits of two entries, one from each walk) where it
+/// costs the least triple support, until no two circuits share a state.
+/// The result depends only on the edges and the triples, not on the order
+/// they are given in.
+fn decompose_circuits(
+    selected: &[(State, State)],
+    triples: &TripleLookup,
+) -> Result<Vec<Vec<State>>> {
+    let mut edges: Vec<&(State, State)> = selected.iter().collect();
+    edges.sort();
+    let n = edges.len();
+
+    let mut ins: BTreeMap<&State, Vec<usize>> = BTreeMap::new();
+    let mut outs: BTreeMap<&State, Vec<usize>> = BTreeMap::new();
+    for (e, (u, v)) in edges.iter().map(|e| (&e.0, &e.1)).enumerate() {
+        outs.entry(u).or_default().push(e);
+        ins.entry(v).or_default().push(e);
+    }
+    let support = |e_in: usize, e_out: usize| -> u32 {
+        triple_reads(triples, &edges[e_in].0, &edges[e_in].1, &edges[e_out].1)
+    };
+
+    // succ[e]: the edge the circuit takes after edge e
+    let mut succ = vec![usize::MAX; n];
+    let states: BTreeSet<&State> = ins.keys().chain(outs.keys()).copied().collect();
+    for state in states {
+        let empty = Vec::new();
+        let (e_in, e_out) = (ins.get(state).unwrap_or(&empty), outs.get(state).unwrap_or(&empty));
+        if e_in.len() != e_out.len() {
+            anyhow::bail!(
+                "selected edges do not balance at {} ({} in, {} out)",
+                state_str(state),
+                e_in.len(),
+                e_out.len()
+            );
+        }
+        let matrix: Vec<Vec<u32>> = e_in
+            .iter()
+            .map(|&i| e_out.iter().map(|&o| support(i, o)).collect())
+            .collect();
+        for (i, j) in pair_through_state(&matrix).into_iter().enumerate() {
+            succ[e_in[i]] = e_out[j];
+        }
     }
 
-    let mut circuits = Vec::new();
-    let starts: Vec<State> = adj.keys().cloned().collect();
-
-    for start in starts {
-        let has_out = |u: &State, remaining: &HashMap<(State, State), i64>| {
-            adj.get(u)
-                .map(|vs| {
-                    vs.iter()
-                        .any(|v| *remaining.get(&(u.clone(), v.clone())).unwrap_or(&0) > 0)
-                })
-                .unwrap_or(false)
-        };
-        if !has_out(&start, &remaining) {
-            continue;
+    let label = |succ: &[usize]| -> Vec<usize> {
+        let mut cycle = vec![usize::MAX; n];
+        let mut next_id = 0;
+        for start in 0..n {
+            if cycle[start] != usize::MAX {
+                continue;
+            }
+            let mut e = start;
+            while cycle[e] == usize::MAX {
+                cycle[e] = next_id;
+                e = succ[e];
+            }
+            next_id += 1;
         }
+        cycle
+    };
 
-        let mut stack = vec![start.clone()];
-        let mut circuit = Vec::new();
-        let mut cur = start;
-        loop {
-            let mut advanced = false;
-            if let Some(vs) = adj.get(&cur).cloned() {
-                for v in vs {
-                    let key = (cur.clone(), v.clone());
-                    if *remaining.get(&key).unwrap_or(&0) > 0 {
-                        *remaining.get_mut(&key).unwrap() -= 1;
-                        stack.push(v.clone());
-                        cur = v;
-                        advanced = true;
-                        break;
+    // join closed walks that share a state, cheapest join first
+    let mut cycle = label(&succ);
+    loop {
+        let mut best: Option<(i64, usize, usize)> = None;
+        for e_in in ins.values() {
+            for (x, &a) in e_in.iter().enumerate() {
+                for &b in &e_in[x + 1..] {
+                    if cycle[a] == cycle[b] {
+                        continue;
+                    }
+                    let kept = support(a, succ[a]) as i64 + support(b, succ[b]) as i64;
+                    let swapped = support(a, succ[b]) as i64 + support(b, succ[a]) as i64;
+                    let loss = kept - swapped;
+                    if best.is_none_or(|(l, _, _)| loss < l) {
+                        best = Some((loss, a, b));
                     }
                 }
             }
-            if !advanced {
-                circuit.push(stack.pop().expect("stack always has the current node"));
-                match stack.last() {
-                    Some(top) => cur = top.clone(),
-                    None => break,
-                }
-            }
         }
-        circuit.reverse();
-        if circuit.len() > 1 && circuit.first() == circuit.last() {
-            circuit.pop();
-        }
-        if circuit.len() > 1 {
-            circuits.push(circuit);
-        }
+        let Some((_, a, b)) = best else { break };
+        succ.swap(a, b);
+        cycle = label(&succ);
     }
 
-    circuits
+    let mut circuits: Vec<Vec<State>> = Vec::new();
+    let mut done = vec![false; n];
+    for start in 0..n {
+        if done[start] {
+            continue;
+        }
+        let mut circuit = Vec::new();
+        let mut e = start;
+        while !done[e] {
+            done[e] = true;
+            circuit.push(edges[e].0.clone());
+            e = succ[e];
+        }
+        circuits.push(circuit);
+    }
+    Ok(circuits)
+}
+
+/// One fixed way of writing a circuit, whichever state it was found from
+/// and whichever strand it was walked on: of every rotation of the circuit
+/// and of its reverse complement, the one that sorts first. So it starts at
+/// its first segment by name, forward if that segment is ever walked
+/// forward.
+fn canonical_circuit(circuit: &[State]) -> Vec<State> {
+    let n = circuit.len();
+    let rc: Vec<State> = circuit.iter().rev().map(|(s, o)| (s.clone(), flip(*o))).collect();
+    let mut best: Option<(&[State], usize)> = None;
+    for strand in [circuit, &rc[..]] {
+        for k in 0..n {
+            let candidate = strand[k..].iter().chain(&strand[..k]);
+            let better = match best {
+                None => true,
+                Some((b, bk)) => candidate.clone().lt(b[bk..].iter().chain(&b[..bk])),
+            };
+            if better {
+                best = Some((strand, k));
+            }
+        }
+    }
+    match best {
+        Some((strand, k)) => strand[k..].iter().chain(&strand[..k]).cloned().collect(),
+        None => Vec::new(),
+    }
 }
 
 /// For every pair of separately-resolved circuits, the strongest real
@@ -700,7 +873,7 @@ fn splice_circuits(
 ) -> (Vec<Vec<State>>, usize) {
     let mut merges = 0;
     loop {
-        circuits.sort_by_key(|c| std::cmp::Reverse(c.len()));
+        circuits.sort_by(|a, b| b.len().cmp(&a.len()).then_with(|| a.cmp(b)));
         if circuits.len() < 2 {
             break;
         }
@@ -900,6 +1073,8 @@ fn detect_bubbles(
     }
 
     let mut bubbles = Vec::new();
+    let mut excluded: Vec<&Seg> = excluded.iter().collect();
+    excluded.sort();
     for seg in excluded {
         if let (Some(in_edge), Some(out_edge)) = (into.get(seg), out_of.get(seg)) {
             bubbles.push(BubbleArm {
@@ -1373,18 +1548,36 @@ pub fn resolve(matches: &clap::ArgMatches) -> Result<()> {
         gene_segs.extend(genes.into_keys());
     }
 
-    let selected = match solve_ilp(&edges, &budget, &segments, &gene_segs, true, time_limit) {
-        Ok(selected) => selected,
-        Err(e) => {
-            eprintln!(
-                "[-]\tCould not solve for a single connected circuit within the time budget ({e}); \
-                 falling back to the unconstrained solve, which may report multiple circuits."
-            );
-            solve_ilp(&edges, &budget, &segments, &gene_segs, false, time_limit)?
+    // First without the single-circuit constraint: quick, and it shows
+    // which part of the graph the best solution uses, so the constrained
+    // solve can be rooted there.
+    let (free_selected, free_optimal) = solve_ilp(&edges, &budget, &segments, &gene_segs, None, time_limit)?;
+    let free_circuits = decompose_circuits(&free_selected, &triple_lookup)?;
+    let root = choose_root(&free_circuits, &edges);
+    let (selected, optimal) = if free_circuits.len() <= 1 {
+        // already one circuit: the constraint has nothing to add
+        (free_selected, free_optimal)
+    } else {
+        match solve_ilp(&edges, &budget, &segments, &gene_segs, root.as_ref(), time_limit) {
+            Ok(solved) => solved,
+            Err(e) => {
+                eprintln!(
+                    "[-]\tCould not solve for a single connected circuit within the time budget ({e}); \
+                     falling back to the unconstrained solve, which may report multiple circuits."
+                );
+                (free_selected, free_optimal)
+            }
         }
     };
+    if !optimal {
+        eprintln!(
+            "[-]\tThe solver stopped at its time limit ({time_limit} s) before proving its answer \
+             the best one: the circuit(s) below are the best found so far, and may differ \
+             between runs. Raise --time-limit to let it finish."
+        );
+    }
     let circuits = {
-        let c = decompose_circuits(&selected);
+        let c = decompose_circuits(&selected, &triple_lookup)?;
         let n_before = c.len();
         let (spliced, merges) = splice_circuits(c, &edges);
         if merges > 0 {
@@ -1396,7 +1589,9 @@ pub fn resolve(matches: &clap::ArgMatches) -> Result<()> {
                 spliced.len()
             );
         }
-        spliced
+        let mut canonical: Vec<Vec<State>> = spliced.iter().map(|c| canonical_circuit(c)).collect();
+        canonical.sort_by(|a, b| b.len().cmp(&a.len()).then_with(|| a.cmp(b)));
+        canonical
     };
 
     let included: HashSet<Seg> = circuits.iter().flatten().map(|(s, _)| s.clone()).collect();
@@ -1661,7 +1856,7 @@ mod tests {
             (s("b", F), s("c", F)),
             (s("c", F), s("a", F)),
         ];
-        let circuits = decompose_circuits(&selected);
+        let circuits = decompose_circuits(&selected, &HashMap::new()).unwrap();
         assert_eq!(circuits.len(), 1);
         // the closing edge back to the start must not appear as a duplicate
         // final element
@@ -1689,7 +1884,7 @@ mod tests {
             (s("x", F), s("y", F)),
             (s("y", F), s("x", F)),
         ];
-        let mut circuits = decompose_circuits(&selected);
+        let mut circuits = decompose_circuits(&selected, &HashMap::new()).unwrap();
         circuits.sort_by_key(|c| c.len());
         assert_eq!(circuits.len(), 2);
         assert_eq!(circuits[0].len(), 2);
@@ -1708,11 +1903,174 @@ mod tests {
             (s("b", F), s("repeat", F)),
             (s("repeat", F), s("a", F)),
         ];
-        let circuits = decompose_circuits(&selected);
+        let circuits = decompose_circuits(&selected, &HashMap::new()).unwrap();
         assert_eq!(circuits.len(), 1);
         assert_eq!(circuits[0].len(), 4);
         let repeat_visits = circuits[0].iter().filter(|st| st.0 == b"repeat").count();
         assert_eq!(repeat_visits, 2);
+    }
+
+    #[test]
+    fn test_decompose_circuits_keeps_a_single_segment_circuit() {
+        // a circular unitig linked to itself is a circuit of one state
+        use Orientation::Forward as F;
+        let selected = vec![(s("a", F), s("a", F))];
+        let circuits = decompose_circuits(&selected, &HashMap::new()).unwrap();
+        assert_eq!(circuits, vec![vec![s("a", F)]]);
+    }
+
+    #[test]
+    fn test_decompose_circuits_rejects_unbalanced_edges() {
+        use Orientation::Forward as F;
+        let selected = vec![(s("a", F), s("b", F))];
+        assert!(decompose_circuits(&selected, &HashMap::new()).is_err());
+    }
+
+    /// A repeat `r` walked three times, between unique segments: every
+    /// pairing of entries with exits gives closed walks, and only the reads
+    /// say which arrangement is the real one.
+    fn three_visit_repeat() -> Vec<(State, State)> {
+        use Orientation::Forward as F;
+        let mut selected = Vec::new();
+        for (a, b) in [("a", "b"), ("c", "d"), ("e", "f")] {
+            selected.push((s(a, F), s("r", F)));
+            selected.push((s("r", F), s(b, F)));
+        }
+        // b -> c, d -> e, f -> a close the circle a r b c r d e r f
+        for (a, b) in [("b", "c"), ("d", "e"), ("f", "a")] {
+            selected.push((s(a, F), s(b, F)));
+        }
+        selected
+    }
+
+    fn follows(circuit: &[State], a: &str, via: &str, b: &str) -> bool {
+        let n = circuit.len();
+        (0..n).any(|i| {
+            circuit[i].0 == a.as_bytes()
+                && circuit[(i + 1) % n].0 == via.as_bytes()
+                && circuit[(i + 2) % n].0 == b.as_bytes()
+        })
+    }
+
+    #[test]
+    fn test_decompose_circuits_pairs_a_repeat_by_read_triples() {
+        use Orientation::Forward as F;
+        let selected = three_visit_repeat();
+        // reads say a-r-d, c-r-f, e-r-b: still one circuit (a r d e r b c r f)
+        let mut walked = Vec::new();
+        for (a, b) in [("a", "d"), ("c", "f"), ("e", "b")] {
+            walked.extend(reads(&[s(a, F), s("r", F), s(b, F)], 10));
+        }
+        let triples = build_triple_lookup(&walked);
+        let circuits = decompose_circuits(&selected, &triples).unwrap();
+        assert_eq!(circuits.len(), 1);
+        assert_eq!(circuits[0].len(), 9);
+        for (a, b) in [("a", "d"), ("c", "f"), ("e", "b")] {
+            assert!(follows(&circuits[0], a, "r", b), "{a} r {b} in {:?}", circuits[0]);
+        }
+    }
+
+    #[test]
+    fn test_decompose_circuits_joins_walks_where_reads_object_least() {
+        use Orientation::Forward as F;
+        let selected = three_visit_repeat();
+        // reads say a-r-b (strongly), c-r-d and e-r-f (weakly): followed to
+        // the letter that is three separate walks only if b, d and f led
+        // back to a, c and e - here they lead on round the circle, so it is
+        // already one circuit and nothing has to give
+        let mut walked = reads(&[s("a", F), s("r", F), s("b", F)], 50);
+        walked.extend(reads(&[s("c", F), s("r", F), s("d", F)], 6));
+        walked.extend(reads(&[s("e", F), s("r", F), s("f", F)], 6));
+        let triples = build_triple_lookup(&walked);
+        let circuits = decompose_circuits(&selected, &triples).unwrap();
+        assert_eq!(circuits.len(), 1);
+        for (a, b) in [("a", "b"), ("c", "d"), ("e", "f")] {
+            assert!(follows(&circuits[0], a, "r", b));
+        }
+
+        // now reads that would close three separate loops (b -> r -> a etc.
+        // can't be: use a figure where they do): a r a', i.e. exits pair
+        // back to their own entry's loop
+        let loops = vec![
+            (s("x", F), s("r", F)),
+            (s("r", F), s("x", F)),
+            (s("y", F), s("r", F)),
+            (s("r", F), s("y", F)),
+            (s("z", F), s("r", F)),
+            (s("r", F), s("z", F)),
+        ];
+        let mut walked = reads(&[s("x", F), s("r", F), s("x", F)], 50);
+        walked.extend(reads(&[s("y", F), s("r", F), s("y", F)], 20));
+        walked.extend(reads(&[s("z", F), s("r", F), s("z", F)], 6));
+        let triples = build_triple_lookup(&walked);
+        let circuits = decompose_circuits(&loops, &triples).unwrap();
+        // one circuit all the same: the three loops share r
+        assert_eq!(circuits.len(), 1);
+        assert_eq!(circuits[0].len(), 6);
+    }
+
+    #[test]
+    fn test_decompose_circuits_ignores_the_order_edges_come_in() {
+        use Orientation::Forward as F;
+        let selected = three_visit_repeat();
+        let walked = reads(&[s("a", F), s("r", F), s("d", F)], 10);
+        let triples = build_triple_lookup(&walked);
+        let expected = decompose_circuits(&selected, &triples).unwrap();
+        let mut shuffled = selected.clone();
+        shuffled.reverse();
+        shuffled.swap(1, 5);
+        assert_eq!(decompose_circuits(&shuffled, &triples).unwrap(), expected);
+    }
+
+    #[test]
+    fn test_canonical_circuit_is_the_same_from_any_start_and_strand() {
+        use Orientation::Backward as B;
+        use Orientation::Forward as F;
+        let circuit = vec![s("c", F), s("a", B), s("b", F), s("a", F)];
+        let expected = vec![s("a", F), s("c", F), s("a", B), s("b", F)];
+        assert_eq!(canonical_circuit(&circuit), expected);
+        let rotated = vec![s("b", F), s("a", F), s("c", F), s("a", B)];
+        assert_eq!(canonical_circuit(&rotated), expected);
+        let other_strand: Vec<State> = circuit.iter().rev().map(|(n, o)| (n.clone(), flip(*o))).collect();
+        assert_eq!(canonical_circuit(&other_strand), expected);
+        assert_eq!(canonical_circuit(&[]), Vec::<State>::new());
+    }
+
+    #[test]
+    fn test_build_candidate_edges_come_out_sorted() {
+        use Orientation::Forward as F;
+        let links = vec![
+            (b"c".to_vec(), F, b"a".to_vec(), F),
+            (b"a".to_vec(), F, b"b".to_vec(), F),
+            (b"b".to_vec(), F, b"c".to_vec(), F),
+        ];
+        let (edges, _) = build_candidate_edges(&HashMap::new(), &HashMap::new(), &build_links_index(&links));
+        let keys: Vec<(State, State)> = edges.iter().map(|e| (e.from.clone(), e.to.clone())).collect();
+        let mut sorted = keys.clone();
+        sorted.sort();
+        assert_eq!(keys, sorted);
+    }
+
+    #[test]
+    fn test_choose_root_is_in_the_largest_circuit() {
+        use Orientation::Forward as F;
+        // "hub" has the most candidate edges but is in no circuit; the root
+        // must come from the larger circuit, its best-connected state
+        let circuits = vec![vec![s("x", F), s("y", F)], vec![s("a", F), s("b", F), s("c", F)]];
+        let mut edges = vec![
+            edge(s("a", F), s("b", F), 1, 9),
+            edge(s("b", F), s("c", F), 1, 9),
+            edge(s("c", F), s("a", F), 1, 9),
+            edge(s("c", F), s("b", F), 2, 1),
+            edge(s("x", F), s("y", F), 1, 9),
+            edge(s("y", F), s("x", F), 1, 9),
+        ];
+        for other in ["a", "b", "c", "x", "y"] {
+            edges.push(edge(s("hub", F), s(other, F), 2, 1));
+        }
+        // b and c both have 4 edges; b sorts first
+        assert_eq!(choose_root(&circuits, &edges), Some(s("b", F)));
+        assert_eq!(choose_root(&[], &edges), None);
     }
 
     #[test]
@@ -2135,9 +2493,9 @@ mod tests {
         segments.insert(b"s2".to_vec(), b"A".to_vec());
         let gene_segs = HashSet::new();
 
-        match solve_ilp(&edges, &budget, &segments, &gene_segs, true, 5.0) {
-            Ok(selected) => {
-                let circuits = decompose_circuits(&selected);
+        match solve_ilp(&edges, &budget, &segments, &gene_segs, Some(&s("h", F)), 5.0) {
+            Ok((selected, _)) => {
+                let circuits = decompose_circuits(&selected, &HashMap::new()).unwrap();
                 assert_eq!(
                     circuits.len(),
                     1,
