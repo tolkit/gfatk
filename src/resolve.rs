@@ -232,11 +232,31 @@ fn build_edge_support(records: &[GafRecord]) -> HashMap<State, HashMap<State, u3
                 .or_insert(0) += 1;
         }
     }
-    edge_support.retain(|_, m| {
+    // A read from the other strand of the same molecule walks the same
+    // junction as v' -> u': pool the two before thresholding, so support
+    // split between strands (3 reads one way, 4 the other) still counts,
+    // and both traversals of a junction carry the same support.
+    let mut pooled: HashMap<State, HashMap<State, u32>> = HashMap::new();
+    for (u, m) in &edge_support {
+        for (v, &cnt) in m {
+            let (ru, rv) = ((v.0.clone(), flip(v.1)), (u.0.clone(), flip(u.1)));
+            let mirrored = (&ru, &rv) != (u, v);
+            let other = if mirrored {
+                edge_support.get(&ru).and_then(|m| m.get(&rv)).copied().unwrap_or(0)
+            } else {
+                0 // its own reverse complement: one junction, counted once
+            };
+            pooled.entry(u.clone()).or_default().insert(v.clone(), cnt + other);
+            if mirrored {
+                pooled.entry(ru).or_default().insert(rv, cnt + other);
+            }
+        }
+    }
+    pooled.retain(|_, m| {
         m.retain(|_, &mut cnt| cnt >= MIN_EDGE_READS);
         !m.is_empty()
     });
-    edge_support
+    pooled
 }
 
 /// The bare GFA topology. A link `L A oA B oB` licenses two traversals:
@@ -1037,6 +1057,8 @@ fn find_inter_circuit_links(
 /// bubble's minor arm, not a data gap.
 struct BubbleArm {
     segment: Seg,
+    /// The strand the arm is walked on between `entry` and `exit`.
+    orientation: Orientation,
     entry: State,
     exit: State,
     support_reads: u32,
@@ -1047,8 +1069,10 @@ fn detect_bubbles(
     excluded: &HashSet<Seg>,
     circuit_states: &HashSet<State>,
 ) -> Vec<BubbleArm> {
-    let mut into: HashMap<Seg, (State, State, u32)> = HashMap::new();
-    let mut out_of: HashMap<Seg, (State, State, u32)> = HashMap::new();
+    // Keyed by the arm's *state*: an entry into x+ and an exit from x- are
+    // not one walk through x, so the two must agree on the strand.
+    let mut into: HashMap<State, (State, State, u32)> = HashMap::new();
+    let mut out_of: HashMap<State, (State, State, u32)> = HashMap::new();
 
     for e in edges {
         if e.tier >= 2 {
@@ -1056,7 +1080,7 @@ fn detect_bubbles(
         }
         if excluded.contains(&e.to.0) && circuit_states.contains(&e.from) {
             let entry = into
-                .entry(e.to.0.clone())
+                .entry(e.to.clone())
                 .or_insert((e.from.clone(), e.to.clone(), 0));
             if e.reads > entry.2 {
                 *entry = (e.from.clone(), e.to.clone(), e.reads);
@@ -1064,7 +1088,7 @@ fn detect_bubbles(
         }
         if excluded.contains(&e.from.0) && circuit_states.contains(&e.to) {
             let entry = out_of
-                .entry(e.from.0.clone())
+                .entry(e.from.clone())
                 .or_insert((e.from.clone(), e.to.clone(), 0));
             if e.reads > entry.2 {
                 *entry = (e.from.clone(), e.to.clone(), e.reads);
@@ -1076,14 +1100,25 @@ fn detect_bubbles(
     let mut excluded: Vec<&Seg> = excluded.iter().collect();
     excluded.sort();
     for seg in excluded {
-        if let (Some(in_edge), Some(out_edge)) = (into.get(seg), out_of.get(seg)) {
-            bubbles.push(BubbleArm {
-                segment: seg.clone(),
-                entry: in_edge.0.clone(),
-                exit: out_edge.1.clone(),
-                support_reads: in_edge.2.min(out_edge.2),
-            });
+        // the better-supported strand; forward on a tie (the other strand
+        // is the same arm seen from the circuit's reverse complement)
+        let mut best: Option<BubbleArm> = None;
+        for orientation in [Orientation::Forward, Orientation::Backward] {
+            let state = (seg.clone(), orientation);
+            if let (Some(in_edge), Some(out_edge)) = (into.get(&state), out_of.get(&state)) {
+                let support_reads = in_edge.2.min(out_edge.2);
+                if best.as_ref().is_none_or(|b| support_reads > b.support_reads) {
+                    best = Some(BubbleArm {
+                        segment: seg.clone(),
+                        orientation,
+                        entry: in_edge.0.clone(),
+                        exit: out_edge.1.clone(),
+                        support_reads,
+                    });
+                }
+            }
         }
+        bubbles.extend(best);
     }
     bubbles
 }
@@ -1716,7 +1751,8 @@ pub fn resolve(matches: &clap::ArgMatches) -> Result<()> {
         );
         for b in &bubbles {
             let genes = gene_segs.contains(&b.segment);
-            let seq = &segments[&b.segment];
+            // the arm as it is walked from entry to exit
+            let seq = &oriented(&(b.segment.clone(), b.orientation), &segments);
 
             // How different is this bubble arm from whatever the main
             // path actually does between the same entry/exit points?
@@ -1729,7 +1765,7 @@ pub fn resolve(matches: &clap::ArgMatches) -> Result<()> {
 
             eprintln!(
                 "[-]\t  {} (between {} and {}, ~{} supporting reads{}{})",
-                String::from_utf8_lossy(&b.segment),
+                state_str(&(b.segment.clone(), b.orientation)),
                 state_str(&b.entry),
                 state_str(&b.exit),
                 b.support_reads,
@@ -1745,11 +1781,12 @@ pub fn resolve(matches: &clap::ArgMatches) -> Result<()> {
                 // already ends in '+' or '-' for the orientation, so
                 // "u34--u22-" reads ambiguously -- "u34-_to_u22-" doesn't.
                 let header = format!(
-                    "bubble_arm:{}:between={}_to_{}:support_reads={}{}",
+                    "bubble_arm:{}:between={}_to_{}:support_reads={}:strand={}{}",
                     String::from_utf8_lossy(&b.segment),
                     state_str(&b.entry),
                     state_str(&b.exit),
                     b.support_reads,
+                    orient_char(b.orientation),
                     diff_header
                 );
                 write_fasta_record(&header, seq);
@@ -2071,6 +2108,47 @@ mod tests {
         // b and c both have 4 edges; b sorts first
         assert_eq!(choose_root(&circuits, &edges), Some(s("b", F)));
         assert_eq!(choose_root(&[], &edges), None);
+    }
+
+    #[test]
+    fn test_build_edge_support_pools_both_strands_of_a_junction() {
+        use Orientation::Backward as B;
+        use Orientation::Forward as F;
+        // 3 reads walk a+ -> b+, 4 walk it from the other strand (b- -> a-):
+        // 7 for the junction, not two counts each under the threshold of 5
+        let mut records = reads(&[s("a", F), s("b", F)], 3);
+        records.extend(reads(&[s("b", B), s("a", B)], 4));
+        // a junction that is its own reverse complement is counted once
+        records.extend(reads(&[s("h", F), s("h", B)], 5));
+        // too few reads on both strands together
+        records.extend(reads(&[s("x", F), s("y", F)], 2));
+        let support = build_edge_support(&records);
+        assert_eq!(support[&s("a", F)][&s("b", F)], 7);
+        assert_eq!(support[&s("b", B)][&s("a", B)], 7);
+        assert_eq!(support[&s("h", F)][&s("h", B)], 5);
+        assert!(!support.contains_key(&s("x", F)));
+    }
+
+    #[test]
+    fn test_detect_bubbles_needs_entry_and_exit_on_one_strand() {
+        use Orientation::Backward as B;
+        use Orientation::Forward as F;
+        let circuit_states: HashSet<State> = [s("a", F), s("b", F)].into_iter().collect();
+        let excluded: HashSet<Seg> = [b"x".to_vec(), b"y".to_vec()].into_iter().collect();
+        let edges = vec![
+            // x: in on the forward strand, out on the reverse - not a walk through x
+            edge(s("a", F), s("x", F), 1, 9),
+            edge(s("x", B), s("b", F), 1, 9),
+            // y: walked on its reverse strand from a to b
+            edge(s("a", F), s("y", B), 1, 8),
+            edge(s("y", B), s("b", F), 1, 6),
+        ];
+        let bubbles = detect_bubbles(&edges, &excluded, &circuit_states);
+        assert_eq!(bubbles.len(), 1);
+        assert_eq!(bubbles[0].segment, b"y".to_vec());
+        assert_eq!(bubbles[0].orientation, B);
+        assert_eq!((bubbles[0].entry.clone(), bubbles[0].exit.clone()), (s("a", F), s("b", F)));
+        assert_eq!(bubbles[0].support_reads, 6);
     }
 
     #[test]

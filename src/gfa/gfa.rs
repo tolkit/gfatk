@@ -11,6 +11,7 @@ use anyhow::{bail, Context, Result};
 use gfa::gfa::{Orientation, GFA};
 use gfa::optfields::{OptFieldVal, OptionalFields};
 use petgraph::graph::{Graph, NodeIndex, UnGraph};
+use petgraph::visit::EdgeRef;
 use std::collections::HashMap;
 
 /// A wrapper around GFA from the gfa crate
@@ -91,6 +92,34 @@ impl GFAtk {
         }
 
         Ok((graph_indices, GFAdigraph(gfa_graph)))
+    }
+
+    /// As [`GFAtk::into_digraph`], with each link's reverse-complement
+    /// traversal added as an edge too where the GFA doesn't already write
+    /// it: `L a + b +` also licenses `b- -> a-`. A walk that only follows
+    /// links as written can't leave a segment it entered on the other
+    /// strand, which on a graph that writes each link once (oatk's, for
+    /// one) hides half of the ways through it.
+    pub fn into_walk_digraph(&self) -> Result<(GFAGraphLookups, GFAdigraph)> {
+        let (graph_indices, GFAdigraph(mut graph)) = self.into_digraph()?;
+        let flip = |o: Orientation| match o {
+            Orientation::Forward => Orientation::Backward,
+            Orientation::Backward => Orientation::Forward,
+        };
+        let written: Vec<_> = graph
+            .edge_references()
+            .map(|e| (e.source(), e.target(), *e.weight()))
+            .collect();
+        for (from, to, (from_orient, to_orient, ec)) in written {
+            let (rc_from, rc_to) = (flip(to_orient), flip(from_orient));
+            let present = graph
+                .edges_connecting(to, from)
+                .any(|e| e.weight().0 == rc_from && e.weight().1 == rc_to);
+            if !present {
+                graph.add_edge(to, from, (rc_from, rc_to, ec));
+            }
+        }
+        Ok((graph_indices, GFAdigraph(graph)))
     }
 
     /// A method to print a GFA to STDOUT, given a vector of sequence ID's to keep.

@@ -1,0 +1,8 @@
+H	VN:Z:1.0
+S	a	AAAACCCCGGGG
+S	b	GGGGTTTTACAC
+S	c	TCTCTCTCGTGT
+S	d	ACACCCATCATC
+L	a	+	b	+	4M
+L	c	+	b	-	4M
+L	d	-	b	-	4M

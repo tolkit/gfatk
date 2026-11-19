@@ -41,6 +41,29 @@ All notable changes to gfatk are listed here, newest first. Versions follow
   of the largest circuit found without the constraint; if that is already a
   single circuit, the constrained solve is skipped.
 
+- `gfatk linear`, `gfatk path`, `gfatk trim` and `gfatk extract` only
+  followed a link in the direction it is written: `L a + b +` let a walk go
+  from `a+` to `b+` but not from `b-` to `a-`, which is the same junction on
+  the other strand. On a graph that writes each link once (oatk's, for one)
+  `linear` therefore stopped wherever the next link was written the other
+  way round, `path` refused such a step (including any `path=` that
+  `resolve` or oatk reports), `trim` counted only the segments a segment
+  links *to* as its neighbours, and `extract` only searched outwards along
+  links as written. All four now treat a link as usable from either strand.
+  On 300 oatk graphs, the longest `linear` walk gets longer in 157 and
+  shorter in 1.
+- `gfatk resolve` counted the reads supporting a junction separately for
+  each strand, and needed 5 on one of them; reads from both strands are now
+  pooled before the threshold, and both traversals of a junction carry the
+  same support.
+- `gfatk resolve` could report a segment as a bubble arm from an entry onto
+  one of its strands and an exit from the other, which is not a walk
+  through it. Entry and exit must now be on the same strand; such segments
+  are reported as unresolved. The arm is written, and compared with the
+  main path, on the strand it is walked on (before, always forward, so the
+  identity reported for a reverse-strand arm was meaningless), and its
+  header gains `:strand=+` or `:strand=-` after `support_reads`.
+
 ### Added
 
 - `gfatk resolve` reports on stderr each junction of a circuit where the two

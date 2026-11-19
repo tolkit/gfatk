@@ -432,3 +432,54 @@ AATCAAGGT
 
     Ok(())
 }
+
+// Links walked on the other strand. tests/test_rc_links.gfa writes each
+// link once, as oatk does:
+//   L a + b + 4M      a+ -> b+   (and b- -> a-)
+//   L c + b - 4M      c+ -> b-   (and b+ -> c-)
+//   L d - b - 4M      d- -> b-   (and b+ -> d+)
+
+#[test]
+fn test_gfa_path_reverse_complement_link() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = Command::cargo_bin("gfatk")?;
+
+    // b+ -> c- is only there as the reverse complement of `L c + b -`
+    cmd.arg("path")
+        .arg("./tests/test_rc_links.gfa")
+        .arg("a+,b+,c-");
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("AAAACCCCGGGGTTTTACACGAGAGAGA"));
+
+    Ok(())
+}
+
+#[test]
+fn test_gfa_linear_reverse_complement_link() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = Command::cargo_bin("gfatk")?;
+
+    // following links only as written, no walk gets past two segments
+    cmd.arg("linear").arg("./tests/test_rc_links.gfa");
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("path=a+,b+,c-"))
+        .stdout(predicate::str::contains("AAAACCCCGGGGTTTTACACGAGAGAGA"));
+
+    Ok(())
+}
+
+#[test]
+fn test_gfa_trim_counts_links_written_either_way() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = Command::cargo_bin("gfatk")?;
+
+    // b is linked to a, c and d, though it is the `from` segment of no
+    // link; a, c and d hang off it alone and go first, then b
+    cmd.arg("trim").arg("./tests/test_rc_links.gfa");
+    cmd.assert()
+        .success()
+        .stderr(predicate::str::contains("Removed segment a"))
+        .stderr(predicate::str::contains("Removed segment c"))
+        .stderr(predicate::str::contains("Removed segment d"));
+
+    Ok(())
+}

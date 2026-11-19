@@ -164,6 +164,20 @@ fn parse_path_string(path_string: &str, gfa: &GFAtk) -> Result<(GFAPath, HashMap
         let path_pair = format!("{}{}|{}{}", from_d, link.from_orient, to_d, link.to_orient);
         let cigar = utils::parse_cigar(&link.overlap)?;
 
+        // the same link walked on the other strand: `L a + b -` is also
+        // b+ -> a-. A link written both ways keeps its own entry.
+        let flip = |o: Orientation| match o {
+            Orientation::Forward => Orientation::Backward,
+            Orientation::Backward => Orientation::Forward,
+        };
+        let rc_pair = format!(
+            "{}{}|{}{}",
+            to_d,
+            flip(link.to_orient),
+            from_d,
+            flip(link.from_orient)
+        );
+        link_map.entry(rc_pair).or_insert(cigar);
         link_map.insert(path_pair, cigar);
     }
 

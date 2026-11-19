@@ -52,7 +52,7 @@ pub fn linear(matches: &clap::ArgMatches) -> Result<()> {
     };
 
     // load gfa into graph structure
-    let (graph_indices, gfa_graph) = gfa.into_digraph()?;
+    let (graph_indices, gfa_graph) = gfa.into_walk_digraph()?;
 
     // if we have only one node (segment) then all we can do
     // is print the sequence
@@ -88,7 +88,7 @@ pub fn linear(matches: &clap::ArgMatches) -> Result<()> {
                 let gfa = gfa.clone();
                 // make the new GFA
                 let subgraph_gfa = GFAtk(segments_subgraph(&gfa.0, id_set.to_vec()));
-                let (graph_indices_subgraph, subgraph) = subgraph_gfa.into_digraph()?;
+                let (graph_indices_subgraph, subgraph) = subgraph_gfa.into_walk_digraph()?;
 
                 // it can be useful to see here whether the subgraph is cyclic
                 let is_circular = is_cyclic_directed(&subgraph.0);

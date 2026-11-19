@@ -47,7 +47,8 @@ impl GFAungraph {
         for _ in 0..iterations {
             // collect all the neighbours of all the current node indices
             for index in collect_sequence_set.clone() {
-                for c in gfa_graph.neighbors(index) {
+                // linked either way round: `L a + b +` joins b to a as much as a to b
+                for c in gfa_graph.neighbors_undirected(index) {
                     // could possibly add a conditional in here.
                     collect_sequence_set.insert(c);
                 }
@@ -342,16 +343,20 @@ impl GFAdigraph {
             // iterate over the nodes
             for (node_index, _) in gfa_graph.node_references() {
                 // how many neighbours for this particular node?
-                let neighbours = gfa_graph.neighbors(node_index).collect::<HashSet<_>>();
+                // every other segment this one is linked to, whichever
+                // way round the link is written
+                let neighbours = gfa_graph
+                    .neighbors_undirected(node_index)
+                    .filter(|n| *n != node_index)
+                    .collect::<HashSet<_>>();
 
-                // if there are fewer than two neighbours
-                // OR the difference between neighbours & removed nodes == 1
-                if neighbours.len() < 2
-                    || neighbours
-                        .difference(&removed_nodes)
-                        .collect::<HashSet<_>>()
-                        .len()
-                        == 1
+                // fewer than two neighbours left once the removed ones
+                // are discounted
+                if neighbours
+                    .difference(&removed_nodes)
+                    .collect::<HashSet<_>>()
+                    .len()
+                    < 2
                 {
                     removed_nodes.insert(node_index);
                 }
