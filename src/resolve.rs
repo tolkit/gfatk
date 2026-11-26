@@ -204,7 +204,10 @@ fn estimate_budget(depth: &HashMap<Seg, f64>, seg_len: &HashMap<Seg, usize>) -> 
             budget: depth.keys().map(|s| (s.clone(), 1)).collect(),
         };
     }
-    let ratio: HashMap<Seg, f64> = depth.iter().map(|(seg, &d)| (seg.clone(), d / baseline)).collect();
+    let ratio: HashMap<Seg, f64> = depth
+        .iter()
+        .map(|(seg, &d)| (seg.clone(), d / baseline))
+        .collect();
     let budget = ratio
         .iter()
         .map(|(seg, &r)| {
@@ -302,11 +305,18 @@ fn build_edge_support(records: &[GafRecord]) -> HashMap<State, HashMap<State, u3
             let (ru, rv) = ((v.0.clone(), flip(v.1)), (u.0.clone(), flip(u.1)));
             let mirrored = (&ru, &rv) != (u, v);
             let other = if mirrored {
-                edge_support.get(&ru).and_then(|m| m.get(&rv)).copied().unwrap_or(0)
+                edge_support
+                    .get(&ru)
+                    .and_then(|m| m.get(&rv))
+                    .copied()
+                    .unwrap_or(0)
             } else {
                 0 // its own reverse complement: one junction, counted once
             };
-            pooled.entry(u.clone()).or_default().insert(v.clone(), cnt + other);
+            pooled
+                .entry(u.clone())
+                .or_default()
+                .insert(v.clone(), cnt + other);
             if mirrored {
                 pooled.entry(ru).or_default().insert(rv, cnt + other);
             }
@@ -331,7 +341,11 @@ fn build_links_index(
         let rev = ((ts.clone(), flip(*to)), (fs.clone(), flip(*fo)));
         // a link that is its own reverse complement (e.g. `L x + x -`)
         // is still only one link
-        let traversals = if fwd == rev { vec![fwd] } else { vec![fwd, rev] };
+        let traversals = if fwd == rev {
+            vec![fwd]
+        } else {
+            vec![fwd, rev]
+        };
         for (u, v) in traversals {
             *idx.entry(u).or_default().entry(v).or_insert(0) += 1;
         }
@@ -369,17 +383,14 @@ fn build_candidate_edges(
     let mut unlicensed: HashSet<(State, State)> = HashSet::new();
     let licensed = |u: &State, v: &State| links_index.get(u).is_some_and(|m| m.contains_key(v));
 
-    let mut consider_read_edge = |best: &mut HashMap<(State, State), (u8, u32)>,
-                                  u: State,
-                                  v: State,
-                                  cnt: u32,
-                                  tier: u8| {
-        if licensed(&u, &v) {
-            consider(best, u, v, cnt, tier);
-        } else {
-            unlicensed.insert((u, v));
-        }
-    };
+    let mut consider_read_edge =
+        |best: &mut HashMap<(State, State), (u8, u32)>, u: State, v: State, cnt: u32, tier: u8| {
+            if licensed(&u, &v) {
+                consider(best, u, v, cnt, tier);
+            } else {
+                unlicensed.insert((u, v));
+            }
+        };
 
     for ((a, ao, seg, so), ctr) in triple_lookup {
         for (&(ref b, bo), &cnt) in ctr {
@@ -451,7 +462,8 @@ fn solve_ilp(
     root: Option<&State>,
     time_limit: f64,
 ) -> Result<(Vec<(State, State)>, bool)> {
-    let solve = |tie_bp| solve_ilp_with(edges, copies, segments, gene_segs, root, time_limit, tie_bp);
+    let solve =
+        |tie_bp| solve_ilp_with(edges, copies, segments, gene_segs, root, time_limit, tie_bp);
     match solve(TIE_BREAK_BP) {
         Ok(solved) => Ok(solved),
         Err(e) => {
@@ -722,7 +734,10 @@ fn solve_ilp_with(
 
     let mut selected = Vec::new();
     for e in edges {
-        let times = solution.value(x[&(e.from.clone(), e.to.clone())]).round().max(0.0) as usize;
+        let times = solution
+            .value(x[&(e.from.clone(), e.to.clone())])
+            .round()
+            .max(0.0) as usize;
         for _ in 0..times {
             selected.push((e.from.clone(), e.to.clone()));
         }
@@ -818,14 +833,28 @@ fn pair_through_state(support: &[Vec<u32>]) -> Vec<usize> {
                 if !used[j] {
                     used[j] = true;
                     current.push(j);
-                    search(i + 1, support, used, current, total + support[i][j] as u64, best);
+                    search(
+                        i + 1,
+                        support,
+                        used,
+                        current,
+                        total + support[i][j] as u64,
+                        best,
+                    );
                     current.pop();
                     used[j] = false;
                 }
             }
         }
         let mut best = None;
-        search(0, support, &mut vec![false; k], &mut Vec::with_capacity(k), 0, &mut best);
+        search(
+            0,
+            support,
+            &mut vec![false; k],
+            &mut Vec::with_capacity(k),
+            0,
+            &mut best,
+        );
         return best.map(|(_, p)| p).unwrap_or_default();
     }
     let mut pairs: Vec<(u32, usize, usize)> = (0..k)
@@ -881,7 +910,10 @@ fn decompose_circuits(
     let states: BTreeSet<&State> = ins.keys().chain(outs.keys()).copied().collect();
     for state in states {
         let empty = Vec::new();
-        let (e_in, e_out) = (ins.get(state).unwrap_or(&empty), outs.get(state).unwrap_or(&empty));
+        let (e_in, e_out) = (
+            ins.get(state).unwrap_or(&empty),
+            outs.get(state).unwrap_or(&empty),
+        );
         if e_in.len() != e_out.len() {
             anyhow::bail!(
                 "selected edges do not balance at {} ({} in, {} out)",
@@ -994,7 +1026,9 @@ fn repeat_runs(circuit: &[State], budget: &HashMap<Seg, u32>) -> Vec<(usize, usi
 /// read must make to show which flank joins which across the repeat.
 fn run_walk(circuit: &[State], start: usize, len: usize) -> Vec<State> {
     let n = circuit.len();
-    (0..len + 2).map(|k| circuit[(start + n - 1 + k) % n].clone()).collect()
+    (0..len + 2)
+        .map(|k| circuit[(start + n - 1 + k) % n].clone())
+        .collect()
 }
 
 /// How many read-path records walk each of `walks` whole, on either strand.
@@ -1003,11 +1037,18 @@ fn spanning_reads(records: &[GafRecord], walks: &[Vec<State>]) -> Vec<u32> {
     // each walk and its reverse complement, by the state it starts with
     let mut index: HashMap<State, Vec<(usize, Vec<State>)>> = HashMap::new();
     for (i, walk) in walks.iter().enumerate() {
-        let rc: Vec<State> = walk.iter().rev().map(|(s, o)| (s.clone(), flip(*o))).collect();
+        let rc: Vec<State> = walk
+            .iter()
+            .rev()
+            .map(|(s, o)| (s.clone(), flip(*o)))
+            .collect();
         if rc != *walk {
             index.entry(rc[0].clone()).or_default().push((i, rc));
         }
-        index.entry(walk[0].clone()).or_default().push((i, walk.clone()));
+        index
+            .entry(walk[0].clone())
+            .or_default()
+            .push((i, walk.clone()));
     }
     let mut counts = vec![0u32; walks.len()];
     let mut seen: HashSet<usize> = HashSet::new();
@@ -1034,7 +1075,11 @@ fn spanning_reads(records: &[GafRecord], walks: &[Vec<State>]) -> Vec<u32> {
 /// forward.
 fn canonical_circuit(circuit: &[State]) -> Vec<State> {
     let n = circuit.len();
-    let rc: Vec<State> = circuit.iter().rev().map(|(s, o)| (s.clone(), flip(*o))).collect();
+    let rc: Vec<State> = circuit
+        .iter()
+        .rev()
+        .map(|(s, o)| (s.clone(), flip(*o)))
+        .collect();
     let mut best: Option<(&[State], usize)> = None;
     for strand in [circuit, &rc[..]] {
         for k in 0..n {
@@ -1346,7 +1391,10 @@ fn detect_bubbles(
             let state = (seg.clone(), orientation);
             if let (Some(in_edge), Some(out_edge)) = (into.get(&state), out_of.get(&state)) {
                 let support_reads = in_edge.2.min(out_edge.2);
-                if best.as_ref().is_none_or(|b| support_reads > b.support_reads) {
+                if best
+                    .as_ref()
+                    .is_none_or(|b| support_reads > b.support_reads)
+                {
                     best = Some(BubbleArm {
                         segment: seg.clone(),
                         orientation,
@@ -1794,16 +1842,23 @@ pub fn resolve(matches: &clap::ArgMatches) -> Result<()> {
         100.0 * min_read_aligned
     );
 
-
     let triple_lookup = build_triple_lookup(&records);
     let edge_support = build_edge_support(&records);
     let links_index = build_links_index(&links);
     let cigars: Vec<Vec<u8>> = gfa.0.links.iter().map(|l| l.overlap.clone()).collect();
     let overlaps = build_overlaps(&links, &cigars)?;
-    let depth = compute_depth(&records, &evidence.single_segment_bases, &seg_len, &overlaps);
+    let depth = compute_depth(
+        &records,
+        &evidence.single_segment_bases,
+        &seg_len,
+        &overlaps,
+    );
     let copies = estimate_budget(&depth, &seg_len);
     let budget = &copies.budget;
-    eprintln!("[+]\tBaseline (single-copy) read depth: {:.1}x", copies.baseline);
+    eprintln!(
+        "[+]\tBaseline (single-copy) read depth: {:.1}x",
+        copies.baseline
+    );
     let (edges, n_unlicensed) = build_candidate_edges(&triple_lookup, &edge_support, &links_index);
     eprintln!(
         "[+]\t{} candidate edges from read/graph evidence",
@@ -1836,14 +1891,22 @@ pub fn resolve(matches: &clap::ArgMatches) -> Result<()> {
     // First without the single-circuit constraint: quick, and it shows
     // which part of the graph the best solution uses, so the constrained
     // solve can be rooted there.
-    let (free_selected, free_optimal) = solve_ilp(&edges, &copies, &segments, &gene_segs, None, time_limit)?;
+    let (free_selected, free_optimal) =
+        solve_ilp(&edges, &copies, &segments, &gene_segs, None, time_limit)?;
     let free_circuits = decompose_circuits(&free_selected, &triple_lookup)?;
     let root = choose_root(&free_circuits, &edges, &copies, &seg_len);
     let (selected, optimal) = if free_circuits.len() <= 1 {
         // already one circuit: the constraint has nothing to add
         (free_selected, free_optimal)
     } else {
-        match solve_ilp(&edges, &copies, &segments, &gene_segs, root.as_ref(), time_limit) {
+        match solve_ilp(
+            &edges,
+            &copies,
+            &segments,
+            &gene_segs,
+            root.as_ref(),
+            time_limit,
+        ) {
             Ok(solved) => solved,
             Err(e) => {
                 eprintln!(
@@ -1923,13 +1986,22 @@ pub fn resolve(matches: &clap::ArgMatches) -> Result<()> {
                 idx + 1,
                 inexact.len(),
                 shown.join(", "),
-                if inexact.len() > shown.len() { ", ..." } else { "" }
+                if inexact.len() > shown.len() {
+                    ", ..."
+                } else {
+                    ""
+                }
             );
         }
         let runs = repeat_runs(circuit, budget);
-        let walks: Vec<Vec<State>> = runs.iter().map(|&(start, len)| run_walk(circuit, start, len)).collect();
+        let walks: Vec<Vec<State>> = runs
+            .iter()
+            .map(|&(start, len)| run_walk(circuit, start, len))
+            .collect();
         let spanning = spanning_reads(&records, &walks);
-        let unspanned: Vec<usize> = (0..runs.len()).filter(|&i| spanning[i] < MIN_EDGE_READS).collect();
+        let unspanned: Vec<usize> = (0..runs.len())
+            .filter(|&i| spanning[i] < MIN_EDGE_READS)
+            .collect();
         let positions = |i: usize| {
             let (start, len) = runs[i];
             format!("{}-{}", start + 1, (start + len - 1) % circuit.len() + 1)
@@ -1982,7 +2054,11 @@ pub fn resolve(matches: &clap::ArgMatches) -> Result<()> {
         let unspanned_at = if unspanned.is_empty() {
             "none".to_string()
         } else {
-            unspanned.iter().map(|&i| positions(i)).collect::<Vec<_>>().join(",")
+            unspanned
+                .iter()
+                .map(|&i| positions(i))
+                .collect::<Vec<_>>()
+                .join(",")
         };
         // path= stays last: its value runs to the end of the header
         let header = format!(
@@ -2066,7 +2142,9 @@ pub fn resolve(matches: &clap::ArgMatches) -> Result<()> {
             // path actually does between the same entry/exit points?
             // Purely informational -- doesn't affect what gets written.
             let diff = match find_main_detour(&circuits, &b.entry, &b.exit, MAX_DETOUR_HOPS) {
-                Some(detour) => diff_bubble_arm(seq, &path_sequence(&detour, &segments, &overlaps, false)?),
+                Some(detour) => {
+                    diff_bubble_arm(seq, &path_sequence(&detour, &segments, &overlaps, false)?)
+                }
                 None => BubbleDiff::NoDetourFound,
             };
             let (diff_summary, diff_header) = diff.describe();
@@ -2196,7 +2274,9 @@ mod tests {
 
     #[test]
     fn test_estimate_budget_without_depth_gives_every_segment_one_copy() {
-        let depth: HashMap<Seg, f64> = [(b"a".to_vec(), 0.0), (b"b".to_vec(), 0.0)].into_iter().collect();
+        let depth: HashMap<Seg, f64> = [(b"a".to_vec(), 0.0), (b"b".to_vec(), 0.0)]
+            .into_iter()
+            .collect();
         let len: HashMap<Seg, usize> = depth.keys().map(|k| (k.clone(), 1000)).collect();
         let copies = estimate_budget(&depth, &len);
         assert_eq!(copies.budget[&b"a".to_vec()], 1);
@@ -2226,21 +2306,43 @@ mod tests {
         use Orientation::Forward as F;
         // a (10 bp) and b (10 bp) overlap by 4: the path a,b is 16 long and
         // b covers path positions 6..16
-        let seg_len: HashMap<Seg, usize> = [(b"a".to_vec(), 10), (b"b".to_vec(), 10)].into_iter().collect();
+        let seg_len: HashMap<Seg, usize> = [(b"a".to_vec(), 10), (b"b".to_vec(), 10)]
+            .into_iter()
+            .collect();
         let mut overlaps = HashMap::new();
         overlaps.insert((s("a", F), s("b", F)), 4usize);
-        let spanning = GafRecord { path: vec![s("a", F), s("b", F)], path_start: 8, path_end: 16, mapq: 60, identity: None, counts_for_depth: true };
-        let depth = compute_depth(std::slice::from_ref(&spanning), &HashMap::new(), &seg_len, &overlaps);
+        let spanning = GafRecord {
+            path: vec![s("a", F), s("b", F)],
+            path_start: 8,
+            path_end: 16,
+            mapq: 60,
+            identity: None,
+            counts_for_depth: true,
+        };
+        let depth = compute_depth(
+            std::slice::from_ref(&spanning),
+            &HashMap::new(),
+            &seg_len,
+            &overlaps,
+        );
         // a: 8..10 = 2 bases; b: 8..16 = 8 bases (laid end to end, b would
         // start at 10 and get only 6)
         assert_eq!(depth[&b"a".to_vec()], 0.2);
         assert_eq!(depth[&b"b".to_vec()], 0.8);
         // a read inside b alone (5 aligned bases) adds to b's depth
         let within: HashMap<Seg, u64> = [(b"b".to_vec(), 5)].into_iter().collect();
-        let depth = compute_depth(std::slice::from_ref(&spanning), &within, &seg_len, &overlaps);
+        let depth = compute_depth(
+            std::slice::from_ref(&spanning),
+            &within,
+            &seg_len,
+            &overlaps,
+        );
         assert_eq!(depth[&b"b".to_vec()], 1.3);
         // a junction-crossing read that is mostly unaligned is not depth
-        let partial = GafRecord { counts_for_depth: false, ..spanning };
+        let partial = GafRecord {
+            counts_for_depth: false,
+            ..spanning
+        };
         let depth = compute_depth(&[partial], &HashMap::new(), &seg_len, &overlaps);
         assert_eq!(depth[&b"b".to_vec()], 0.0);
     }
@@ -2367,7 +2469,11 @@ mod tests {
         assert_eq!(circuits.len(), 1);
         assert_eq!(circuits[0].len(), 9);
         for (a, b) in [("a", "d"), ("c", "f"), ("e", "b")] {
-            assert!(follows(&circuits[0], a, "r", b), "{a} r {b} in {:?}", circuits[0]);
+            assert!(
+                follows(&circuits[0], a, "r", b),
+                "{a} r {b} in {:?}",
+                circuits[0]
+            );
         }
     }
 
@@ -2432,7 +2538,11 @@ mod tests {
         assert_eq!(canonical_circuit(&circuit), expected);
         let rotated = vec![s("b", F), s("a", F), s("c", F), s("a", B)];
         assert_eq!(canonical_circuit(&rotated), expected);
-        let other_strand: Vec<State> = circuit.iter().rev().map(|(n, o)| (n.clone(), flip(*o))).collect();
+        let other_strand: Vec<State> = circuit
+            .iter()
+            .rev()
+            .map(|(n, o)| (n.clone(), flip(*o)))
+            .collect();
         assert_eq!(canonical_circuit(&other_strand), expected);
         assert_eq!(canonical_circuit(&[]), Vec::<State>::new());
     }
@@ -2445,8 +2555,12 @@ mod tests {
             (b"a".to_vec(), F, b"b".to_vec(), F),
             (b"b".to_vec(), F, b"c".to_vec(), F),
         ];
-        let (edges, _) = build_candidate_edges(&HashMap::new(), &HashMap::new(), &build_links_index(&links));
-        let keys: Vec<(State, State)> = edges.iter().map(|e| (e.from.clone(), e.to.clone())).collect();
+        let (edges, _) =
+            build_candidate_edges(&HashMap::new(), &HashMap::new(), &build_links_index(&links));
+        let keys: Vec<(State, State)> = edges
+            .iter()
+            .map(|e| (e.from.clone(), e.to.clone()))
+            .collect();
         let mut sorted = keys.clone();
         sorted.sort();
         assert_eq!(keys, sorted);
@@ -2457,7 +2571,10 @@ mod tests {
         use Orientation::Forward as F;
         // "hub" has the most candidate edges but is in no circuit; the root
         // must come from the larger circuit, its best-connected state
-        let circuits = vec![vec![s("x", F), s("y", F)], vec![s("a", F), s("b", F), s("c", F)]];
+        let circuits = vec![
+            vec![s("x", F), s("y", F)],
+            vec![s("a", F), s("b", F), s("c", F)],
+        ];
         let mut edges = vec![
             edge(s("a", F), s("b", F), 1, 9),
             edge(s("b", F), s("c", F), 1, 9),
@@ -2470,9 +2587,15 @@ mod tests {
             edges.push(edge(s("hub", F), s(other, F), 2, 1));
         }
         // b and c both have 4 edges; b sorts first
-        let len: HashMap<Seg, usize> = ["a", "b", "c", "x", "y", "hub"].iter().map(|n| (n.as_bytes().to_vec(), 1000)).collect();
+        let len: HashMap<Seg, usize> = ["a", "b", "c", "x", "y", "hub"]
+            .iter()
+            .map(|n| (n.as_bytes().to_vec(), 1000))
+            .collect();
         let copies = copy_number(len.keys().map(|k| (k.clone(), 1)).collect());
-        assert_eq!(choose_root(&circuits, &edges, &copies, &len), Some(s("b", F)));
+        assert_eq!(
+            choose_root(&circuits, &edges, &copies, &len),
+            Some(s("b", F))
+        );
         assert_eq!(choose_root(&[], &edges, &copies, &len), None);
     }
 
@@ -2483,12 +2606,26 @@ mod tests {
         use Orientation::Forward as F;
         let hub: Vec<State> = std::iter::repeat_n(s("r", F), 10).collect();
         let genome = vec![s("a", F), s("b", F)];
-        let len: HashMap<Seg, usize> =
-            [("r", 1000), ("a", 25_000), ("b", 25_000)].iter().map(|(n, l)| (n.as_bytes().to_vec(), *l)).collect();
-        let mut copies = copy_number([("r", 10), ("a", 1), ("b", 1)].iter().map(|(n, b)| (n.as_bytes().to_vec(), *b)).collect());
+        let len: HashMap<Seg, usize> = [("r", 1000), ("a", 25_000), ("b", 25_000)]
+            .iter()
+            .map(|(n, l)| (n.as_bytes().to_vec(), *l))
+            .collect();
+        let mut copies = copy_number(
+            [("r", 10), ("a", 1), ("b", 1)]
+                .iter()
+                .map(|(n, b)| (n.as_bytes().to_vec(), *b))
+                .collect(),
+        );
         copies.ratio.insert(b"r".to_vec(), 10.0);
-        let edges = vec![edge(s("r", F), s("r", F), 0, 10), edge(s("a", F), s("b", F), 0, 10), edge(s("b", F), s("a", F), 0, 10)];
-        assert_eq!(choose_root(&[hub, genome], &edges, &copies, &len), Some(s("a", F)));
+        let edges = vec![
+            edge(s("r", F), s("r", F), 0, 10),
+            edge(s("a", F), s("b", F), 0, 10),
+            edge(s("b", F), s("a", F), 0, 10),
+        ];
+        assert_eq!(
+            choose_root(&[hub, genome], &edges, &copies, &len),
+            Some(s("a", F))
+        );
     }
 
     #[test]
@@ -2528,7 +2665,10 @@ mod tests {
         assert_eq!(bubbles.len(), 1);
         assert_eq!(bubbles[0].segment, b"y".to_vec());
         assert_eq!(bubbles[0].orientation, B);
-        assert_eq!((bubbles[0].entry.clone(), bubbles[0].exit.clone()), (s("a", F), s("b", F)));
+        assert_eq!(
+            (bubbles[0].entry.clone(), bubbles[0].exit.clone()),
+            (s("a", F), s("b", F))
+        );
         assert_eq!(bubbles[0].support_reads, 6);
     }
 
@@ -2751,11 +2891,25 @@ mod tests {
     fn test_path_sequence_circuit_is_the_same_circle_from_any_start() {
         use Orientation::Forward as F;
         let (segments, overlaps) = ring();
-        let from_a = path_sequence(&[s("a", F), s("b", F), s("c", F)], &segments, &overlaps, true).unwrap();
-        let from_b = path_sequence(&[s("b", F), s("c", F), s("a", F)], &segments, &overlaps, true).unwrap();
+        let from_a = path_sequence(
+            &[s("a", F), s("b", F), s("c", F)],
+            &segments,
+            &overlaps,
+            true,
+        )
+        .unwrap();
+        let from_b = path_sequence(
+            &[s("b", F), s("c", F), s("a", F)],
+            &segments,
+            &overlaps,
+            true,
+        )
+        .unwrap();
         assert_eq!(from_a.len(), from_b.len());
         let doubled = [from_a.clone(), from_a].concat();
-        assert!(doubled.windows(from_b.len()).any(|w| w == from_b.as_slice()));
+        assert!(doubled
+            .windows(from_b.len())
+            .any(|w| w == from_b.as_slice()));
     }
 
     #[test]
@@ -2763,9 +2917,21 @@ mod tests {
         use Orientation::Backward as B;
         use Orientation::Forward as F;
         let (segments, overlaps) = ring();
-        let fwd = path_sequence(&[s("a", F), s("b", F), s("c", F)], &segments, &overlaps, true).unwrap();
+        let fwd = path_sequence(
+            &[s("a", F), s("b", F), s("c", F)],
+            &segments,
+            &overlaps,
+            true,
+        )
+        .unwrap();
         // the same circle walked on the other strand: a- -> c- -> b-
-        let rev = path_sequence(&[s("a", B), s("c", B), s("b", B)], &segments, &overlaps, true).unwrap();
+        let rev = path_sequence(
+            &[s("a", B), s("c", B), s("b", B)],
+            &segments,
+            &overlaps,
+            true,
+        )
+        .unwrap();
         let rc = revcomp(&fwd);
         let doubled = [rc.clone(), rc].concat();
         assert_eq!(rev.len(), fwd.len());
@@ -2778,14 +2944,19 @@ mod tests {
         let (segments, overlaps) = ring();
         let seq = path_sequence(&[s("a", F), s("b", F)], &segments, &overlaps, false).unwrap();
         assert_eq!(seq, b"AAACCCGGGTTTACG".to_vec());
-        assert!(path_sequence(&[], &segments, &overlaps, false).unwrap().is_empty());
+        assert!(path_sequence(&[], &segments, &overlaps, false)
+            .unwrap()
+            .is_empty());
     }
 
     #[test]
     fn test_path_sequence_single_segment_circuit_trims_its_self_link() {
         use Orientation::Forward as F;
-        let segments: HashMap<Seg, Vec<u8>> = [(b"x".to_vec(), b"ACGTTTGGCACG".to_vec())].into_iter().collect();
-        let overlaps = build_overlaps(&[(b"x".to_vec(), F, b"x".to_vec(), F)], &[b"3M".to_vec()]).unwrap();
+        let segments: HashMap<Seg, Vec<u8>> = [(b"x".to_vec(), b"ACGTTTGGCACG".to_vec())]
+            .into_iter()
+            .collect();
+        let overlaps =
+            build_overlaps(&[(b"x".to_vec(), F, b"x".to_vec(), F)], &[b"3M".to_vec()]).unwrap();
         let seq = path_sequence(&[s("x", F)], &segments, &overlaps, true).unwrap();
         assert_eq!(seq, b"TTTGGCACG".to_vec());
     }
@@ -2871,7 +3042,10 @@ mod tests {
         // strand, register p+ -> u72+ -> u14+ -- not -> u14-
         use Orientation::Backward as B;
         use Orientation::Forward as F;
-        let records = reads(&[s("u14", B), s("u72", B), s("p", B)], MIN_EDGE_READS as usize);
+        let records = reads(
+            &[s("u14", B), s("u72", B), s("p", B)],
+            MIN_EDGE_READS as usize,
+        );
         let lookup = build_triple_lookup(&records);
         let ctr = &lookup[&(b"p".to_vec(), F, b"u72".to_vec(), F)];
         assert!(ctr.contains_key(&s("u14", F)));
@@ -2922,7 +3096,12 @@ mod tests {
             (s("u14", B), s("u96", B)),
         ] {
             let e = edges.iter().find(|e| e.from == u && e.to == v).unwrap();
-            assert!(e.tier < 2, "{} -> {} lost its read support", state_str(&u), state_str(&v));
+            assert!(
+                e.tier < 2,
+                "{} -> {} lost its read support",
+                state_str(&u),
+                state_str(&v)
+            );
         }
     }
 
@@ -2954,7 +3133,14 @@ mod tests {
         let gene_segs = HashSet::new();
 
         let copies = copy_number(budget);
-        match solve_ilp(&edges, &copies, &segments, &gene_segs, Some(&s("h", F)), 5.0) {
+        match solve_ilp(
+            &edges,
+            &copies,
+            &segments,
+            &gene_segs,
+            Some(&s("h", F)),
+            5.0,
+        ) {
             Ok((selected, _)) => {
                 let circuits = decompose_circuits(&selected, &HashMap::new()).unwrap();
                 assert_eq!(
@@ -2988,18 +3174,35 @@ mod tests {
     fn ilp_inputs_with_ratio(
         segs: &[(&str, f64, usize)],
     ) -> (CopyNumber, HashMap<Seg, Vec<u8>>, HashSet<Seg>) {
-        let ratio: HashMap<Seg, f64> = segs.iter().map(|(n, r, _)| (n.as_bytes().to_vec(), *r)).collect();
-        let budget = ratio.iter().map(|(s, r)| (s.clone(), r.round().max(1.0) as u32)).collect();
+        let ratio: HashMap<Seg, f64> = segs
+            .iter()
+            .map(|(n, r, _)| (n.as_bytes().to_vec(), *r))
+            .collect();
+        let budget = ratio
+            .iter()
+            .map(|(s, r)| (s.clone(), r.round().max(1.0) as u32))
+            .collect();
         let segments = segs
             .iter()
             .map(|(n, _, len)| (n.as_bytes().to_vec(), vec![b'A'; *len]))
             .collect();
-        (CopyNumber { baseline: 100.0, ratio, budget }, segments, HashSet::new())
+        (
+            CopyNumber {
+                baseline: 100.0,
+                ratio,
+                budget,
+            },
+            segments,
+            HashSet::new(),
+        )
     }
 
     /// As [`ilp_inputs_with_ratio`], with each ratio a whole budget.
-    fn ilp_inputs(segs: &[(&str, u32, usize)]) -> (CopyNumber, HashMap<Seg, Vec<u8>>, HashSet<Seg>) {
-        let with_ratio: Vec<(&str, f64, usize)> = segs.iter().map(|(n, b, l)| (*n, *b as f64, *l)).collect();
+    fn ilp_inputs(
+        segs: &[(&str, u32, usize)],
+    ) -> (CopyNumber, HashMap<Seg, Vec<u8>>, HashSet<Seg>) {
+        let with_ratio: Vec<(&str, f64, usize)> =
+            segs.iter().map(|(n, b, l)| (*n, *b as f64, *l)).collect();
         ilp_inputs_with_ratio(&with_ratio)
     }
 
@@ -3017,19 +3220,33 @@ mod tests {
             edge(s("b", F), s("r1", F), 0, 10),
             edge(s("r2", F), s("a", F), 0, 10),
         ];
-        let (copies, segments, genes) =
-            ilp_inputs(&[("a", 1, 5000), ("b", 1, 5000), ("r1", 2, 1000), ("r2", 2, 1000)]);
+        let (copies, segments, genes) = ilp_inputs(&[
+            ("a", 1, 5000),
+            ("b", 1, 5000),
+            ("r1", 2, 1000),
+            ("r2", 2, 1000),
+        ]);
         let (selected, optimal) = solve_ilp(&edges, &copies, &segments, &genes, None, 5.0).unwrap();
         assert!(optimal);
         assert_eq!(
-            selected.iter().filter(|e| **e == (s("r1", F), s("r2", F))).count(),
+            selected
+                .iter()
+                .filter(|e| **e == (s("r1", F), s("r2", F)))
+                .count(),
             2
         );
         let circuits = decompose_circuits(&selected, &HashMap::new()).unwrap();
         assert_eq!(circuits.len(), 1);
         assert_eq!(
             canonical_circuit(&circuits[0]),
-            vec![s("a", F), s("r1", F), s("r2", F), s("b", F), s("r1", F), s("r2", F)]
+            vec![
+                s("a", F),
+                s("r1", F),
+                s("r2", F),
+                s("b", F),
+                s("r1", F),
+                s("r2", F)
+            ]
         );
     }
 
@@ -3046,12 +3263,19 @@ mod tests {
             edge(s("s1", F), s("s2", F), 0, 50),
             edge(s("s2", F), s("h", F), 0, 50),
         ];
-        let (copies, segments, genes) =
-            ilp_inputs(&[("h", 1, 1000), ("long", 1, 5000), ("s1", 1, 100), ("s2", 1, 100)]);
+        let (copies, segments, genes) = ilp_inputs(&[
+            ("h", 1, 1000),
+            ("long", 1, 5000),
+            ("s1", 1, 100),
+            ("s2", 1, 100),
+        ]);
         let (selected, _) = solve_ilp(&edges, &copies, &segments, &genes, None, 5.0).unwrap();
         let circuits = decompose_circuits(&selected, &HashMap::new()).unwrap();
         assert_eq!(circuits.len(), 1);
-        assert_eq!(canonical_circuit(&circuits[0]), vec![s("h", F), s("long", F)]);
+        assert_eq!(
+            canonical_circuit(&circuits[0]),
+            vec![s("h", F), s("long", F)]
+        );
     }
 
     #[test]
@@ -3073,8 +3297,14 @@ mod tests {
             canonical_circuit(&decompose_circuits(&selected, &HashMap::new()).unwrap()[0])
         };
         assert_eq!(loops(2000), vec![s("h", F), s("y", F)]);
-        assert_eq!(loops(2000 + TIE_BREAK_BP as usize - 1), vec![s("h", F), s("y", F)]);
-        assert_eq!(loops(2000 + TIE_BREAK_BP as usize + 1), vec![s("h", F), s("x", F)]);
+        assert_eq!(
+            loops(2000 + TIE_BREAK_BP as usize - 1),
+            vec![s("h", F), s("y", F)]
+        );
+        assert_eq!(
+            loops(2000 + TIE_BREAK_BP as usize + 1),
+            vec![s("h", F), s("x", F)]
+        );
     }
 
     #[test]
@@ -3093,7 +3323,10 @@ mod tests {
             ilp_inputs_with_ratio(&[("h", 1.0, 1000), ("half", 0.5, 3000), ("whole", 1.0, 2000)]);
         let (selected, _) = solve_ilp(&edges, &copies, &segments, &genes, None, 5.0).unwrap();
         let circuits = decompose_circuits(&selected, &HashMap::new()).unwrap();
-        assert_eq!(canonical_circuit(&circuits[0]), vec![s("h", F), s("whole", F)]);
+        assert_eq!(
+            canonical_circuit(&circuits[0]),
+            vec![s("h", F), s("whole", F)]
+        );
     }
 
     #[test]
@@ -3113,7 +3346,9 @@ mod tests {
                 edges.push(edge(s("trace", F), s("h", F), 0, 10));
             }
             let (copies, segments, genes) = ilp_inputs_with_ratio(&segs);
-            solve_ilp(&edges, &copies, &segments, &genes, None, 5.0).unwrap().0
+            solve_ilp(&edges, &copies, &segments, &genes, None, 5.0)
+                .unwrap()
+                .0
         };
         assert!(loop_through(false).is_empty());
         assert_eq!(loop_through(true).len(), 3);
@@ -3122,16 +3357,31 @@ mod tests {
     #[test]
     fn test_repeat_runs_and_their_walks() {
         use Orientation::Forward as F;
-        let budget: HashMap<Seg, u32> =
-            [("a", 1), ("b", 1), ("r1", 2), ("r2", 2)].iter().map(|(n, b)| (n.as_bytes().to_vec(), *b)).collect();
-        let circuit = vec![s("a", F), s("r1", F), s("r2", F), s("b", F), s("r1", F), s("r2", F)];
+        let budget: HashMap<Seg, u32> = [("a", 1), ("b", 1), ("r1", 2), ("r2", 2)]
+            .iter()
+            .map(|(n, b)| (n.as_bytes().to_vec(), *b))
+            .collect();
+        let circuit = vec![
+            s("a", F),
+            s("r1", F),
+            s("r2", F),
+            s("b", F),
+            s("r1", F),
+            s("r2", F),
+        ];
         assert_eq!(repeat_runs(&circuit, &budget), vec![(1, 2), (4, 2)]);
         // the second run's walk wraps round to the circuit's start
-        assert_eq!(run_walk(&circuit, 4, 2), vec![s("b", F), s("r1", F), s("r2", F), s("a", F)]);
+        assert_eq!(
+            run_walk(&circuit, 4, 2),
+            vec![s("b", F), s("r1", F), s("r2", F), s("a", F)]
+        );
         // a run across the circuit's start is one run, not two
         let wrapped = vec![s("r1", F), s("a", F), s("r2", F)];
         assert_eq!(repeat_runs(&wrapped, &budget), vec![(2, 2)]);
-        assert_eq!(run_walk(&wrapped, 2, 2), vec![s("a", F), s("r2", F), s("r1", F), s("a", F)]);
+        assert_eq!(
+            run_walk(&wrapped, 2, 2),
+            vec![s("a", F), s("r2", F), s("r1", F), s("a", F)]
+        );
         // no single-copy state, no runs
         assert!(repeat_runs(&[s("r1", F), s("r2", F)], &budget).is_empty());
     }
@@ -3150,7 +3400,16 @@ mod tests {
             // inside the repeat only
             rec(&[s("r1", F), s("r2", F)]),
             // the walk twice in one record counts once
-            rec(&[s("b", F), s("r1", F), s("r2", F), s("a", F), s("b", F), s("r1", F), s("r2", F), s("a", F)]),
+            rec(&[
+                s("b", F),
+                s("r1", F),
+                s("r2", F),
+                s("a", F),
+                s("b", F),
+                s("r1", F),
+                s("r2", F),
+                s("a", F),
+            ]),
         ];
         assert_eq!(spanning_reads(&records, &[walk]), vec![3]);
     }
