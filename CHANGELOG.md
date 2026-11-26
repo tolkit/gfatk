@@ -4,6 +4,70 @@ All notable changes to gfatk are listed here, newest first. Versions follow
 [semantic versioning](https://semver.org/); release binaries are on the
 [GitHub releases page](https://github.com/tolkit/gfatk/releases).
 
+## [Unreleased]
+
+### Changed
+
+- `gfatk resolve` may walk a junction more than once. The solver chose each
+  transition between two segments at most once, so a repeat spanning several
+  segments could be walked only once, however many copies its depth showed,
+  and everything a circuit could reach only by walking it again was left
+  out. A transition may now be walked as many times as the smaller budget of
+  its two segments allows. On fern mitochondrial graphs, this was most of
+  what resolve left out.
+- `gfatk resolve` keeps as much of the sequence read depth shows as it can,
+  without overstating it, rather than including as many segments as it can.
+  Each segment counted once whatever its length or depth, so the solver
+  would give up a long segment to keep two short ones, or a single-copy
+  segment to keep one at a few percent of the baseline depth. A segment's
+  weight is now its length (times 20 for a gene-bearing segment, as before).
+  A segment at or above the single-copy baseline depth earns its weight when
+  included. One below it, at copy ratio r, earns r of its weight but
+  overstates its depth by 1 - r, so it nets 2r - 1: sequence at 5% of the
+  baseline (typically from the other organelle, nuclear copies or an
+  assembly error) is walked only where that connects more sequence than it
+  overstates, and sequence at half the baseline breaks even. Segments left
+  out are still written as unplaced records.
+- `gfatk resolve` forces its single circuit through the circuit, found
+  without that constraint, that scores best in those terms. It used to take
+  the one with the most segment visits, which can be one walking a few short
+  repeats many times rather than the one holding the genome.
+- Read support now only decides between solutions to within 10 bp of
+  sequence. If the solver fails on a graph with it, resolve solves again
+  without it and says so.
+- Together, on 54 plant organelle graphs (31 fern and lycophyte
+  mitochondria), against 0.6.3:
+  - 43 graphs now place at least 70% (mitochondria) or 90% (plastids) of
+    their graph sequence in the circuit, up from 25.
+  - The median share placed rises from 0.70 to 0.84.
+  - How far each segment's walks are from its copy ratio, weighted by
+    length, falls from a median of 0.43 to 0.24 of the depth-implied genome
+    size.
+  - Sequence placed at under 0.2x the baseline depth falls from 188 to 40
+    kb. Because of that, Geranium phaeum's plastid now places 88% of its
+    graph rather than 95%: it no longer walks 46 kb of such sequence.
+  - All 54 resolve to a single circuit, output is identical between runs,
+    and the 54 together take 686 s rather than 1201 s.
+  - 94 of 810 repeat runs, in 32 graphs, are flagged as not crossed by
+    reads.
+
+### Added
+
+- `gfatk resolve` flags repeat runs whose arrangement the reads don't show. A
+  repeat run is a stretch of consecutive repeat segments (budget above 1)
+  between two single-copy segments. Which flank each copy joins is shown by
+  reads that cross the whole run, flank to flank; where fewer than 5 do, the
+  circuit's arrangement there is one the graph allows, not one the reads
+  show. Each circuit's header now carries `repeat_runs=`,
+  `unspanned_repeat_runs=` and `unspanned_at=` (1-based path positions of the
+  repeat segments of each such run, or `none`), before `path=`. stderr lists
+  each such run with its segments, length, flanks and spanning reads.
+
+### Fixed
+
+- When the single-circuit solve fails, the warning now gives the solver's own
+  error instead of blaming the time limit.
+
 ## [0.6.3] - 2026-11-19
 
 ### Fixed

@@ -15,12 +15,13 @@
 //!     tiers: an exact `(prev, segment, next)` triple seen in a single read,
 //!     a plain pairwise adjacency seen in a read's path, or (as a last
 //!     resort) the bare GFA link topology with no read support at all
-//!   - the actual selection is posed as a small integer program: choose the
-//!     set of candidate edges that maximises coverage (weighted towards
-//!     annotated genes, when a GFF is supplied), subject to each segment's
-//!     budget and flow conservation at every state -- which guarantees the
-//!     selected edges decompose cleanly into one or more closed circuits,
-//!     with no dangling ends
+//!   - the actual selection is posed as a small integer program: choose how
+//!     many times to walk each candidate edge so as to include as much
+//!     sequence (in bp, weighted towards annotated genes when a GFF or BED is
+//!     supplied) as possible, subject to each segment's budget and flow
+//!     conservation at every state -- which guarantees the selected edges
+//!     decompose cleanly into one or more closed circuits, with no dangling
+//!     ends
 //!
 //! Segments left out entirely, but which have real read evidence connecting
 //! them to both sides of the resolved circuit, are reported separately as
@@ -64,6 +65,12 @@ struct CandidateEdge {
 const MIN_EDGE_READS: u32 = 5;
 const GENE_WEIGHT: f64 = 20.0;
 const BASE_WEIGHT: f64 = 1.0;
+/// How much sequence (bp) read support can be worth in the solver: it
+/// decides between solutions holding the same sequence, or within this much
+/// of it. Half a base would make it a pure tie-break, but its coefficients
+/// are then small enough (~1e-8) for microlp to fail with a singular basis
+/// on some graphs (2 of 54 at 2 bp, none at 5 or 10).
+const TIE_BREAK_BP: f64 = 10.0;
 
 fn flip(o: Orientation) -> Orientation {
     match o {
@@ -151,16 +158,28 @@ fn compute_depth(
         .collect()
 }
 
-/// The depth of single-copy sequence, and each segment's estimated copy
-/// number relative to it, floored at 1 for segments with too little
-/// evidence to say otherwise.
+/// Copy number from read depth: the depth of single-copy sequence (the
+/// baseline), each segment's depth relative to it (its copy ratio), and its
+/// budget, the most times a circuit may walk it.
 ///
 /// The baseline is the depth at the middle base of the graph: the median
 /// over segments with reads, each weighted by its length. Most of an
 /// organelle genome is single-copy, so most *bases* are at single-copy
 /// depth - which is not true of most *segments* in a graph with many short
 /// repeat or low-coverage pieces, and those would set an unweighted median.
-fn estimate_budget(depth: &HashMap<Seg, f64>, seg_len: &HashMap<Seg, usize>) -> (f64, HashMap<Seg, u32>) {
+///
+/// The budget is the copy ratio rounded, and at least 1: a segment at low
+/// depth may still be walked once, but the solver counts that walk against
+/// the circuit (see [`solve_ilp`]), so it is only walked where it connects
+/// more sequence than it overstates. With no depth at all (no reads on any
+/// segment) every segment gets ratio and budget 1.
+struct CopyNumber {
+    baseline: f64,
+    ratio: HashMap<Seg, f64>,
+    budget: HashMap<Seg, u32>,
+}
+
+fn estimate_budget(depth: &HashMap<Seg, f64>, seg_len: &HashMap<Seg, usize>) -> CopyNumber {
     let mut values: Vec<(f64, usize, &Seg)> = depth
         .iter()
         .filter(|(_, d)| **d > 0.0)
@@ -178,16 +197,27 @@ fn estimate_budget(depth: &HashMap<Seg, f64>, seg_len: &HashMap<Seg, usize>) -> 
         }
     }
 
-    let budget = depth
+    if values.is_empty() {
+        return CopyNumber {
+            baseline,
+            ratio: depth.keys().map(|s| (s.clone(), 1.0)).collect(),
+            budget: depth.keys().map(|s| (s.clone(), 1)).collect(),
+        };
+    }
+    let ratio: HashMap<Seg, f64> = depth.iter().map(|(seg, &d)| (seg.clone(), d / baseline)).collect();
+    let budget = ratio
         .iter()
-        .map(|(seg, &d)| {
-            let ratio = d / baseline;
-            let b = ratio.round().max(1.0) as u32;
+        .map(|(seg, &r)| {
+            let b = r.round().max(1.0) as u32;
             (seg.clone(), b)
         })
         .collect();
 
-    (baseline, budget)
+    CopyNumber {
+        baseline,
+        ratio,
+        budget,
+    }
 }
 
 /// The most specific evidence tier: an exact `(prev, segment, next)` triple
@@ -384,9 +414,21 @@ fn build_candidate_edges(
     (edges, unlicensed.len())
 }
 
-/// Solve the integer program: pick the subset of candidate edges maximising
-/// segment coverage (weighted towards genes), subject to each segment's
-/// depth budget and flow conservation at every state. Given a `root` state,
+/// Solve the integer program: choose how many times to walk each candidate
+/// edge so the circuit holds as much of the sequence read depth shows as
+/// possible without overstating it, subject to each segment's budget and
+/// flow conservation at every state. Each segment's weight is its length
+/// (GENE_WEIGHT times that if it carries a gene). A segment at or above the
+/// single-copy baseline earns its weight once, if included. A segment below
+/// it, at copy ratio r < 1 (its read depth relative to the baseline), can be
+/// walked once: that earns r of its weight and overstates its depth by
+/// 1 - r, which costs as much, so it nets 2r - 1. A segment at 5% of the
+/// baseline is walked only where that connects more sequence than it
+/// overstates, and one at half the baseline breaks even. Further walks of a
+/// repeat, up to its budget, earn only the read-support tie-break. (Crediting
+/// each walk up to the copy ratio, and charging walks beyond it, left
+/// microlp choosing exact repeat multiplicities among many near-equal
+/// solutions, and it ran out of time on most graphs.) Given a `root` state,
 /// an additional single-commodity-flow constraint forces the result into
 /// one circuit through it rather than however many disjoint ones flow
 /// conservation alone happens to allow -- see the comment further down for
@@ -394,15 +436,44 @@ fn build_candidate_edges(
 /// too slow for microlp within a reasonable time budget, so the caller
 /// retries without it on failure rather than leaving the tool hanging.
 ///
-/// Returns the selected edges and whether the solver proved them optimal;
-/// if it ran out of time instead, they are only the best found so far.
+/// Returns the selected edges, each listed as many times as it is walked,
+/// and whether the solver proved them optimal; if it ran out of time
+/// instead, they are only the best found so far.
+///
+/// If microlp fails on the model (a singular basis, which the tiny read
+/// support terms can provoke), it is solved again without them, so the
+/// choice between equally long solutions is no longer guided by reads.
 fn solve_ilp(
     edges: &[CandidateEdge],
-    budget: &HashMap<Seg, u32>,
+    copies: &CopyNumber,
     segments: &HashMap<Seg, Vec<u8>>,
     gene_segs: &HashSet<Seg>,
     root: Option<&State>,
     time_limit: f64,
+) -> Result<(Vec<(State, State)>, bool)> {
+    let solve = |tie_bp| solve_ilp_with(edges, copies, segments, gene_segs, root, time_limit, tie_bp);
+    match solve(TIE_BREAK_BP) {
+        Ok(solved) => Ok(solved),
+        Err(e) => {
+            let solved = solve(0.0).with_context(|| format!("and before that, {e:#}"))?;
+            eprintln!(
+                "[-]\tThe solver failed with read support breaking ties ({e:#}); solved again \
+                 without it, so among equally long solutions the choice is not guided by reads."
+            );
+            Ok(solved)
+        }
+    }
+}
+
+/// [`solve_ilp`] with read support worth at most `tie_bp` bases of sequence.
+fn solve_ilp_with(
+    edges: &[CandidateEdge],
+    copies: &CopyNumber,
+    segments: &HashMap<Seg, Vec<u8>>,
+    gene_segs: &HashSet<Seg>,
+    root: Option<&State>,
+    time_limit: f64,
+    tie_bp: f64,
 ) -> Result<(Vec<(State, State)>, bool)> {
     // states and segments in sorted order, so the model is built the same
     // way on every run
@@ -414,13 +485,24 @@ fn solve_ilp(
 
     let mut vars = ProblemVariables::new();
 
+    // How many times each transition may be walked. A repeat that spans
+    // several segments walks the junctions inside it once per copy, so a
+    // transition is capped by the smaller budget of its two segments, not at
+    // one. Versions up to 0.6.3 allowed each transition at most once, which
+    // left out everything a circuit could only reach by walking a
+    // multi-segment repeat a second time.
+    let budget = &copies.budget;
+    let seg_budget = |seg: &Seg| budget.get(seg).copied().unwrap_or(1);
+    let cap = |e: &CandidateEdge| seg_budget(&e.from.0).min(seg_budget(&e.to.0)) as f64;
     let mut x: HashMap<(State, State), Variable> = HashMap::new();
     for e in edges {
         x.insert(
             (e.from.clone(), e.to.clone()),
-            vars.add(variable().binary()),
+            vars.add(variable().integer().min(0.0).max(cap(e))),
         );
     }
+    // y[s]: whether segment s is included
+    let ratio_of = |seg: &Seg| copies.ratio.get(seg).copied().unwrap_or(1.0).max(0.0);
     let mut y: BTreeMap<Seg, Variable> = BTreeMap::new();
     for seg in segments.keys().collect::<BTreeSet<_>>() {
         y.insert(seg.clone(), vars.add(variable().binary()));
@@ -479,20 +561,51 @@ fn solve_ilp(
         }
     }
 
-    let total_reads: f64 = edges.iter().map(|e| e.reads as f64).sum::<f64>().max(1.0);
-
-    let mut objective = Expression::from(0.0);
-    for (seg, &yvar) in &y {
-        let w = if gene_segs.contains(seg) {
+    // Weights are lengths in kb (GENE_WEIGHT times that with a gene).
+    // Versions up to 0.6.3 instead counted each segment included once,
+    // whatever its length or depth, which would give up a 100 kb segment to
+    // keep two 1 kb ones, or a single-copy segment to keep one at a few
+    // percent of the baseline depth.
+    let weight = |seg: &Seg| {
+        let kb = segments.get(seg).map_or(1, |s| s.len().max(1)) as f64 / 1000.0;
+        kb * if gene_segs.contains(seg) {
             GENE_WEIGHT
         } else {
             BASE_WEIGHT
-        };
-        objective += w * yvar;
+        }
+    };
+    // Read support only breaks ties: the edge terms together add at most
+    // `tie_bp` bases' weight, so they can't outweigh any more sequence than
+    // that (see TIE_BREAK_BP).
+    let max_support: f64 = edges.iter().map(|e| cap(e) * e.reads as f64).sum();
+    let tie_scale = if max_support > 0.0 {
+        tie_bp * (BASE_WEIGHT / 1000.0) / max_support
+    } else {
+        0.0
+    };
+
+    let mut objective = Expression::from(0.0);
+    for (seg, &yvar) in &y {
+        if ratio_of(seg) >= 1.0 {
+            objective += weight(seg) * yvar;
+        }
+    }
+    // below the baseline the budget is 1, so the walks entering the segment
+    // are 0 or 1 and its net worth goes straight on them - rounded to whole
+    // bases, as a segment just under half the baseline would otherwise get a
+    // coefficient small enough (like the tie-break's) to make microlp fail
+    for e in edges {
+        let r = ratio_of(&e.to.0);
+        if r < 1.0 {
+            let net = (weight(&e.to.0) * 1000.0 * (2.0 * r - 1.0)).round() / 1000.0;
+            if net != 0.0 {
+                objective += net * x[&(e.from.clone(), e.to.clone())];
+            }
+        }
     }
     for e in edges {
         let var = x[&(e.from.clone(), e.to.clone())];
-        objective += (e.reads as f64 / total_reads) * 0.01 * var;
+        objective += tie_scale * e.reads as f64 * var;
     }
 
     let mut model = vars
@@ -607,24 +720,51 @@ fn solve_ilp(
     let solution = model.solve().context("ILP solve failed")?;
     let optimal = matches!(solution.status(), SolutionStatus::Optimal);
 
-    let selected = edges
-        .iter()
-        .filter(|e| solution.value(x[&(e.from.clone(), e.to.clone())]) > 0.5)
-        .map(|e| (e.from.clone(), e.to.clone()))
-        .collect();
+    let mut selected = Vec::new();
+    for e in edges {
+        let times = solution.value(x[&(e.from.clone(), e.to.clone())]).round().max(0.0) as usize;
+        for _ in 0..times {
+            selected.push((e.from.clone(), e.to.clone()));
+        }
+    }
     Ok((selected, optimal))
+}
+
+/// A circuit's score in the solver's terms (see [`solve_ilp`], without gene
+/// weighting or read support): over the segments it walks, length if at or
+/// above the baseline depth, length times 2r - 1 if at copy ratio r below it.
+fn depth_fit(circuit: &[State], copies: &CopyNumber, seg_len: &HashMap<Seg, usize>) -> f64 {
+    let walked: HashSet<&Seg> = circuit.iter().map(|(s, _)| s).collect();
+    walked
+        .into_iter()
+        .map(|s| {
+            let r = copies.ratio.get(s).copied().unwrap_or(1.0);
+            seg_len.get(s).copied().unwrap_or(0) as f64 * if r >= 1.0 { 1.0 } else { 2.0 * r - 1.0 }
+        })
+        .sum()
 }
 
 /// The state to force a single circuit through: the best-connected state
 /// (most candidate edges in and out; the first in sorted order on a tie)
-/// of the largest circuit found without the connectivity constraint.
-/// Versions up to 0.6.2 took the best-connected state of the whole graph,
-/// whether or not a good circuit passes through it - and where the best
-/// one doesn't, forcing it in cost segments.
-fn choose_root(circuits: &[Vec<State>], edges: &[CandidateEdge]) -> Option<State> {
-    let largest = circuits
-        .iter()
-        .max_by(|a, b| a.len().cmp(&b.len()).then_with(|| b.cmp(a)))?;
+/// of the circuit, found without the connectivity constraint, that best fits
+/// read depth (see [`depth_fit`]). Versions up to 0.6.2 took the
+/// best-connected state of the whole graph, whether or not a good circuit
+/// passes through it - and where the best one doesn't, forcing it in cost
+/// segments; 0.6.3 took the circuit with the most states, which can be one
+/// walking a few short repeats many times rather than the one holding the
+/// genome.
+fn choose_root(
+    circuits: &[Vec<State>],
+    edges: &[CandidateEdge],
+    copies: &CopyNumber,
+    seg_len: &HashMap<Seg, usize>,
+) -> Option<State> {
+    let largest = circuits.iter().max_by(|a, b| {
+        depth_fit(a, copies, seg_len)
+            .total_cmp(&depth_fit(b, copies, seg_len))
+            .then_with(|| a.len().cmp(&b.len()))
+            .then_with(|| b.cmp(a))
+    })?;
     let mut degree: HashMap<&State, usize> = HashMap::new();
     for e in edges {
         *degree.entry(&e.from).or_insert(0) += 1;
@@ -816,6 +956,75 @@ fn decompose_circuits(
         circuits.push(circuit);
     }
     Ok(circuits)
+}
+
+/// The repeat runs of a circuit: each maximal stretch of consecutive states
+/// whose segment has a budget above 1, between two single-copy states, as
+/// (first position, number of states). Positions are 0-based in the circuit
+/// as given, and a run may wrap round from its end to its start. A circuit
+/// with no single-copy state has none.
+fn repeat_runs(circuit: &[State], budget: &HashMap<Seg, u32>) -> Vec<(usize, usize)> {
+    let n = circuit.len();
+    let repeat: Vec<bool> = circuit
+        .iter()
+        .map(|(s, _)| budget.get(s).copied().unwrap_or(1) > 1)
+        .collect();
+    let Some(first_single) = repeat.iter().position(|r| !r) else {
+        return Vec::new();
+    };
+    let mut runs = Vec::new();
+    let mut i = 0;
+    while i < n {
+        let p = (first_single + i) % n;
+        if repeat[p] {
+            let mut len = 0;
+            while i < n && repeat[(first_single + i) % n] {
+                len += 1;
+                i += 1;
+            }
+            runs.push((p, len));
+        } else {
+            i += 1;
+        }
+    }
+    runs
+}
+
+/// A repeat run with the single-copy state on either side of it: the walk a
+/// read must make to show which flank joins which across the repeat.
+fn run_walk(circuit: &[State], start: usize, len: usize) -> Vec<State> {
+    let n = circuit.len();
+    (0..len + 2).map(|k| circuit[(start + n - 1 + k) % n].clone()).collect()
+}
+
+/// How many read-path records walk each of `walks` whole, on either strand.
+/// A record walking one several times counts once for it.
+fn spanning_reads(records: &[GafRecord], walks: &[Vec<State>]) -> Vec<u32> {
+    // each walk and its reverse complement, by the state it starts with
+    let mut index: HashMap<State, Vec<(usize, Vec<State>)>> = HashMap::new();
+    for (i, walk) in walks.iter().enumerate() {
+        let rc: Vec<State> = walk.iter().rev().map(|(s, o)| (s.clone(), flip(*o))).collect();
+        if rc != *walk {
+            index.entry(rc[0].clone()).or_default().push((i, rc));
+        }
+        index.entry(walk[0].clone()).or_default().push((i, walk.clone()));
+    }
+    let mut counts = vec![0u32; walks.len()];
+    let mut seen: HashSet<usize> = HashSet::new();
+    for rec in records {
+        seen.clear();
+        for k in 0..rec.path.len() {
+            if let Some(entries) = index.get(&rec.path[k]) {
+                for (i, w) in entries {
+                    if !seen.contains(i) && rec.path[k..].starts_with(w) {
+                        counts[*i] += 1;
+                        seen.insert(*i);
+                    }
+                }
+            }
+        }
+    }
+    counts
 }
 
 /// One fixed way of writing a circuit, whichever state it was found from
@@ -1592,8 +1801,9 @@ pub fn resolve(matches: &clap::ArgMatches) -> Result<()> {
     let cigars: Vec<Vec<u8>> = gfa.0.links.iter().map(|l| l.overlap.clone()).collect();
     let overlaps = build_overlaps(&links, &cigars)?;
     let depth = compute_depth(&records, &evidence.single_segment_bases, &seg_len, &overlaps);
-    let (baseline, budget) = estimate_budget(&depth, &seg_len);
-    eprintln!("[+]\tBaseline (single-copy) read depth: {baseline:.1}x");
+    let copies = estimate_budget(&depth, &seg_len);
+    let budget = &copies.budget;
+    eprintln!("[+]\tBaseline (single-copy) read depth: {:.1}x", copies.baseline);
     let (edges, n_unlicensed) = build_candidate_edges(&triple_lookup, &edge_support, &links_index);
     eprintln!(
         "[+]\t{} candidate edges from read/graph evidence",
@@ -1626,18 +1836,18 @@ pub fn resolve(matches: &clap::ArgMatches) -> Result<()> {
     // First without the single-circuit constraint: quick, and it shows
     // which part of the graph the best solution uses, so the constrained
     // solve can be rooted there.
-    let (free_selected, free_optimal) = solve_ilp(&edges, &budget, &segments, &gene_segs, None, time_limit)?;
+    let (free_selected, free_optimal) = solve_ilp(&edges, &copies, &segments, &gene_segs, None, time_limit)?;
     let free_circuits = decompose_circuits(&free_selected, &triple_lookup)?;
-    let root = choose_root(&free_circuits, &edges);
+    let root = choose_root(&free_circuits, &edges, &copies, &seg_len);
     let (selected, optimal) = if free_circuits.len() <= 1 {
         // already one circuit: the constraint has nothing to add
         (free_selected, free_optimal)
     } else {
-        match solve_ilp(&edges, &budget, &segments, &gene_segs, root.as_ref(), time_limit) {
+        match solve_ilp(&edges, &copies, &segments, &gene_segs, root.as_ref(), time_limit) {
             Ok(solved) => solved,
             Err(e) => {
                 eprintln!(
-                    "[-]\tCould not solve for a single connected circuit within the time budget ({e}); \
+                    "[-]\tCould not solve for a single connected circuit ({e:#}); \
                      falling back to the unconstrained solve, which may report multiple circuits."
                 );
                 (free_selected, free_optimal)
@@ -1716,15 +1926,73 @@ pub fn resolve(matches: &clap::ArgMatches) -> Result<()> {
                 if inexact.len() > shown.len() { ", ..." } else { "" }
             );
         }
+        let runs = repeat_runs(circuit, budget);
+        let walks: Vec<Vec<State>> = runs.iter().map(|&(start, len)| run_walk(circuit, start, len)).collect();
+        let spanning = spanning_reads(&records, &walks);
+        let unspanned: Vec<usize> = (0..runs.len()).filter(|&i| spanning[i] < MIN_EDGE_READS).collect();
+        let positions = |i: usize| {
+            let (start, len) = runs[i];
+            format!("{}-{}", start + 1, (start + len - 1) % circuit.len() + 1)
+        };
+        if runs.is_empty() {
+            // nothing to flag: no repeat, or nothing but repeat
+        } else if unspanned.is_empty() {
+            eprintln!(
+                "[+]\tCircuit {}: all {} repeat run(s) are crossed end to end, flank to flank, by at \
+                 least {MIN_EDGE_READS} reads",
+                idx + 1,
+                runs.len()
+            );
+        } else {
+            let shown: Vec<String> = unspanned
+                .iter()
+                .map(|&i| {
+                    let walk = &walks[i];
+                    let repeat = &walk[1..walk.len() - 1];
+                    format!(
+                        "path positions {} ({}{}, {} bp, between {} and {}, {} read(s))",
+                        positions(i),
+                        state_str(&repeat[0]),
+                        if repeat.len() > 1 {
+                            format!("..{}", state_str(&repeat[repeat.len() - 1]))
+                        } else {
+                            String::new()
+                        },
+                        repeat.iter().map(|(s, _)| seg_len[s]).sum::<usize>(),
+                        state_str(&walk[0]),
+                        state_str(&walk[walk.len() - 1]),
+                        spanning[i]
+                    )
+                })
+                .collect();
+            eprintln!(
+                "[-]\tCircuit {}: {} of {} repeat run(s) are crossed end to end by fewer than \
+                 {MIN_EDGE_READS} reads, so which flank each copy joins there is one arrangement the \
+                 graph allows, not one the reads show: {}",
+                idx + 1,
+                unspanned.len(),
+                runs.len(),
+                shown.join("; ")
+            );
+        }
         let species_tag = gfa_file
             .and_then(|p| p.file_stem())
             .map(|s| s.to_string_lossy().to_string())
             .unwrap_or_else(|| "gfatk_resolve".to_string());
+        let unspanned_at = if unspanned.is_empty() {
+            "none".to_string()
+        } else {
+            unspanned.iter().map(|&i| positions(i)).collect::<Vec<_>>().join(",")
+        };
+        // path= stays last: its value runs to the end of the header
         let header = format!(
-            "{species_tag}_circuit{}:n_segments={}:bp={}:circular=true:path={}",
+            "{species_tag}_circuit{}:n_segments={}:bp={}:circular=true:repeat_runs={}:\
+             unspanned_repeat_runs={}:unspanned_at={unspanned_at}:path={}",
             idx + 1,
             circuit.len(),
             seq.len(),
+            runs.len(),
+            unspanned.len(),
             path_str
         );
         write_fasta_record(&header, &seq);
@@ -1904,23 +2172,35 @@ mod tests {
         depth.insert(b"c".to_vec(), 100.0);
         depth.insert(b"repeat".to_vec(), 300.0);
         let len: HashMap<Seg, usize> = depth.keys().map(|k| (k.clone(), 1000)).collect();
-        let (baseline, budget) = estimate_budget(&depth, &len);
-        assert!((baseline - 100.0).abs() < 1e-9);
-        assert_eq!(budget[&b"a".to_vec()], 1);
-        assert_eq!(budget[&b"repeat".to_vec()], 3);
+        let copies = estimate_budget(&depth, &len);
+        assert!((copies.baseline - 100.0).abs() < 1e-9);
+        assert_eq!(copies.budget[&b"a".to_vec()], 1);
+        assert_eq!(copies.budget[&b"repeat".to_vec()], 3);
+        assert!((copies.ratio[&b"repeat".to_vec()] - 3.0).abs() < 1e-9);
     }
 
     #[test]
     fn test_estimate_budget_floors_at_one() {
-        // a segment with very little read support should still get a
-        // budget of at least 1, never 0 -- it's real, just underrepresented
+        // even sequence at a few percent of the baseline may be walked once
+        // (the solver counts that walk against the circuit); its ratio says
+        // how little depth it has
         let mut depth = HashMap::new();
         depth.insert(b"a".to_vec(), 100.0);
         depth.insert(b"b".to_vec(), 100.0);
-        depth.insert(b"weak".to_vec(), 5.0);
+        depth.insert(b"trace".to_vec(), 5.0);
         let len: HashMap<Seg, usize> = depth.keys().map(|k| (k.clone(), 1000)).collect();
-        let (_, budget) = estimate_budget(&depth, &len);
-        assert_eq!(budget[&b"weak".to_vec()], 1);
+        let copies = estimate_budget(&depth, &len);
+        assert_eq!(copies.budget[&b"trace".to_vec()], 1);
+        assert!((copies.ratio[&b"trace".to_vec()] - 0.05).abs() < 1e-9);
+    }
+
+    #[test]
+    fn test_estimate_budget_without_depth_gives_every_segment_one_copy() {
+        let depth: HashMap<Seg, f64> = [(b"a".to_vec(), 0.0), (b"b".to_vec(), 0.0)].into_iter().collect();
+        let len: HashMap<Seg, usize> = depth.keys().map(|k| (k.clone(), 1000)).collect();
+        let copies = estimate_budget(&depth, &len);
+        assert_eq!(copies.budget[&b"a".to_vec()], 1);
+        assert_eq!(copies.ratio[&b"a".to_vec()], 1.0);
     }
 
     #[test]
@@ -1935,10 +2215,10 @@ mod tests {
             depth.insert(name.as_bytes().to_vec(), 200.0);
             len.insert(name.as_bytes().to_vec(), 2_000);
         }
-        let (baseline, budget) = estimate_budget(&depth, &len);
-        assert!((baseline - 100.0).abs() < 1e-9);
-        assert_eq!(budget[&b"unique".to_vec()], 1);
-        assert_eq!(budget[&b"r1".to_vec()], 2);
+        let copies = estimate_budget(&depth, &len);
+        assert!((copies.baseline - 100.0).abs() < 1e-9);
+        assert_eq!(copies.budget[&b"unique".to_vec()], 1);
+        assert_eq!(copies.budget[&b"r1".to_vec()], 2);
     }
 
     #[test]
@@ -2190,8 +2470,25 @@ mod tests {
             edges.push(edge(s("hub", F), s(other, F), 2, 1));
         }
         // b and c both have 4 edges; b sorts first
-        assert_eq!(choose_root(&circuits, &edges), Some(s("b", F)));
-        assert_eq!(choose_root(&[], &edges), None);
+        let len: HashMap<Seg, usize> = ["a", "b", "c", "x", "y", "hub"].iter().map(|n| (n.as_bytes().to_vec(), 1000)).collect();
+        let copies = copy_number(len.keys().map(|k| (k.clone(), 1)).collect());
+        assert_eq!(choose_root(&circuits, &edges, &copies, &len), Some(s("b", F)));
+        assert_eq!(choose_root(&[], &edges, &copies, &len), None);
+    }
+
+    #[test]
+    fn test_choose_root_prefers_the_circuit_that_fits_depth() {
+        // a circuit walking a short 10x repeat ten times has more states,
+        // but the two-segment one holds 50 kb of single-copy genome
+        use Orientation::Forward as F;
+        let hub: Vec<State> = std::iter::repeat_n(s("r", F), 10).collect();
+        let genome = vec![s("a", F), s("b", F)];
+        let len: HashMap<Seg, usize> =
+            [("r", 1000), ("a", 25_000), ("b", 25_000)].iter().map(|(n, l)| (n.as_bytes().to_vec(), *l)).collect();
+        let mut copies = copy_number([("r", 10), ("a", 1), ("b", 1)].iter().map(|(n, b)| (n.as_bytes().to_vec(), *b)).collect());
+        copies.ratio.insert(b"r".to_vec(), 10.0);
+        let edges = vec![edge(s("r", F), s("r", F), 0, 10), edge(s("a", F), s("b", F), 0, 10), edge(s("b", F), s("a", F), 0, 10)];
+        assert_eq!(choose_root(&[hub, genome], &edges, &copies, &len), Some(s("a", F)));
     }
 
     #[test]
@@ -2656,7 +2953,8 @@ mod tests {
         segments.insert(b"s2".to_vec(), b"A".to_vec());
         let gene_segs = HashSet::new();
 
-        match solve_ilp(&edges, &budget, &segments, &gene_segs, Some(&s("h", F)), 5.0) {
+        let copies = copy_number(budget);
+        match solve_ilp(&edges, &copies, &segments, &gene_segs, Some(&s("h", F)), 5.0) {
             Ok((selected, _)) => {
                 let circuits = decompose_circuits(&selected, &HashMap::new()).unwrap();
                 assert_eq!(
@@ -2674,5 +2972,186 @@ mod tests {
                 // h with no edge between them.
             }
         }
+    }
+
+    /// Copy numbers with each segment's ratio equal to its budget.
+    fn copy_number(budget: HashMap<Seg, u32>) -> CopyNumber {
+        CopyNumber {
+            baseline: 100.0,
+            ratio: budget.iter().map(|(s, b)| (s.clone(), *b as f64)).collect(),
+            budget,
+        }
+    }
+
+    /// Copy numbers (`ratio` per segment, budget as `estimate_budget` would
+    /// give it), sequences (`len` bases each) and no genes, for `solve_ilp`.
+    fn ilp_inputs_with_ratio(
+        segs: &[(&str, f64, usize)],
+    ) -> (CopyNumber, HashMap<Seg, Vec<u8>>, HashSet<Seg>) {
+        let ratio: HashMap<Seg, f64> = segs.iter().map(|(n, r, _)| (n.as_bytes().to_vec(), *r)).collect();
+        let budget = ratio.iter().map(|(s, r)| (s.clone(), r.round().max(1.0) as u32)).collect();
+        let segments = segs
+            .iter()
+            .map(|(n, _, len)| (n.as_bytes().to_vec(), vec![b'A'; *len]))
+            .collect();
+        (CopyNumber { baseline: 100.0, ratio, budget }, segments, HashSet::new())
+    }
+
+    /// As [`ilp_inputs_with_ratio`], with each ratio a whole budget.
+    fn ilp_inputs(segs: &[(&str, u32, usize)]) -> (CopyNumber, HashMap<Seg, Vec<u8>>, HashSet<Seg>) {
+        let with_ratio: Vec<(&str, f64, usize)> = segs.iter().map(|(n, b, l)| (*n, *b as f64, *l)).collect();
+        ilp_inputs_with_ratio(&with_ratio)
+    }
+
+    #[test]
+    fn test_solve_ilp_walks_a_multi_segment_repeat_twice() {
+        // a and b are single-copy; r1 r2 is a two-segment repeat present
+        // twice. The only circuit holding both a and b is a r1 r2 b r1 r2,
+        // which walks the r1 -> r2 junction twice. With each transition
+        // allowed once, only one of a and b could be included.
+        use Orientation::Forward as F;
+        let edges = vec![
+            edge(s("a", F), s("r1", F), 0, 10),
+            edge(s("r1", F), s("r2", F), 0, 20),
+            edge(s("r2", F), s("b", F), 0, 10),
+            edge(s("b", F), s("r1", F), 0, 10),
+            edge(s("r2", F), s("a", F), 0, 10),
+        ];
+        let (copies, segments, genes) =
+            ilp_inputs(&[("a", 1, 5000), ("b", 1, 5000), ("r1", 2, 1000), ("r2", 2, 1000)]);
+        let (selected, optimal) = solve_ilp(&edges, &copies, &segments, &genes, None, 5.0).unwrap();
+        assert!(optimal);
+        assert_eq!(
+            selected.iter().filter(|e| **e == (s("r1", F), s("r2", F))).count(),
+            2
+        );
+        let circuits = decompose_circuits(&selected, &HashMap::new()).unwrap();
+        assert_eq!(circuits.len(), 1);
+        assert_eq!(
+            canonical_circuit(&circuits[0]),
+            vec![s("a", F), s("r1", F), s("r2", F), s("b", F), s("r1", F), s("r2", F)]
+        );
+    }
+
+    #[test]
+    fn test_solve_ilp_keeps_the_most_sequence_not_the_most_segments() {
+        // Single-copy h can close one loop: through the 5 kb segment `long`,
+        // or through two 100 bp segments. Counting segments picks the two
+        // short ones; counting bp picks `long`.
+        use Orientation::Forward as F;
+        let edges = vec![
+            edge(s("h", F), s("long", F), 0, 10),
+            edge(s("long", F), s("h", F), 0, 10),
+            edge(s("h", F), s("s1", F), 0, 50),
+            edge(s("s1", F), s("s2", F), 0, 50),
+            edge(s("s2", F), s("h", F), 0, 50),
+        ];
+        let (copies, segments, genes) =
+            ilp_inputs(&[("h", 1, 1000), ("long", 1, 5000), ("s1", 1, 100), ("s2", 1, 100)]);
+        let (selected, _) = solve_ilp(&edges, &copies, &segments, &genes, None, 5.0).unwrap();
+        let circuits = decompose_circuits(&selected, &HashMap::new()).unwrap();
+        assert_eq!(circuits.len(), 1);
+        assert_eq!(canonical_circuit(&circuits[0]), vec![s("h", F), s("long", F)]);
+    }
+
+    #[test]
+    fn test_solve_ilp_read_support_only_breaks_ties() {
+        // Two loops through single-copy h. Read support decides between
+        // loops holding the same sequence (or within TIE_BREAK_BP of it),
+        // but never outweighs more sequence than that.
+        use Orientation::Forward as F;
+        let loops = |x_len: usize| {
+            let edges = vec![
+                edge(s("h", F), s("x", F), 0, 5),
+                edge(s("x", F), s("h", F), 0, 5),
+                edge(s("h", F), s("y", F), 0, 100_000),
+                edge(s("y", F), s("h", F), 0, 100_000),
+            ];
+            let (copies, segments, genes) =
+                ilp_inputs(&[("h", 1, 1000), ("x", 1, x_len), ("y", 1, 2000)]);
+            let (selected, _) = solve_ilp(&edges, &copies, &segments, &genes, None, 5.0).unwrap();
+            canonical_circuit(&decompose_circuits(&selected, &HashMap::new()).unwrap()[0])
+        };
+        assert_eq!(loops(2000), vec![s("h", F), s("y", F)]);
+        assert_eq!(loops(2000 + TIE_BREAK_BP as usize - 1), vec![s("h", F), s("y", F)]);
+        assert_eq!(loops(2000 + TIE_BREAK_BP as usize + 1), vec![s("h", F), s("x", F)]);
+    }
+
+    #[test]
+    fn test_solve_ilp_counts_sequence_only_up_to_its_depth() {
+        // Single-copy h closes one loop: through `half`, 3 kb at half the
+        // baseline depth, or `whole`, 2 kb at single-copy depth. Counted up
+        // to its depth `half` is worth 1.5 kb, so `whole` wins.
+        use Orientation::Forward as F;
+        let edges = vec![
+            edge(s("h", F), s("half", F), 0, 10),
+            edge(s("half", F), s("h", F), 0, 10),
+            edge(s("h", F), s("whole", F), 0, 10),
+            edge(s("whole", F), s("h", F), 0, 10),
+        ];
+        let (copies, segments, genes) =
+            ilp_inputs_with_ratio(&[("h", 1.0, 1000), ("half", 0.5, 3000), ("whole", 1.0, 2000)]);
+        let (selected, _) = solve_ilp(&edges, &copies, &segments, &genes, None, 5.0).unwrap();
+        let circuits = decompose_circuits(&selected, &HashMap::new()).unwrap();
+        assert_eq!(canonical_circuit(&circuits[0]), vec![s("h", F), s("whole", F)]);
+    }
+
+    #[test]
+    fn test_solve_ilp_walks_low_depth_sequence_only_to_connect_more() {
+        // `trace` is at 5% of the baseline depth. Walking it overstates its
+        // depth by 95% of its length: not worth it to close a loop through
+        // 1 kb of h, but worth it to bring in 100 kb of single-copy `big`.
+        use Orientation::Forward as F;
+        let loop_through = |big: bool| {
+            let mut edges = vec![edge(s("h", F), s("trace", F), 0, 10)];
+            let mut segs = vec![("h", 1.0, 1000), ("trace", 0.05, 20_000)];
+            if big {
+                edges.push(edge(s("trace", F), s("big", F), 0, 10));
+                edges.push(edge(s("big", F), s("h", F), 0, 10));
+                segs.push(("big", 1.0, 100_000));
+            } else {
+                edges.push(edge(s("trace", F), s("h", F), 0, 10));
+            }
+            let (copies, segments, genes) = ilp_inputs_with_ratio(&segs);
+            solve_ilp(&edges, &copies, &segments, &genes, None, 5.0).unwrap().0
+        };
+        assert!(loop_through(false).is_empty());
+        assert_eq!(loop_through(true).len(), 3);
+    }
+
+    #[test]
+    fn test_repeat_runs_and_their_walks() {
+        use Orientation::Forward as F;
+        let budget: HashMap<Seg, u32> =
+            [("a", 1), ("b", 1), ("r1", 2), ("r2", 2)].iter().map(|(n, b)| (n.as_bytes().to_vec(), *b)).collect();
+        let circuit = vec![s("a", F), s("r1", F), s("r2", F), s("b", F), s("r1", F), s("r2", F)];
+        assert_eq!(repeat_runs(&circuit, &budget), vec![(1, 2), (4, 2)]);
+        // the second run's walk wraps round to the circuit's start
+        assert_eq!(run_walk(&circuit, 4, 2), vec![s("b", F), s("r1", F), s("r2", F), s("a", F)]);
+        // a run across the circuit's start is one run, not two
+        let wrapped = vec![s("r1", F), s("a", F), s("r2", F)];
+        assert_eq!(repeat_runs(&wrapped, &budget), vec![(2, 2)]);
+        assert_eq!(run_walk(&wrapped, 2, 2), vec![s("a", F), s("r2", F), s("r1", F), s("a", F)]);
+        // no single-copy state, no runs
+        assert!(repeat_runs(&[s("r1", F), s("r2", F)], &budget).is_empty());
+    }
+
+    #[test]
+    fn test_spanning_reads_either_strand_once_per_record() {
+        use Orientation::Backward as B;
+        use Orientation::Forward as F;
+        let walk = vec![s("b", F), s("r1", F), s("r2", F), s("a", F)];
+        let records = vec![
+            rec(&[s("x", F), s("b", F), s("r1", F), s("r2", F), s("a", F)]),
+            // the same molecule read from the other strand
+            rec(&[s("a", B), s("r2", B), s("r1", B), s("b", B)]),
+            // into the repeat but out to the other flank: not this walk
+            rec(&[s("b", F), s("r1", F), s("r2", F), s("c", F)]),
+            // inside the repeat only
+            rec(&[s("r1", F), s("r2", F)]),
+            // the walk twice in one record counts once
+            rec(&[s("b", F), s("r1", F), s("r2", F), s("a", F), s("b", F), s("r1", F), s("r2", F), s("a", F)]),
+        ];
+        assert_eq!(spanning_reads(&records, &[walk]), vec![3]);
     }
 }
