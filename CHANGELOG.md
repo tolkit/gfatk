@@ -4,7 +4,7 @@ All notable changes to gfatk are listed here, newest first. Versions follow
 [semantic versioning](https://semver.org/); release binaries are on the
 [GitHub releases page](https://github.com/tolkit/gfatk/releases).
 
-## [Unreleased]
+## [0.7.0] - 2026-11-27
 
 ### Changed
 
@@ -274,6 +274,7 @@ All notable changes to gfatk are listed here, newest first. Versions follow
 
 Versions 0.1.x–0.2.x (2022–2025) predate this changelog; see the git history.
 
+[0.7.0]: https://github.com/tolkit/gfatk/compare/0.6.3...0.7.0
 [0.6.3]: https://github.com/tolkit/gfatk/compare/0.6.2...0.6.3
 [0.6.2]: https://github.com/tolkit/gfatk/compare/0.6.1...0.6.2
 [0.6.1]: https://github.com/tolkit/gfatk/compare/0.6.0...0.6.1
